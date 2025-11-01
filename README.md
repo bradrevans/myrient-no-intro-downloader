@@ -3,6 +3,8 @@ Myrient Downloader
 
 This tool allows you to easily browse, filter, and download sets from any archive on Myrient (e.g., No-Intro, Redump, TOSEC). It turns a complex directory of thousands of files into a simple, step-by-step wizard.
 
+![Screenshot of Myrient Downloader.](screenshots/image.png)
+
 Features
 --------
 
