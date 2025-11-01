@@ -23,25 +23,113 @@ def print_splash_screen(title="Platform Selection"):
     os.system('cls' if os.name == 'nt' else 'clear')
     
     print(r"""
-___  ___           _            _    ______                    _                 _           
-|  \/  |          (_)          | |   |  _  \                  | |               | |          
-| .  . |_   _ _ __ _  ___ _ __ | |_  | | | |_____      ___ __ | | ___   __ _  __| | ___ _ __ 
-| |\/| | | | | '__| |/ _ \ '_ \| __| | | | / _ \ \ /\ / / '_ \| |/ _ \ / _` |/ _` |/ _ \ '__|
-| |  | | |_| | |  | |  __/ | | | |_  | |/ / (_) \ V  V /| | | | | (_) | (_| | (_| |  __/ |   
-\_|  |_/\__, |_|  |_|\___|_| |_|\__| |___/ \___/ \_/\_/ |_| |_|_|\___/ \__,_|\__,_|\___|_|   
-         __/ |                                                                               
-        |___/                                                                                
+█▀▄▀█ ▀▄    ▄ █▄▄▄▄ ▄█ ▄███▄      ▄     ▄▄▄▄▀     ██▄   ████▄   ▄ ▄      ▄   █    ████▄ ██   ██▄   ▄███▄   █▄▄▄▄ 
+█ █ █   █  █  █  ▄▀ ██ █▀   ▀      █ ▀▀▀ █        █  █  █   █  █   █      █  █    █   █ █ █  █  █  █▀   ▀  █  ▄▀ 
+█ ▄ █    ▀█   █▀▀▌  ██ ██▄▄    ██   █    █        █   █ █   █ █ ▄   █ ██   █ █    █   █ █▄▄█ █   █ ██▄▄    █▀▀▌  
+█   █    █    █  █  ▐█ █▄   ▄▀ █ █  █   █         █  █  ▀████ █  █  █ █ █  █ ███▄ ▀████ █  █ █  █  █▄   ▄▀ █  █  
+   █   ▄▀       █    ▐ ▀███▀   █  █ █  ▀          ███▀         █ █ █  █  █ █     ▀         █ ███▀  ▀███▀     █   
+  ▀            ▀               █   ██                           ▀ ▀   █   ██              █                 ▀    
+                                                                                         ▀                       
+                                ┏┓ ╻ ╻   ┏┓ ┏━┓┏━┓╺┳┓   ┏━╸╻ ╻┏━┓┏┓╻┏━┓
+                                ┣┻┓┗┳┛   ┣┻┓┣┳┛┣━┫ ┃┃   ┣╸ ┃┏┛┣━┫┃┗┫┗━┓
+                                ┗━┛ ╹    ┗━┛╹┗╸╹ ╹╺┻┛   ┗━╸┗┛ ╹ ╹╹ ╹┗━┛
+                                           
+                           https://github.com/bradrevans/myrient-downloader
 """)
 
     print("=" * 64)
-    print(f" Myrient No-Intro Downloader - {title}")
+    print(f" {title}")
     print("=" * 64 + "\n")
 
+def get_main_archives(root_url):
+    print("Loading main archive list... (this may take a moment)")
+    
+    try:
+        response = requests.get(root_url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+    except requests.exceptions.RequestException as e:
+        print(f"Error: Failed to fetch directory data. {e}")
+        return None
+
+    all_archives = []
+    for link in soup.find_all('a'):
+        href = link.get('href')
+        
+        if (href and 
+            href.endswith('/') and 
+            not href.startswith('?') and 
+            not href.startswith('http') and
+            not href.startswith('/') and
+            '..' not in href and
+            href != './'):
+            
+            dir_name = unquote(href).strip('/')
+            all_archives.append({
+                'name': dir_name,
+                'href': href
+            })
+    
+    if not all_archives:
+        print("Error: Scraper found no valid directory links. Page structure may have changed.")
+        return None
+
+    return all_archives
+
+def main_archive_selection_loop(archives):
+    all_archive_keys = sorted([a['name'] for a in archives])
+    display_archives = all_archive_keys
+    
+    archive_map = {a['name']: a['href'] for a in archives}
+    
+    while True:
+        print_splash_screen("Step 1: Archive Selection")
+        print("Please select an archive:")
+        
+        for archive_name in display_archives:
+            original_index = all_archive_keys.index(archive_name)
+            print(f"  [{original_index+1}] {archive_name}")
+        
+        print("\n   [q] Quit")
+        
+        print(f"\nDisplaying {len(display_archives)} of {len(all_archive_keys)} archives.")
+        print("(Enter a number, search, [Enter] to clear, or 'q' to quit)")
+        choice = input("\nChoice: ").lower()
+
+        if choice == 'q':
+            return None
+        
+        if choice == '':
+            display_archives = all_archive_keys
+            continue
+
+        try:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(all_archive_keys):
+                selected_key = all_archive_keys[choice_num - 1]
+                if selected_key not in display_archives:
+                     print(f"Number {choice_num} is not in the current filtered list.")
+                     print("Clear the search [Enter] to see all options.")
+                     input("Press Enter to continue...")
+                     continue
+                
+                return archive_map[selected_key]
+            else:
+                print("Invalid number. Please try again.")
+                input("Press Enter to continue...")
+        
+        except ValueError:
+            query = choice
+            filtered_list = [p for p in all_archive_keys if query in p.lower()]
+            
+            if not filtered_list:
+                print(f"No results found for '{query}'.")
+                input("Press Enter to continue...")
+            else:
+                display_archives = filtered_list
+
 def get_platform_groups(root_url):
-    """
-    Scrapes the root Myrient URL, groups platforms, and returns a dictionary.
-    """
-    print("Loading main directory... (this may take a moment)")
+    print("Loading platform directory... (this may take a moment)")
     
     try:
         response = requests.get(root_url)
@@ -96,15 +184,14 @@ def get_platform_groups(root_url):
     return final_grouped_platforms
 
 def platform_selection_loop(grouped_platforms):
-    """
-    Manages the interactive menu for searching and selecting a platform.
-    """
     all_platform_keys = sorted(grouped_platforms.keys())
     display_platforms = all_platform_keys
     
     while True:
-        print_splash_screen("Step 1: Platform Selection")
+        print_splash_screen("Step 2: Platform Selection")
         print("Please select a platform:")
+        
+        print("   [b] .. (Go Back)")
         
         for platform_name in display_platforms:
             original_index = all_platform_keys.index(platform_name)
@@ -113,11 +200,14 @@ def platform_selection_loop(grouped_platforms):
         print("\n   [q] Quit")
         
         print(f"\nDisplaying {len(display_platforms)} of {len(all_platform_keys)} platforms.")
-        print("(Enter a number, search, [Enter] to clear, or 'q' to quit)")
+        print("(Enter a number, search, [Enter] to clear, 'b' for back, or 'q' to quit)")
         choice = input("\nChoice: ").lower()
 
         if choice == 'q':
             return None
+        
+        if choice == 'b':
+            return "GO_BACK"
         
         if choice == '':
             display_platforms = all_platform_keys
@@ -149,9 +239,6 @@ def platform_selection_loop(grouped_platforms):
                 display_platforms = filtered_list
 
 def sub_category_selection_loop(sub_dirs):
-    """
-    Manages the menu for selecting a sub-category.
-    """
     if len(sub_dirs) == 1:
         print(f"\nAuto-selecting only available sub-category: {sub_dirs[0]['name']}")
         input("Press Enter to continue...")
@@ -166,7 +253,7 @@ def sub_category_selection_loop(sub_dirs):
         split_list = re.split(r'\s*[-–—]\s*', key_name)
         key_name_clean = split_list[-1].strip()
             
-        print_splash_screen(f"Step 2: Sub-Category for {key_name_clean}")
+        print_splash_screen(f"Step 3: Sub-Category for {key_name_clean}")
         print("Please select a sub-category:\n")
         
         print("   [b] .. (Go Back)")
@@ -217,9 +304,6 @@ def sub_category_selection_loop(sub_dirs):
                 display_dirs = filtered_list
 
 def parse_filename(filename):
-    """
-    Intelligently parses a No-Intro filename.
-    """
     name_no_ext, _ = os.path.splitext(filename)
     
     base_name_match = re.split(r'\s*\(', name_no_ext, 1)
@@ -243,9 +327,6 @@ def parse_filename(filename):
     }
 
 def scrape_and_parse_files(page_url):
-    """
-    Scrapes the sub-category URL, parses all filenames, and finds all tags.
-    """
     print("\nScanning and parsing file list... (this may take a moment)")
     try:
         response = requests.get(page_url)
@@ -261,7 +342,14 @@ def scrape_and_parse_files(page_url):
     for link in soup.find_all('a'):
         href = link.get('href')
         
-        if href and (href.lower().endswith('.zip') or href.lower().endswith('.7z')):
+        if (href and 
+            not href.endswith('/') and 
+            not href.startswith('?') and 
+            not href.startswith('http') and
+            not href.startswith('/') and
+            '..' not in href and
+            href != './'):
+            
             filename = unquote(href)
             
             parsed_info = parse_filename(filename)
@@ -271,7 +359,7 @@ def scrape_and_parse_files(page_url):
             all_tags.update(parsed_info['tags'])
                 
     if not all_files:
-        print("Error: No .zip or .7z files found in this directory.")
+        print("Error: No valid files found in this directory.")
         return None, None
         
     print(f"Parsed {len(all_files)} files and found {len(all_tags)} unique tags.")
@@ -279,10 +367,6 @@ def scrape_and_parse_files(page_url):
     return all_files, all_tags
 
 def tag_selection_menu(all_tags, title, prompt, list_name):
-    """
-    A generic, reusable, searchable menu for building a list of tags.
-    This version uses STABLE numbering and a minimal [*] marker.
-    """
     selected_set = set()
     master_available_tags = sorted([t for t in all_tags if not re.match(r'^(v|Rev)\s*[\d\.]+$', t, re.IGNORECASE)])
     
@@ -370,11 +454,8 @@ def tag_selection_menu(all_tags, title, prompt, list_name):
             input("Press Enter to continue...")
 
 def language_filter_menu(file_list, all_tags):
-    """
-    Step 3.1: Asks user how to filter by tags (region/language).
-    """
     while True:
-        print_splash_screen("Step 3.1: Region/Language Filter")
+        print_splash_screen("Step 4.1: Region/Language Filter")
         print("First, select the broad pool of files you are interested in.\n")
         print("Tip: To get 'all English games', choose [2] and select all tags")
         print("that contain English, e.g. (USA), (Europe), (UK), (World), (En,Fr,De), etc.\n")
@@ -395,7 +476,7 @@ def language_filter_menu(file_list, all_tags):
         elif choice == '2':
             include_tags = tag_selection_menu(
                 all_tags, 
-                "Step 3.1: INCLUDE Tags",
+                "Step 4.1: INCLUDE Tags",
                 "Select tags to INCLUDE. A file will be KEPT if it has AT LEAST ONE of these tags.",
                 "INCLUDE"
             )
@@ -418,7 +499,7 @@ def language_filter_menu(file_list, all_tags):
         elif choice == '3':
             exclude_tags = tag_selection_menu(
                 all_tags, 
-                "Step 3.1: EXCLUDE Tags",
+                "Step 4.1: EXCLUDE Tags",
                 "Select tags to EXCLUDE. A file will be REMOVED if it has AT LEAST ONE of these tags.",
                 "EXCLUDE"
             )
@@ -443,11 +524,8 @@ def language_filter_menu(file_list, all_tags):
             input("Press Enter to continue...")
 
 def revision_filter_menu(file_list):
-    """
-    Step 3.2: Asks user how to handle game revisions.
-    """
     while True:
-        print_splash_screen("Step 3.2: Revision Filtering")
+        print_splash_screen("Step 4.2: Revision Filtering")
         print(f"You have {len(file_list)} files remaining.")
         print("This step handles multiple versions (e.g., (v1.1), (Rev 1)).\n")
 
@@ -488,17 +566,13 @@ def revision_filter_menu(file_list):
             input("Press Enter to continue...")
 
 def build_priority_list_menu(all_tags):
-    """
-    A sub-menu for Step 3.3 to create an ordered list of priority tags.
-    This menu is searchable AND uses stable numbering.
-    """
     priority_list = []
     master_available_tags = sorted([t for t in all_tags if not re.match(r'^(v|Rev)\s*[\d\.]+$', t, re.IGNORECASE)])
     
     current_query = ""
 
     while True:
-        print_splash_screen("Step 3.3: Build Priority List")
+        print_splash_screen("Step 4.3: Build Priority List")
         print("Create your ranked priority list. The order you select tags is their priority.\n")
         
         print("--- Current Priority ---")
@@ -591,11 +665,8 @@ def build_priority_list_menu(all_tags):
             input("Press Enter to continue...")
 
 def priority_deduplication_menu(file_list, all_tags, tags_for_priority_menu):
-    """
-    Step 3.3: The de-duplication menu with prioritization.
-    """
     while True:
-        print_splash_screen("Step 3.3: De-duplication")
+        print_splash_screen("Step 4.3: De-duplication")
         print(f"You have {len(file_list)} files remaining.")
         print("This final step ensures you only get ONE copy of each game.\n")
 
@@ -630,7 +701,7 @@ def priority_deduplication_menu(file_list, all_tags, tags_for_priority_menu):
             if priority_list is None:
                 continue
             
-            print_splash_screen("Step 3.3: De-duplication")
+            print_splash_screen("Step 4.3: De-duplication")
             print("What about games that do NOT match any of your priority tags?")
             print(f"Example: You prioritized (USA), but a game only exists as (Japan).")
             print("\n   [1] Keep them (Keeps the best-scoring version, even if 0)")
@@ -677,9 +748,6 @@ def priority_deduplication_menu(file_list, all_tags, tags_for_priority_menu):
             input("Press Enter to continue...")
 
 def get_download_directory():
-    """
-    Step 5: Asks for and validates a target download directory.
-    """
     print("\n" + "="*64)
     print_splash_screen("Step 5: Download Location")
     print("Where would you like to save the files?")
@@ -718,9 +786,6 @@ def get_download_directory():
             print("Please enter a valid path.")
 
 def get_download_info(file_list, base_url, target_dir, session):
-    """
-    Pre-scan all files to get their total size and check for existing files.
-    """
     total_size = 0
     files_to_download = []
     
@@ -756,11 +821,7 @@ def get_download_info(file_list, base_url, target_dir, session):
     
     return files_to_download, total_size
 
-
 def download_files(file_list, base_url, target_dir, total_size):
-    """
-    Step 6: Downloads all files in the list with nested progress bars.
-    """
     print("\n" + "="*64)
     print("Step 6: Downloading Files...")
     
@@ -823,109 +884,132 @@ def download_files(file_list, base_url, target_dir, total_size):
 
 if __name__ == "__main__":
     
-    ROOT_URL = "https://myrient.erista.me/files/No-Intro/"
+    BASE_URL = "https://myrient.erista.me/files/"
     
     try:
-        print_splash_screen()
-        platform_groups = get_platform_groups(ROOT_URL)
-        
-        if not platform_groups:
-            print("Could not find any platforms. Exiting.")
-            sys.exit(1)
-            
         while True: 
-            selected_subdirs = platform_selection_loop(platform_groups)
-            if not selected_subdirs:
+            choice = "" 
+            
+            print_splash_screen("Step 1: Archive Selection")
+            main_archives = get_main_archives(BASE_URL)
+            if not main_archives:
+                print("Could not find any archives. Exiting.")
+                sys.exit(1)
+
+            selected_archive_href = main_archive_selection_loop(main_archives)
+            if not selected_archive_href:
                 print("Exiting.")
                 sys.exit(0)
             
-            selected_href = sub_category_selection_loop(selected_subdirs)
-            if selected_href == "GO_BACK":
-                continue
-            if not selected_href:
-                print("Exiting.")
-                sys.exit(0)
-            
-            FINAL_URL = urljoin(ROOT_URL, selected_href)
-            
-            all_files_info, all_tags = scrape_and_parse_files(FINAL_URL)
-            if not all_files_info:
-                print("Returning to main menu.")
-                input("Press Enter to continue...")
-                continue
-            
-            list_after_lang = None
-            tags_for_priority = None
-            list_after_rev = None
-            final_list = None
-            
+            SELECTED_ARCHIVE_URL = urljoin(BASE_URL, selected_archive_href)
+
             while True: 
-                if list_after_lang is None:
-                    list_after_lang, tags_for_priority = language_filter_menu(all_files_info, all_tags)
-                if list_after_lang is None:
-                    break
+                print_splash_screen("Step 2: Platform Selection")
+                platform_groups = get_platform_groups(SELECTED_ARCHIVE_URL)
+                if not platform_groups:
+                    print("Could not find any platforms. Exiting.")
+                    break 
                 
-                if list_after_rev is None:
-                    list_after_rev = revision_filter_menu(list_after_lang)
-                if list_after_rev is None:
-                    list_after_lang = None
-                    continue
-
-                if final_list is None:
-                    current_tags = set().union(*[f['tags'] for f in list_after_rev])
-                    final_list = priority_deduplication_menu(list_after_rev, current_tags, tags_for_priority)
-                if final_list is None:
-                    list_after_rev = None
-                    continue
-
-                break 
-            
-            if final_list is None:
-                continue
-
-            
-            print_splash_screen("Step 4: Final Result")
-            print(f"Selected Directory: {unquote(FINAL_URL)}")
-            print(f"Found {len(final_list)} matching files out of {len(all_files_info)} total.\n")
-            
-            if final_list:
-                print("--- Filtered File List (Sample) ---")
-                for file_info in final_list[:20]:
-                    print(f"  {file_info['name_raw']}")
-                if len(final_list) > 20:
-                    print(f"  ...and {len(final_list) - 20} more.")
+                selected_subdirs = platform_selection_loop(platform_groups)
+                if not selected_subdirs:
+                    print("Exiting.")
+                    sys.exit(0)
+                if selected_subdirs == "GO_BACK":
+                    break 
                 
-                target_dir = get_download_directory()
-                
-                if target_dir:
-                    session = requests.Session()
-                    files_to_download, total_size = get_download_info(final_list, FINAL_URL, target_dir, session)
+                while True: 
+                    selected_href = sub_category_selection_loop(selected_subdirs)
+                    if selected_href == "GO_BACK":
+                        break 
+                    if not selected_href:
+                        print("Exiting.")
+                        sys.exit(0)
                     
-                    if not files_to_download:
-                        print("\nAll matched files already exist locally. Nothing to download.")
-                    else:
-                        print(f"\nTotal download size: {total_size / (1024**3):.2f} GB ({len(files_to_download)} files)")
-                        input("Press Enter to begin downloading...")
-                        download_files(files_to_download, FINAL_URL, target_dir, total_size)
-                        print("\nAll downloads complete!")
-                else:
-                    print("\nDownload cancelled.")
-                
-            else:
-                print("No files matched your filters.")
-            
-            print("\n" + "="*64)
-            print("\n([R]estart, [Q]uit)")
-            
-            choice = ""
-            while choice not in ('r', 'q'):
-                choice = input("Choice: ").lower().strip()
+                    FINAL_URL = urljoin(SELECTED_ARCHIVE_URL, selected_href)
+                    
+                    all_files_info, all_tags = scrape_and_parse_files(FINAL_URL)
+                    if not all_files_info:
+                        print("Returning to sub-category menu.")
+                        input("Press Enter to continue...")
+                        continue 
+                    
+                    list_after_lang = None
+                    tags_for_priority = None
+                    list_after_rev = None
+                    final_list = None
+                    
+                    while True: 
+                        if list_after_lang is None:
+                            list_after_lang, tags_for_priority = language_filter_menu(all_files_info, all_tags)
+                        if list_after_lang is None:
+                            break
+                        
+                        if list_after_rev is None:
+                            list_after_rev = revision_filter_menu(list_after_lang)
+                        if list_after_rev is None:
+                            list_after_lang = None
+                            continue
 
+                        if final_list is None:
+                            current_tags = set().union(*[f['tags'] for f in list_after_rev])
+                            final_list = priority_deduplication_menu(list_after_rev, current_tags, tags_for_priority)
+                        if final_list is None:
+                            list_after_rev = None
+                            continue
+
+                        break 
+                    
+                    if final_list is None:
+                        break
+                    
+                    print_splash_screen("Step 5: Final Result")
+                    print(f"Selected Directory: {unquote(FINAL_URL)}")
+                    print(f"Found {len(final_list)} matching files out of {len(all_files_info)} total.\n")
+                    
+                    if final_list:
+                        print("--- Filtered File List (Sample) ---")
+                        for file_info in final_list[:20]:
+                            print(f"  {file_info['name_raw']}")
+                        if len(final_list) > 20:
+                            print(f"  ...and {len(final_list) - 20} more.")
+                        
+                        target_dir = get_download_directory()
+                        
+                        if target_dir:
+                            session = requests.Session()
+                            files_to_download, total_size = get_download_info(final_list, FINAL_URL, target_dir, session)
+                            
+                            if not files_to_download:
+                                print("\nAll matched files already exist locally. Nothing to download.")
+                            else:
+                                print(f"\nTotal download size: {total_size / (1024**3):.2f} GB ({len(files_to_download)} files)")
+                                input("Press Enter to begin downloading...")
+                                download_files(files_to_download, FINAL_URL, target_dir, total_size)
+                                print("\nAll downloads complete!")
+                        else:
+                            print("\nDownload cancelled.")
+                        
+                    else:
+                        print("No files matched your filters.")
+                    
+                    print("\n" + "="*64)
+                    print("\n([R]estart, [Q]uit)")
+                    
+                    choice = ""
+                    while choice not in ('r', 'q'):
+                        choice = input("Choice: ").lower().strip()
+
+                    if choice == 'r':
+                        break 
+                    else:
+                        print("Exiting.")
+                        sys.exit(0)
+                
+                if choice == 'r':
+                    break 
+            
             if choice == 'r':
-                continue
-            else:
-                print("Exiting.")
-                sys.exit(0)
+                continue 
             
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user. Exiting.")
