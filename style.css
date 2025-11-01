@@ -1078,6 +1078,8 @@ body {
   z-index: 10;
   padding-top: 1rem;
   padding-bottom: 1rem;
+  background-color: #171717;
+  top: -32px;
   margin-left: -2rem;
   margin-right: -2rem;
   padding-left: 2rem;
