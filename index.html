@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://rsms.me; font-src 'self' https://rsms.me;">
+    <title>Myrient Downloader</title>
+    <link href="style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+
+<body class="antialiased">
+    <header
+        class="p-4 bg-neutral-800 border-b border-neutral-700 h-16 flex items-center select-none app-draggable-area">
+        <button id="header-back-btn"
+            class="invisible text-lg font-semibold text-white hover:text-orange-500 mr-4 transition-all duration-200 app-non-draggable-area">&larr;</button>
+        <nav id="breadcrumbs" class="text-lg font-semibold text-white"></nav>
+        <div id="window-controls" class="flex-shrink-0 flex-grow flex justify-end items-center">
+            <button id="minimize-btn" class="control-btn hover:bg-neutral-700 app-non-draggable-area">
+                &minus;
+            </button>
+            <button id="maximize-restore-btn" class="control-btn hover:bg-neutral-700 app-non-draggable-area">
+                &#9723;
+            </button>
+            <button id="close-btn" class="control-btn hover:bg-red-600 app-non-draggable-area">
+                &times;
+            </button>
+        </div>
+    </header>
+
+    <main class="p-8 h-[calc(100vh-8rem)] overflow-y-auto">
+        <div id="loading-spinner"
+            class="hidden absolute inset-0 bg-neutral-900 bg-opacity-75 flex items-center justify-center z-50">
+            <div class="loading-spinner-animation"></div>
+            <span id="loading-text" class="text-white text-xl ml-4">Loading...</span>
+        </div>
+        <div id="view-archives" class="view active">
+            <div class="sticky-view-header">
+                <h2 class="text-2xl font-bold mb-4">Step 1: Select an Archive</h2>
+                <div class="search-container">
+                    <input type="text" id="search-archives" class="search-bar" placeholder="Search archives...">
+                    <span id="search-archives-clear" class="search-clear-btn hidden">&times;</span>
+                </div>
+            </div>
+            <div id="list-archives" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <div id="view-directories" class="view">
+            <div class="sticky-view-header">
+                <h2 class="text-2xl font-bold mb-4">Step 2: Select a Directory</h2>
+                <div class="search-container">
+                    <input type="text" id="search-directories" class="search-bar" placeholder="Search directories...">
+                    <span id="search-directories-clear" class="search-clear-btn hidden">&times;</span>
+                </div>
+            </div>
+            <div id="list-directories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <div id="view-wizard" class="view">
+            <div class="sticky-view-header">
+                <h2 class="text-2xl font-bold mb-4">Step 3: Filtering Wizard</h2>
+                <p class="text-gray-400">Loaded <span id="wizard-file-count" class="font-bold">0</span> files and <span
+                        id="wizard-tag-count" class="font-bold">0</span> unique tags. Configure your filters.</p>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">3.1: Region/Language Filter</h3>
+                    <select id="filter-lang-mode" class="search-bar">
+                        <option value="include">Keep files that match an INCLUDE list (Recommended)</option>
+                        <option value="exclude">Remove files that match an EXCLUDE list</option>
+                        <option value="all">Keep ALL files</option>
+                    </select>
+                    <div id="lang-tag-ui" class="mt-2">
+                        <div class="search-container">
+                            <input type="text" id="search-tags" class="search-bar" placeholder="Search tags...">
+                            <span id="search-tags-clear" class="search-clear-btn hidden">&times;</span>
+                        </div>
+                        <div id="wizard-tags-list"
+                            class="h-64 min-h-64 resize-y overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2">
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                            <button id="select-all-tags-btn" class="btn btn-secondary">Select All (Displayed)</button>
+                            <button id="deselect-all-tags-btn" class="btn btn-secondary">Deselect All
+                                (Displayed)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">3.2: Revision Filtering</h3>
+                    <select id="filter-revision-mode" class="search-bar">
+                        <option value="highest">Keep only the HIGHEST revision of each game (Recommended)</option>
+                        <option value="all">Keep ALL files (Keep all revisions)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">3.3: De-duplication</h3>
+                    <select id="filter-dedupe-mode" class="search-bar">
+                        <option value="priority">Keep ONE (Prioritized) (Recommended)</option>
+                        <option value="simple">Keep ONE (Simple)</option>
+                        <option value="all">Keep ALL files</option>
+                    </select>
+
+                    <div id="priority-builder-ui" class="mt-2">
+
+                        <div class="flex gap-4 mt-2 h-[500px]">
+
+                            <div class="w-1/2 h-full flex flex-col">
+                                <h5 class="text-center font-bold mb-1">Priority (Drag to re-order)</h5>
+                                <div id="priority-list"
+                                    class="flex-grow overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-lg p-2 space-y-2">
+                                </div>
+                            </div>
+
+                            <div class="w-1/2 h-full flex flex-col">
+                                <h5 class="text-center font-bold">Available (Drag to add)</h5>
+                                <div class="search-container my-1">
+                                    <input type="text" id="search-priority-tags" class="search-bar"
+                                        placeholder="Search available tags...">
+                                    <span id="search-priority-tags-clear" class="search-clear-btn hidden">&times;</span>
+                                </div>
+
+                                <div class="flex flex-col gap-2 my-1">
+                                    <button id="add-all-shortest" class="btn btn-secondary btn-sm w-full">Add All
+                                        (Displayed: Prioritise Shortest)</button>
+                                    <button id="add-all-longest" class="btn btn-secondary btn-sm w-full">Add All
+                                        (Displayed: Prioritise Longest)</button>
+                                </div>
+
+                                <div id="priority-available"
+                                    class="flex-grow overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-lg p-2 space-y-2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <input type="checkbox" id="filter-keep-fallbacks" class="h-4 w-4" checked>
+                            <label for="filter-keep-fallbacks" class="ml-2">Fallback: Keep unprioritized tags</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end items-center">
+                    <button id="wizard-run-btn" class="btn btn-primary">Apply Filters & Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-results" class="view">
+            <div class="sticky-view-header">
+                <h2 class="text-2xl font-bold mb-4">Step 4: Final Result</h2>
+                <p class="text-gray-400 mb-4">Found <span id="results-file-count" class="font-bold text-white">0</span>
+                    matching files out of <span id="results-total-count" class="font-bold text-white">0</span> total.
+                </p>
+                <div class="search-container">
+                    <input type="text" id="search-results" class="search-bar" placeholder="Search results...">
+                    <span id="search-results-clear" class="search-clear-btn hidden">&times;</span>
+                </div>
+            </div>
+
+            <div id="results-list"
+                class="h-64 min-h-64 resize-y overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mb-4">
+            </div>
+            <div id="download-ui" class="space-y-4">
+                <div>
+                    <button id="download-dir-btn" class="btn btn-secondary">Set Download Directory</button>
+                    <span id="download-dir-text" class="text-gray-500 ml-4">No directory selected.</span>
+                </div>
+
+                <button id="download-scan-btn" class="btn btn-primary w-full" disabled>Scan & Download</button>
+
+                <button id="download-cancel-btn"
+                    class="btn btn-secondary bg-red-600 hover:bg-red-500 w-full hidden">Cancel Download</button>
+
+                <div id="scan-progress-bar" class="hidden w-full">
+                    <label for="scan-progress" class="text-sm font-semibold">Scanning file sizes...</label>
+                    <progress id="scan-progress" class="w-full" max="100" value="0"></progress>
+                    <div class="text-right"><span id="scan-progress-text" class="text-sm text-gray-100">0 / 0
+                            files</span></div>
+                </div>
+
+                <div id="download-progress-bars" class="hidden w-full space-y-4">
+                    <div>
+                        <label for="overall-progress" class="text-sm font-semibold">Overall Progress (by size)</label>
+                        <progress id="overall-progress" class="w-full" max="100" value="0"></progress>
+                        <div class="flex justify-between text-sm text-gray-100">
+                            <span id="overall-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
+                                --</span>
+                            <span id="overall-progress-text" class="truncate text-right">0.00 MB / 0.00 MB</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="file-progress" class="text-sm font-semibold">Current File</label>
+                        <progress id="file-progress" class="w-full" max="100" value="0"></progress>
+                        <div class="flex justify-between text-sm text-gray-100">
+                            <span id="file-progress-name" class="truncate"></span>
+                            <span id="file-progress-size" class="flex-shrink-0 ml-2"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="download-log"
+                    class="h-40 overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-lg p-2 font-mono text-sm">
+                </div>
+
+                <button id="download-restart-btn" class="btn btn-secondary w-full hidden">Restart Wizard</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer h-16 flex-shrink-0">
+        <p>
+            Created by Brad Evans.
+            <a href="#" id="github-link" class="footer-link">GitHub</a>
+        </p>
+        <p>
+            Please be respectful of Myrient's bandwidth and service.
+            <a href="#" id="donate-link" class="footer-link">Donate to Myrient</a>
+        </p>
+    </footer>
+
+    <script src="renderer.js"></script>
+</body>
+
+</html>

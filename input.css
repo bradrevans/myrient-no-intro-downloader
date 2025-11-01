@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://rsms.me/inter/inter.css');
+
+html {
+    font-family: 'Inter', sans-serif;
+}
+
+@supports (font-variation-settings: normal) {
+    html {
+        font-family: 'Inter var', sans-serif;
+    }
+}
+
+body {
+    background-color: #171717;
+    color: #d4d4d4;
+}
+
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block;
+}
+
+.list-item {
+    @apply block w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer hover:bg-neutral-700 hover:border-orange-500 transition-all duration-200 shadow-md;
+}
+
+.btn {
+    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-primary {
+    @apply bg-orange-600 text-white hover:bg-orange-500;
+}
+
+.btn-secondary {
+    @apply bg-neutral-700 text-white hover:bg-neutral-600;
+}
+
+.btn-sm {
+    @apply px-2 py-1 text-sm;
+}
+
+.search-bar {
+    @apply w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500;
+}
+
+.search-container {
+    @apply relative;
+}
+
+.search-clear-btn {
+    @apply absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white font-bold cursor-pointer text-lg;
+    padding: 0.5rem;
+}
+
+.sticky-view-header {
+    @apply sticky z-10;
+
+    @apply pt-4 pb-4;
+
+    margin-left: -2rem;
+    margin-right: -2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+progress {
+    @apply w-full;
+
+}
+
+progress::-webkit-progress-bar {}
+
+progress::-webkit-progress-value {
+    @apply bg-green-500;
+}
+
+progress::-moz-progress-bar {}
+
+.list-group-item {
+    @apply p-2 bg-neutral-700 rounded-md cursor-grab active:cursor-grabbing;
+}
+
+.sortable-ghost {
+    @apply bg-orange-500 opacity-50;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+.footer {
+    @apply text-center text-xs text-gray-500 p-4 border-t border-neutral-700 bg-neutral-800;
+}
+
+.footer-link {
+    @apply text-orange-400 hover:text-orange-300 cursor-pointer;
+}
+
+
+input[type='checkbox'] {
+    @apply rounded border-neutral-600 bg-neutral-700 text-orange-600 focus:ring-orange-500 focus:ring-offset-neutral-800;
+}
+
+.loading-spinner-animation {
+    @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500;
+}
+
+.app-draggable-area {
+    -webkit-app-region: drag;
+
+}
+
+#header-back-btn {
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+}
+
+#breadcrumbs span {
+    -webkit-app-region: no-drag;
+    cursor: pointer;
+}
+
+.control-btn {
+    -webkit-app-region: no-drag;
+    @apply h-full w-12 text-xl text-white;
+    transition: background-color 0.1s;
+    line-height: 1;
+}
