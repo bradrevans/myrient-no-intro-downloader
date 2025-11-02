@@ -3,6 +3,8 @@
 
 A powerful, standalone desktop application designed to provide a secure and efficient interface for accessing, filtering, and downloading public domain game archives from the [Myrient](https://myrient.erista.me/) library.
 
+Download the latest release here:
+
 [![Latest Release](https://img.shields.io/github/v/release/bradrevans/myrient-downloader?style=flat-square&color=22c55e&label=latest)](https://github.com/bradrevans/myrient-downloader/releases)
 
 ***
