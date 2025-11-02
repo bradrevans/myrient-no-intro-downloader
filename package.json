@@ -1,0 +1,51 @@
+{
+  "name": "myrient-downloader",
+  "version": "2.0.0",
+  "description": "A desktop app to browse, filter, and download from Myrient.",
+  "main": "main.js",
+  "scripts": {
+    "start": "tailwindcss -i ./input.css -o ./style.css && electron .",
+    "build:all": "npm run build:css && electron-builder --publish never",
+    "build:win": "npm run build:css && electron-builder --win --publish never",
+    "build:mac": "npm run build:css && electron-builder --mac --publish never",
+    "build:linux": "npm run build:css && electron-builder --linux --publish never",
+    "build:css": "tailwindcss -i ./input.css -o ./style.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12",
+    "electron-log": "^5.1.5",
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^24.13.3",
+    "tailwindcss": "^3.4.3"
+  },
+  "build": {
+    "appId": "com.bradrevans.myrientdownloader",
+    "productName": "Myrient Downloader",
+    "files": [
+      "**/*",
+      "!node_modules/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}
