@@ -2,21 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://rsms.me/inter/inter.css');
-
-html {
-    font-family: 'Inter', sans-serif;
-}
-
-@supports (font-variation-settings: normal) {
-    html {
-        font-family: 'Inter var', sans-serif;
-    }
-}
-
 body {
-    background-color: #171717;
-    color: #d4d4d4;
+    background-color: theme('colors.primary');
+    color: theme('colors.secondary');
 }
 
 .view {
@@ -27,8 +15,12 @@ body {
     display: block;
 }
 
+.js-hidden {
+    display: none !important;
+}
+
 .list-item {
-    @apply block w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer hover:bg-neutral-700 hover:border-orange-500 transition-all duration-200 shadow-md;
+    @apply block w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer hover:bg-neutral-700 hover:border-accent-500 transition-all duration-200 shadow-md;
 }
 
 .btn {
@@ -36,7 +28,15 @@ body {
 }
 
 .btn-primary {
-    @apply bg-orange-600 text-white hover:bg-orange-500;
+    @apply bg-accent-600 text-white hover:bg-accent-500;
+}
+
+.btn-success {
+    @apply bg-success-600 text-white hover:bg-success-500;
+}
+
+.btn-danger {
+    @apply bg-danger-600 text-white hover:bg-danger-500;
 }
 
 .btn-secondary {
@@ -48,7 +48,7 @@ body {
 }
 
 .search-bar {
-    @apply w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500;
+    @apply w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-500;
 }
 
 .search-container {
@@ -56,21 +56,11 @@ body {
 }
 
 .search-clear-btn {
-    @apply absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white font-bold cursor-pointer text-lg;
-    padding: 0.5rem;
+    @apply absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white font-bold cursor-pointer text-lg p-2;
 }
 
 .sticky-view-header {
-    @apply sticky z-10;
-
-    @apply pt-4 pb-4;
-
-    background-color: #171717;
-    top: -32px;
-    margin-left: -2rem;
-    margin-right: -2rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    @apply sticky z-10 pt-6 pb-4 bg-primary -mx-8 px-8 top-0;
 }
 
 progress {
@@ -91,11 +81,24 @@ progress::-moz-progress-bar {}
 }
 
 .sortable-ghost {
-    @apply bg-orange-500 opacity-50;
+    @apply bg-accent-500 opacity-50;
 }
 
 ::-webkit-scrollbar {
     width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: theme('colors.neutral.800');
+}
+
+::-webkit-scrollbar-thumb {
+    background: theme('colors.neutral.700');
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.accent.500');
 }
 
 .footer {
@@ -103,16 +106,16 @@ progress::-moz-progress-bar {}
 }
 
 .footer-link {
-    @apply text-orange-400 hover:text-orange-300 cursor-pointer;
+    @apply text-accent-500 hover:text-accent-600 cursor-pointer;
 }
 
 
 input[type='checkbox'] {
-    @apply rounded border-neutral-600 bg-neutral-700 text-orange-600 focus:ring-orange-500 focus:ring-offset-neutral-800;
+    @apply rounded border-neutral-600 bg-neutral-700 text-accent-600 focus:ring-accent-500 focus:ring-offset-neutral-800;
 }
 
 .loading-spinner-animation {
-    @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500;
+    @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent-500;
 }
 
 .app-draggable-area {
@@ -132,7 +135,5 @@ input[type='checkbox'] {
 
 .control-btn {
     -webkit-app-region: no-drag;
-    @apply h-full w-12 text-xl text-white;
-    transition: background-color 0.1s;
-    line-height: 1;
+    @apply h-full w-12 text-xl text-white transition-colors duration-100 leading-none flex items-center justify-center;
 }

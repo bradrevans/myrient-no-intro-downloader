@@ -15,22 +15,38 @@
     <header
         class="p-4 bg-neutral-800 border-b border-neutral-700 h-16 flex items-center select-none app-draggable-area">
         <button id="header-back-btn"
-            class="invisible text-lg font-semibold text-white hover:text-orange-500 mr-4 transition-all duration-200 app-non-draggable-area">&larr;</button>
+            class="invisible text-lg font-semibold text-white hover:text-accent-500 mr-4 transition-all duration-200 app-non-draggable-area">
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
         <nav id="breadcrumbs" class="text-lg font-semibold text-white"></nav>
         <div id="window-controls" class="flex-shrink-0 flex-grow flex justify-end items-center">
             <button id="minimize-btn" class="control-btn hover:bg-neutral-700 app-non-draggable-area">
-                &minus;
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
             </button>
             <button id="maximize-restore-btn" class="control-btn hover:bg-neutral-700 app-non-draggable-area">
-                &#9723;
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="6" y="6" width="12" height="12"></rect>
+                </svg>
             </button>
-            <button id="close-btn" class="control-btn hover:bg-red-600 app-non-draggable-area">
-                &times;
+            <button id="close-btn" class="control-btn hover:bg-danger-500 app-non-draggable-area">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
             </button>
         </div>
     </header>
 
-    <main class="p-8 h-[calc(100vh-8rem)] overflow-y-auto">
+    <main class="pt-0 p-8 h-[calc(100vh-8rem)] overflow-y-auto">
         <div id="loading-spinner"
             class="hidden absolute inset-0 bg-neutral-900 bg-opacity-75 flex items-center justify-center z-50">
             <div class="loading-spinner-animation"></div>
@@ -171,10 +187,9 @@
                     <span id="download-dir-text" class="text-gray-500 ml-4">No directory selected.</span>
                 </div>
 
-                <button id="download-scan-btn" class="btn btn-primary w-full" disabled>Scan & Download</button>
+                <button id="download-scan-btn" class="btn btn-success w-full" disabled>Scan & Download</button>
 
-                <button id="download-cancel-btn"
-                    class="btn btn-secondary bg-red-600 hover:bg-red-500 w-full hidden">Cancel Download</button>
+                <button id="download-cancel-btn" class="btn btn-danger w-full hidden">Cancel Download</button>
 
                 <div id="scan-progress-bar" class="hidden w-full">
                     <label for="scan-progress" class="text-sm font-semibold">Scanning file sizes...</label>
@@ -207,7 +222,7 @@
                     class="h-40 overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-lg p-2 font-mono text-sm">
                 </div>
 
-                <button id="download-restart-btn" class="btn btn-secondary w-full hidden">Restart Wizard</button>
+                <button id="download-restart-btn" class="btn btn-primary w-full hidden">Restart Wizard</button>
             </div>
         </div>
     </main>

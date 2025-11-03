@@ -185,11 +185,11 @@ export function setupWizard() {
   });
 
   document.getElementById('filter-lang-mode').addEventListener('change', (e) => {
-    document.getElementById('lang-tag-ui').style.display = e.target.value === 'all' ? 'none' : 'block';
+    document.getElementById('lang-tag-ui').classList.toggle('js-hidden', e.target.value === 'all');
     updatePriorityBuilderAvailableTags();
   });
   document.getElementById('filter-dedupe-mode').addEventListener('change', (e) => {
-    document.getElementById('priority-builder-ui').style.display = e.target.value === 'priority' ? 'block' : 'none';
+    document.getElementById('priority-builder-ui').classList.toggle('js-hidden', e.target.value !== 'priority');
   });
 
   document.getElementById('filter-lang-mode').dispatchEvent(new Event('change'));
