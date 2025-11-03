@@ -2,7 +2,7 @@
   "name": "myrient-downloader",
   "version": "2.0.0",
   "description": "A desktop app to browse, filter, and download from Myrient.",
-  "main": "main.js",
+  "main": "src/main/main.js",
   "scripts": {
     "start": "tailwindcss -i ./input.css -o ./style.css && electron .",
     "build:all": "npm run build:css && electron-builder --publish never",
