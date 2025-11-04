@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* General */
+
 body {
     background-color: theme('colors.primary');
     color: theme('colors.secondary');
@@ -19,9 +21,13 @@ body {
     display: none !important;
 }
 
+/* Lists */
+
 .list-item {
     @apply block w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer hover:bg-neutral-700 hover:border-accent-500 transition-all duration-200 shadow-md;
 }
+
+/* Buttons */
 
 .btn {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
@@ -47,6 +53,8 @@ body {
     @apply px-2 py-1 text-sm;
 }
 
+/* Forms */
+
 .search-bar {
     @apply w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-500;
 }
@@ -58,6 +66,8 @@ body {
 .search-clear-btn {
     @apply absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white font-bold cursor-pointer text-lg p-2;
 }
+
+/* Components */
 
 .sticky-view-header {
     @apply sticky z-10 pt-6 pb-4 bg-primary -mx-8 px-8 top-0;
@@ -84,6 +94,8 @@ progress::-moz-progress-bar {}
     @apply bg-accent-500 opacity-50;
 }
 
+/* Scrollbar */
+
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -101,6 +113,8 @@ progress::-moz-progress-bar {}
     background: theme('colors.accent.500');
 }
 
+/* Footer */
+
 .footer {
     @apply text-center text-xs text-gray-500 p-4 border-t border-neutral-700 bg-neutral-800;
 }
@@ -114,9 +128,13 @@ input[type='checkbox'] {
     @apply rounded border-neutral-600 bg-neutral-700 text-accent-600 focus:ring-accent-500 focus:ring-offset-neutral-800;
 }
 
+/* Utilities */
+
 .loading-spinner-animation {
     @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent-500;
 }
+
+/* Window Controls */
 
 .app-draggable-area {
     -webkit-app-region: drag;
