@@ -14,7 +14,7 @@ class UIManager {
     async loadViews() {
         const viewFiles = ['archives', 'directories', 'wizard', 'results'];
         for (const view of viewFiles) {
-            const response = await fetch(`src/renderer/views/${view}.html`);
+            const response = await fetch(`./views/${view}.html`);
             this.views[view] = await response.text();
         }
     }
