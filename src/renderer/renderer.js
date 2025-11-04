@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function handleDirectorySelect(item) {
     stateService.set('directory', item);
     stateService.resetWizardState();
-    uiManager.showLoading('Scanning files... (This may take a while)');
+    uiManager.showLoading('Scanning files...');
     try {
       await apiService.scrapeAndParseFiles();
       uiManager.showView('wizard');
@@ -65,17 +65,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.target.dataset.view) {
       const view = e.target.dataset.view;
       const step = parseInt(e.target.dataset.step, 10);
-              if (step === 0) {
-                stateService.set('archive', { name: '', href: '' });
-                stateService.set('directory', { name: '', href: '' });
-                stateService.resetWizardState();
-                loadArchives();
-              }
-              if (step === 1) {
-                stateService.set('directory', { name: '', href: '' });
-                stateService.resetWizardState();
-                loadDirectories();
-              }
+      if (step === 0) {
+        stateService.set('archive', { name: '', href: '' });
+        stateService.set('directory', { name: '', href: '' });
+        stateService.resetWizardState();
+        loadArchives();
+      }
+      if (step === 1) {
+        stateService.set('directory', { name: '', href: '' });
+        stateService.resetWizardState();
+        loadDirectories();
+      }
     }
   });
 
