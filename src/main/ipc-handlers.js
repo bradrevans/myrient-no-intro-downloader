@@ -1,19 +1,17 @@
 const { ipcMain, dialog, shell } = require('electron');
-const path = require('path');
 const fs = require('fs');
-const https = require('https');
-const { URL } = require('url');
-const axios = require('axios');
-const log = require('electron-log');
-const myrient = require('./services/myrient.js');
-const filterService = require('./services/filter.js');
-const fileParser = require('./services/file-parser.js');
-const downloadManager = require('./services/download-manager.js');
+const MyrientService = require('./services/MyrientService.js');
+const FilterService = require('./services/FilterService.js');
+const DownloadManagerService = require('./services/DownloadManagerService.js');
 
 function setupIpcHandlers(win) {
+  const myrientService = new MyrientService();
+  const filterService = new FilterService();
+  const downloadManager = new DownloadManagerService();
+
   ipcMain.handle('get-main-archives', async () => {
     try {
-      const data = await myrient.getMainArchives("https://myrient.erista.me/files/");
+      const data = await myrientService.getMainArchives("https://myrient.erista.me/files/");
       return { data };
     } catch (e) {
       return { error: e.message };
@@ -22,7 +20,7 @@ function setupIpcHandlers(win) {
 
   ipcMain.handle('get-directory-list', async (event, archiveUrl) => {
     try {
-      const data = await myrient.getDirectoryList(archiveUrl);
+      const data = await myrientService.getDirectoryList(archiveUrl);
       return data;
     } catch (e) {
       return { error: e.message };
@@ -31,7 +29,7 @@ function setupIpcHandlers(win) {
 
   ipcMain.handle('scrape-and-parse-files', async (event, pageUrl) => {
     try {
-      const data = await myrient.scrapeAndParseFiles(pageUrl);
+      const data = await myrientService.scrapeAndParseFiles(pageUrl);
       return data;
     } catch (e) {
       return { error: e.message };
@@ -56,7 +54,6 @@ function setupIpcHandlers(win) {
   });
 
   ipcMain.on('cancel-download', () => {
-    log.info('Received cancel signal from renderer.');
     downloadManager.cancel();
   });
 
@@ -64,12 +61,10 @@ function setupIpcHandlers(win) {
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        log.info(`Deleted partial file: ${filePath}`);
         return { success: true };
       }
       return { success: false, error: 'File not found.' };
     } catch (e) {
-      log.error(`Failed to delete partial file ${filePath}: ${e.message}`);
       return { success: false, error: e.message };
     }
   });
@@ -78,7 +73,6 @@ function setupIpcHandlers(win) {
     if (url.startsWith('https://github.com') || url.startsWith('https://myrient.erista.me')) {
       shell.openExternal(url);
     } else {
-      log.warn(`Blocked attempt to open invalid external URL: ${url}`);
     }
   });
 
@@ -123,14 +117,12 @@ function setupIpcHandlers(win) {
 
     } catch (e) {
       if (e.message.startsWith("CANCELLED_")) {
-        log.warn("Download was cancelled by user.");
         summaryMessage = "Download cancelled by user.";
         wasCancelled = true;
         if (e.message === "CANCELLED_MID_FILE") {
           partialFile = e.partialFile || null;
         }
       } else {
-        log.error(`[start-download] Unhandled Error: ${e.message}`);
         summaryMessage = `Error: ${e.message}`;
         win.webContents.send('download-log', summaryMessage);
       }
@@ -147,7 +139,15 @@ function setupIpcHandlers(win) {
   });
 
   ipcMain.on('log-message', (event, level, message) => {
-    log[level](message);
+  });
+
+  ipcMain.handle('read-file', async (event, filePath) => {
+    try {
+      const fileContent = await fs.promises.readFile(filePath, 'utf8');
+      return { data: fileContent };
+    } catch (e) {
+      return { error: e.message };
+    }
   });
 }
 

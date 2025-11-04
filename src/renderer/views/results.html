@@ -1,0 +1,59 @@
+<div id="view-results" class="view">
+    <div class="sticky-view-header">
+        <h2 class="text-2xl font-bold mb-4">Step 4: Final Result</h2>
+        <p class="text-gray-400 mb-4">Found <span id="results-file-count" class="font-bold text-white">0</span>
+            matching files out of <span id="results-total-count" class="font-bold text-white">0</span> total.
+        </p>
+        <div class="search-container">
+            <input type="text" id="search-results" class="search-bar" placeholder="Search results...">
+            <span id="search-results-clear" class="search-clear-btn">&times;</span>
+        </div>
+    </div>
+
+    <div id="results-list"
+        class="h-64 min-h-64 resize-y overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mb-4">
+    </div>
+    <div id="download-ui" class="space-y-4">
+        <div>
+            <button id="download-dir-btn" class="btn btn-secondary">Set Download Directory</button>
+            <span id="download-dir-text" class="text-gray-500 ml-4">No directory selected.</span>
+        </div>
+
+        <button id="download-scan-btn" class="btn btn-success w-full" disabled>Scan & Download</button>
+
+        <button id="download-cancel-btn" class="btn btn-danger w-full hidden">Cancel Download</button>
+
+        <div id="scan-progress-bar" class="hidden w-full">
+            <label for="scan-progress" class="text-sm font-semibold">Scanning file sizes...</label>
+            <progress id="scan-progress" class="w-full" max="100" value="0"></progress>
+            <div class="text-right"><span id="scan-progress-text" class="text-sm text-gray-100">0 / 0
+                    files</span></div>
+        </div>
+
+        <div id="download-progress-bars" class="hidden w-full space-y-4">
+            <div>
+                <label for="overall-progress" class="text-sm font-semibold">Overall Progress (by size)</label>
+                <progress id="overall-progress" class="w-full" max="100" value="0"></progress>
+                <div class="flex justify-between text-sm text-gray-100">
+                    <span id="overall-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
+                        --</span>
+                    <span id="overall-progress-text" class="truncate text-right">0.00 MB / 0.00 MB</span>
+                </div>
+            </div>
+            <div>
+                <label for="file-progress" class="text-sm font-semibold">Current File</label>
+                <progress id="file-progress" class="w-full" max="100" value="0"></progress>
+                <div class="flex justify-between text-sm text-gray-100">
+                    <span id="file-progress-name" class="truncate"></span>
+                    <span id="file-progress-size" class="flex-shrink-0 ml-2"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="download-log"
+            class="h-40 overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-lg p-2 font-mono text-sm">
+        </div>
+
+        <button id="download-restart-btn" class="btn btn-primary w-full hidden">Restart Wizard</button>
+    </div>
+</div>

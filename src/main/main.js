@@ -1,10 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const log = require('electron-log');
 const { setupIpcHandlers } = require('./ipc-handlers.js');
-
-log.transports.file.resolvePathFn = () => path.join(app.getPath('userData'), 'logs/main.log');
-log.info('App starting...');
 
 let win;
 

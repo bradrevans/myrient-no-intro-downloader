@@ -1,0 +1,78 @@
+import stateService from './StateService.js';
+
+class ApiService {
+    async loadArchives() {
+        const result = await window.electronAPI.getMainArchives();
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        return result.data;
+    }
+
+    async loadDirectories() {
+        const archiveUrl = new URL(stateService.get('archive').href, stateService.get('baseUrl')).href;
+        const result = await window.electronAPI.getDirectoryList(archiveUrl);
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        return result.data;
+    }
+
+    async scrapeAndParseFiles() {
+        const pageUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
+        const result = await window.electronAPI.scrapeAndParseFiles(pageUrl);
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        stateService.set('allFiles', result.files);
+        stateService.set('allTags', result.tags.filter(tag => !/^(v|Rev)\s*[\d\.]+$/i.test(tag)));
+    }
+
+    async runFilter(filters) {
+        const result = await window.electronAPI.filterFiles(stateService.get('allFiles'), stateService.get('allTags'), filters);
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        stateService.set('finalFileList', result.data);
+    }
+
+    async getDownloadDirectory() {
+        const dir = await window.electronAPI.getDownloadDirectory();
+        if (dir) {
+            stateService.set('downloadDirectory', dir);
+        }
+        return dir;
+    }
+
+    startDownload() {
+        const baseUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
+        window.electronAPI.startDownload(baseUrl, stateService.get('finalFileList'), stateService.get('downloadDirectory'));
+    }
+
+    cancelDownload() {
+        window.electronAPI.cancelDownload();
+    }
+
+    deleteFile(filePath) {
+        return window.electronAPI.deleteFile(filePath);
+    }
+
+    openExternal(url) {
+        window.electronAPI.openExternal(url);
+    }
+
+    minimizeWindow() {
+        window.electronAPI.windowMinimize();
+    }
+
+    maximizeRestoreWindow() {
+        window.electronAPI.windowMaximizeRestore();
+    }
+
+    closeWindow() {
+        window.electronAPI.windowClose();
+    }
+}
+
+const apiService = new ApiService();
+export default apiService;

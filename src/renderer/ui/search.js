@@ -11,24 +11,13 @@ export function setupSearch(inputId, listContainerId, itemSelector) {
   });
 }
 
-export function clearSearchAndTrigger(inputId) {
-  const input = document.getElementById(inputId);
-  if (input && input.value) {
-    input.value = '';
-    input.dispatchEvent(new Event('input'));
-
-    const clearBtn = document.getElementById(inputId + '-clear');
-    if (clearBtn) {
-      clearBtn.classList.add('js-hidden');
-    }
-  }
-}
-
 export function setupSearchClearButton(inputId, clearId) {
   const input = document.getElementById(inputId);
   const clearBtn = document.getElementById(clearId);
 
   if (input && clearBtn) {
+    clearBtn.classList.toggle('js-hidden', input.value.length === 0);
+
     input.addEventListener('input', () => {
       clearBtn.classList.toggle('js-hidden', input.value.length === 0);
     });

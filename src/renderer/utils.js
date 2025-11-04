@@ -1,8 +1,3 @@
-export function log(level, message) {
-  console[level](message);
-  window.electronAPI.log(level, `[Renderer] ${message}`);
-}
-
 export function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;

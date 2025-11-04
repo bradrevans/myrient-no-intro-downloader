@@ -25,4 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDownloadFileProgress: (callback) => ipcRenderer.on('download-file-progress', (event, data) => callback(data)),
   onDownloadLog: (callback) => ipcRenderer.on('download-log', (event, message) => callback(message)),
   onDownloadComplete: (callback) => ipcRenderer.on('download-complete', (event, summary) => callback(summary)),
+
+
+  readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
 });

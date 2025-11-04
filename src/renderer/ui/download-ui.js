@@ -1,63 +1,62 @@
-import { state, downloadUi } from '../state.js';
-import { log, formatBytes, formatTime } from '../utils.js';
-import * as api from '../api.js';
+import stateService from '../StateService.js';
+import { formatBytes, formatTime } from '../utils.js';
+import apiService from '../ApiService.js';
 
 export function populateResults() {
-  document.getElementById('results-file-count').textContent = state.finalFileList.length;
-  document.getElementById('results-total-count').textContent = state.allFiles.length;
+  document.getElementById('results-file-count').textContent = stateService.get('finalFileList').length;
+  document.getElementById('results-total-count').textContent = stateService.get('allFiles').length;
 
   const listEl = document.getElementById('results-list');
   listEl.innerHTML = '';
 
-  state.finalFileList.forEach(file => {
+  stateService.get('finalFileList').forEach(file => {
     const el = document.createElement('div');
     el.className = 'p-1 text-sm truncate';
     el.textContent = file.name_raw;
     listEl.appendChild(el);
   });
 
-  downloadUi.dirText.textContent = 'No directory selected.';
-  downloadUi.scanBtn.disabled = true;
-  state.downloadDirectory = null;
-  downloadUi.scanProgressBar.classList.add('hidden');
-  downloadUi.sizeProgressBars.classList.add('hidden');
-  downloadUi.cancelBtn.classList.add('hidden');
-  downloadUi.restartBtn.classList.add('hidden');
-  downloadUi.log.innerHTML = '';
+  document.getElementById('download-dir-text').textContent = 'No directory selected.';
+  document.getElementById('download-scan-btn').disabled = true;
+  stateService.set('downloadDirectory', null);
+  document.getElementById('scan-progress-bar').classList.add('hidden');
+  document.getElementById('download-progress-bars').classList.add('hidden');
+  document.getElementById('download-cancel-btn').classList.add('hidden');
+  document.getElementById('download-restart-btn').classList.add('hidden');
+  document.getElementById('download-log').innerHTML = '';
 }
 
 export function startDownload() {
-  if (!state.downloadDirectory) {
+  if (!stateService.get('downloadDirectory')) {
     alert("Please select a download directory first.");
     return;
   }
 
-  log('info', `Starting download (mode: scan)...`);
-  state.isDownloading = true;
-  state.downloadStartTime = Date.now();
-  state.totalBytesDownloadedThisSession = 0;
+  stateService.set('isDownloading', true);
+  stateService.set('downloadStartTime', Date.now());
+  stateService.set('totalBytesDownloadedThisSession', 0);
 
-  downloadUi.log.innerHTML = '';
+  document.getElementById('download-log').innerHTML = '';
   logDownload('Starting download...');
-  downloadUi.scanBtn.disabled = true;
-  downloadUi.dirBtn.disabled = true;
-  downloadUi.cancelBtn.classList.remove('hidden');
-  downloadUi.restartBtn.classList.add('hidden');
+  document.getElementById('download-scan-btn').disabled = true;
+  document.getElementById('download-dir-btn').disabled = true;
+  document.getElementById('download-cancel-btn').classList.remove('hidden');
+  document.getElementById('download-restart-btn').classList.add('hidden');
 
-  downloadUi.scanProgress.value = 0;
-  downloadUi.overallProgress.value = 0;
-  downloadUi.fileProgress.value = 0;
-  downloadUi.fileProgressName.textContent = "";
-  downloadUi.fileProgressSize.textContent = "";
-  downloadUi.overallProgressTime.textContent = "Estimated Time Remaining: --";
-  downloadUi.overallProgressText.textContent = "0.00 MB / 0.00 MB";
+  document.getElementById('scan-progress').value = 0;
+  document.getElementById('overall-progress').value = 0;
+  document.getElementById('file-progress').value = 0;
+  document.getElementById('file-progress-name').textContent = "";
+  document.getElementById('file-progress-size').textContent = "";
+  document.getElementById('overall-progress-time').textContent = "Estimated Time Remaining: --";
+  document.getElementById('overall-progress-text').textContent = "0.00 MB / 0.00 MB";
 
-  downloadUi.scanProgressBar.classList.remove('hidden');
-  downloadUi.sizeProgressBars.classList.remove('hidden');
-  downloadUi.fileProgress.classList.remove('hidden');
-  downloadUi.fileProgressSize.classList.remove('hidden');
+  document.getElementById('scan-progress-bar').classList.remove('hidden');
+  document.getElementById('download-progress-bars').classList.remove('hidden');
+  document.getElementById('file-progress').classList.remove('hidden');
+  document.getElementById('file-progress-size').classList.remove('hidden');
 
-  api.startDownload();
+  apiService.startDownload();
 }
 
 export function logDownload(message) {
@@ -68,46 +67,46 @@ export function logDownload(message) {
 
 export function setupDownloadUiListeners() {
   window.electronAPI.onDownloadScanProgress(data => {
-    downloadUi.scanProgress.value = data.current;
-    downloadUi.scanProgress.max = data.total;
+    document.getElementById('scan-progress').value = data.current;
+    document.getElementById('scan-progress').max = data.total;
     const percent = data.total > 0 ? ((data.current / data.total) * 100).toFixed(0) : 0;
-    downloadUi.scanProgressText.textContent = `${percent}% (${data.current} / ${data.total} files)`;
+    document.getElementById('scan-progress-text').textContent = `${percent}% (${data.current} / ${data.total} files)`;
   });
 
   window.electronAPI.onDownloadOverallProgress(data => {
-    downloadUi.overallProgress.value = data.current;
-    downloadUi.overallProgress.max = data.total;
+    document.getElementById('overall-progress').value = data.current;
+    document.getElementById('overall-progress').max = data.total;
     const percent = data.total > 0 ? ((data.current / data.total) * 100).toFixed(1) : 0;
-    downloadUi.overallProgressText.textContent =
+    document.getElementById('overall-progress-text').textContent =
       `${formatBytes(data.current)} / ${formatBytes(data.total)} (${percent}%)`;
 
-    state.totalBytesDownloadedThisSession = data.current - data.skippedSize;
+    stateService.set('totalBytesDownloadedThisSession', data.current - data.skippedSize);
 
-    const timeElapsed = (Date.now() - state.downloadStartTime) / 1000;
+    const timeElapsed = (Date.now() - stateService.get('downloadStartTime')) / 1000;
 
-    if (timeElapsed > 1 && state.totalBytesDownloadedThisSession > 0) {
-      const avgSpeed = state.totalBytesDownloadedThisSession / timeElapsed;
+    if (timeElapsed > 1 && stateService.get('totalBytesDownloadedThisSession') > 0) {
+      const avgSpeed = stateService.get('totalBytesDownloadedThisSession') / timeElapsed;
       const sizeRemaining = data.total - data.current;
 
       if (avgSpeed > 0 && sizeRemaining > 0) {
         const secondsRemaining = sizeRemaining / avgSpeed;
-        downloadUi.overallProgressTime.textContent = `Time: ${formatTime(secondsRemaining)}`;
+        document.getElementById('overall-progress-time').textContent = `Time: ${formatTime(secondsRemaining)}`;
       } else {
-        downloadUi.overallProgressTime.textContent = "Estimated Time Remaining: --";
+        document.getElementById('overall-progress-time').textContent = "Estimated Time Remaining: --";
       }
     }
   });
 
   window.electronAPI.onDownloadFileProgress(data => {
-    if (downloadUi.fileProgressName.textContent !== data.name) {
-      downloadUi.fileProgress.value = 0;
-      downloadUi.fileProgressName.textContent = data.name;
+    if (document.getElementById('file-progress-name').textContent !== data.name) {
+      document.getElementById('file-progress').value = 0;
+      document.getElementById('file-progress-name').textContent = data.name;
     }
 
-    downloadUi.fileProgress.value = data.current;
-    downloadUi.fileProgress.max = data.total;
+    document.getElementById('file-progress').value = data.current;
+    document.getElementById('file-progress').max = data.total;
     const percent = data.total > 0 ? ((data.current / data.total) * 100).toFixed(0) : 0;
-    downloadUi.fileProgressSize.textContent =
+    document.getElementById('file-progress-size').textContent =
       `${formatBytes(data.current)} / ${formatBytes(data.total)} (${percent}%)`;
   });
 

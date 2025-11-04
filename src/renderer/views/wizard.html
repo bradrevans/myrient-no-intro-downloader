@@ -1,0 +1,91 @@
+<div id="view-wizard" class="view">
+    <div class="sticky-view-header">
+        <h2 class="text-2xl font-bold mb-4">Step 3: Filtering Wizard</h2>
+        <p class="text-gray-400">Loaded <span id="wizard-file-count" class="font-bold">0</span> files and <span
+                id="wizard-tag-count" class="font-bold">0</span> unique tags. Configure your filters.</p>
+    </div>
+
+    <div class="space-y-6">
+        <div>
+            <h3 class="text-lg font-semibold mb-2">3.1: Region/Language Filter</h3>
+            <select id="filter-lang-mode" class="search-bar">
+                <option value="include">Keep files that match an INCLUDE list (Recommended)</option>
+                <option value="exclude">Remove files that match an EXCLUDE list</option>
+                <option value="all">Keep ALL files</option>
+            </select>
+            <div id="lang-tag-ui" class="mt-2">
+                <div class="search-container">
+                    <input type="text" id="search-tags" class="search-bar" placeholder="Search tags...">
+                    <span id="search-tags-clear" class="search-clear-btn">&times;</span>
+                </div>
+                <div id="wizard-tags-list"
+                    class="h-64 min-h-64 resize-y overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2">
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button id="select-all-tags-btn" class="btn btn-secondary">Select All (Displayed)</button>
+                    <button id="deselect-all-tags-btn" class="btn btn-secondary">Deselect All
+                        (Displayed)</button>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-2">3.2: Revision Filtering</h3>
+            <select id="filter-revision-mode" class="search-bar">
+                <option value="highest">Keep only the HIGHEST revision of each game (Recommended)</option>
+                <option value="all">Keep ALL files (Keep all revisions)</option>
+            </select>
+        </div>
+
+        <div>
+            <h3 class="text-lg font-semibold mb-2">3.3: De-duplication</h3>
+            <select id="filter-dedupe-mode" class="search-bar">
+                <option value="priority">Keep ONE (Prioritized) (Recommended)</option>
+                <option value="simple">Keep ONE (Simple)</option>
+                <option value="all">Keep ALL files</option>
+            </select>
+
+            <div id="priority-builder-ui" class="mt-2">
+
+                <div class="flex gap-4 mt-2 h-[500px]">
+
+                    <div class="w-1/2 h-full flex flex-col">
+                        <h5 class="text-center font-bold mb-1">Priority (Drag to re-order)</h5>
+                        <div id="priority-list"
+                            class="flex-grow overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-lg p-2 space-y-2">
+                        </div>
+                    </div>
+
+                    <div class="w-1/2 h-full flex flex-col">
+                        <h5 class="text-center font-bold">Available (Drag to add)</h5>
+                        <div class="search-container my-1">
+                            <input type="text" id="search-priority-tags" class="search-bar"
+                                placeholder="Search available tags...">
+                            <span id="search-priority-tags-clear" class="search-clear-btn">&times;</span>
+                        </div>
+
+                        <div class="flex flex-col gap-2 my-1">
+                            <button id="add-all-shortest" class="btn btn-secondary btn-sm w-full">Add All
+                                (Displayed: Prioritise Shortest)</button>
+                            <button id="add-all-longest" class="btn btn-secondary btn-sm w-full">Add All
+                                (Displayed: Prioritise Longest)</button>
+                        </div>
+
+                        <div id="priority-available"
+                            class="flex-grow overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-lg p-2 space-y-2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    <input type="checkbox" id="filter-keep-fallbacks" class="h-4 w-4" checked>
+                    <label for="filter-keep-fallbacks" class="ml-2">Fallback: Keep unprioritized tags</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end items-center">
+            <button id="wizard-run-btn" class="btn btn-primary">Apply Filters & Continue</button>
+        </div>
+    </div>
+</div>
