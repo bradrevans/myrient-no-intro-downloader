@@ -106,6 +106,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     apiService.closeWindow();
   });
 
+  const settingsPanel = document.getElementById('settings-panel');
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const closeSettingsBtn = document.getElementById('close-settings-btn');
+
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    settingsPanel.classList.remove('translate-x-full');
+    settingsOverlay.classList.remove('hidden');
+  });
+
+  closeSettingsBtn.addEventListener('click', () => {
+    settingsPanel.classList.add('translate-x-full');
+    settingsOverlay.classList.add('hidden');
+  });
+
+  settingsOverlay.addEventListener('click', () => {
+    settingsPanel.classList.add('translate-x-full');
+    settingsOverlay.classList.add('hidden');
+  });
+
+  async function updateZoomDisplay() {
+    const zoomFactor = await apiService.getZoomFactor();
+    const zoomPercentage = Math.round(zoomFactor * 100);
+    document.getElementById('zoom-level-display').value = zoomPercentage;
+  }
+
+
+
+
+
+  document.getElementById('zoom-in-btn').addEventListener('click', async () => {
+    let zoomFactor = await apiService.getZoomFactor();
+    let newZoomPercentage = Math.round(zoomFactor * 100) + 10;
+    newZoomPercentage = Math.max(10, Math.min(400, newZoomPercentage));
+    apiService.setZoomFactor(newZoomPercentage / 100);
+    setTimeout(updateZoomDisplay, 100);
+  });
+
+  document.getElementById('zoom-out-btn').addEventListener('click', async () => {
+    let zoomFactor = await apiService.getZoomFactor();
+    let newZoomPercentage = Math.round(zoomFactor * 100) - 10;
+    newZoomPercentage = Math.max(10, Math.min(400, newZoomPercentage));
+    apiService.setZoomFactor(newZoomPercentage / 100);
+    setTimeout(updateZoomDisplay, 100);
+  });
+
+  document.getElementById('zoom-level-display').addEventListener('change', (e) => {
+    let newZoomPercentage = parseInt(e.target.value, 10);
+    if (isNaN(newZoomPercentage)) newZoomPercentage = 100; // Default to 100 if invalid
+    newZoomPercentage = Math.max(10, Math.min(400, newZoomPercentage)); // Clamp between 10% and 400%
+    const newZoomFactor = newZoomPercentage / 100;
+    apiService.setZoomFactor(newZoomFactor);
+    updateZoomDisplay();
+  });
+
+  document.getElementById('zoom-reset-btn').addEventListener('click', () => {
+    apiService.zoomReset();
+    setTimeout(updateZoomDisplay, 100);
+  });
+
   document.getElementById('github-link').addEventListener('click', () => {
     apiService.openExternal('https://github.com/bradrevans/myrient-downloader');
   });
@@ -117,6 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadArchives();
   uiManager.updateBreadcrumbs();
   setupDownloadUiListeners();
+  updateZoomDisplay();
 });
 
 window.electronAPI.onDownloadComplete(async (summary) => {

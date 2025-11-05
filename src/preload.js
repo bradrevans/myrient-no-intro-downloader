@@ -18,6 +18,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   windowMaximizeRestore: () => ipcRenderer.send('window-maximize-restore'),
   windowClose: () => ipcRenderer.send('window-close'),
 
+  zoomIn: () => ipcRenderer.send('zoom-in'),
+  zoomOut: () => ipcRenderer.send('zoom-out'),
+  zoomReset: () => ipcRenderer.send('zoom-reset'),
+
+  getZoomFactor: () => ipcRenderer.invoke('get-zoom-factor'),
+  setZoomFactor: (factor) => ipcRenderer.send('set-zoom-factor', factor),
+
   log: (level, message) => ipcRenderer.send('log-message', level, message),
 
   onDownloadScanProgress: (callback) => ipcRenderer.on('download-scan-progress', (event, data) => callback(data)),

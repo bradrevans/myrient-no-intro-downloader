@@ -86,6 +86,32 @@ function setupIpcHandlers(win) {
   });
   ipcMain.on('window-close', () => win.close());
 
+  ipcMain.on('zoom-in', () => {
+    const currentZoom = win.webContents.getZoomFactor();
+    win.webContents.setZoomFactor(currentZoom + 0.1);
+  });
+
+  ipcMain.on('zoom-out', () => {
+    const currentZoom = win.webContents.getZoomFactor();
+    win.webContents.setZoomFactor(currentZoom - 0.1);
+  });
+
+  ipcMain.on('zoom-reset', () => {
+    win.webContents.setZoomFactor(1);
+  });
+
+  ipcMain.handle('get-zoom-factor', () => {
+    return win.webContents.getZoomFactor();
+  });
+
+  ipcMain.on('set-zoom-factor', (event, factor) => {
+    win.webContents.setZoomFactor(factor);
+  });
+
+  ipcMain.on('set-zoom-factor', (event, factor) => {
+    win.webContents.setZoomFactor(factor);
+  });
+
   ipcMain.handle('start-download', async (event, baseUrl, files, targetDir) => {
     downloadManager.reset();
 

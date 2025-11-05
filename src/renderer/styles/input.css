@@ -114,6 +114,17 @@ input[type='checkbox'] {
     @apply rounded border-neutral-600 bg-neutral-700 text-accent-600 focus:ring-accent-500 focus:ring-offset-neutral-800;
 }
 
+/* Hide spinner buttons for number input */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
 .loading-spinner-animation {
     @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent-500;
 }

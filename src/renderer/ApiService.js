@@ -72,6 +72,19 @@ class ApiService {
     closeWindow() {
         window.electronAPI.windowClose();
     }
+
+
+    zoomReset() {
+        window.electronAPI.zoomReset();
+    }
+
+    async getZoomFactor() {
+        return await window.electronAPI.getZoomFactor();
+    }
+
+    setZoomFactor(factor) {
+        window.electronAPI.setZoomFactor(factor);
+    }
 }
 
 const apiService = new ApiService();
