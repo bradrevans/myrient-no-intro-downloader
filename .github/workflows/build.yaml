@@ -2,22 +2,28 @@ name: Build and push artifact
 on: push
 jobs:
 
-  # Builds and pushes artifact for Linux systems
+  # Builds and pushes artifact for all systems
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubunt-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     env:
       RELEASE_DIR: release
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
-      - name:  Install npm
-        run: sudo apt-get update; sudo apt-get install npm
+      - uses: actions/setup-node@v6
       - name: Build executable
         run: |
           # Generate executable
           npm install
-          npm run build:linux
+          npm run build:all
           # Find executable. Keep it and its name for artifact
-          exec_name=$(find "${{ env.RELEASE_DIR }}" -type f -name '*.AppImage' -printf '%f\n')
+          exec_name=$(find "${{ env.RELEASE_DIR }}" -maxdepth 1 -type f \( -name '*.AppImage' -o -name '*.exe' -o -name '*.dmg' \) -exec basename {} \;)
           echo "ARTIFACT_NAME=$exec_name" >> "$GITHUB_ENV"
           echo "FILENAME=${{ env.RELEASE_DIR }}/$exec_name" >> "$GITHUB_ENV"
       - name: Upload artifact
