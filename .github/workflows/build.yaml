@@ -1,0 +1,37 @@
+name: Build and push artifact
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+
+  # Builds and pushes artifact for all systems
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubunt-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      RELEASE_DIR: release
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+      - name: Build executable
+        run: |
+          # Generate executable
+          npm install
+          npm run build:all
+          # Find executable. Keep it and its name for artifact
+          exec_name=$(find "${{ env.RELEASE_DIR }}" -maxdepth 1 -type f \( -name '*.AppImage' -o -name '*.exe' -o -name '*.dmg' \) -exec basename {} \;)
+          echo "ARTIFACT_NAME=$exec_name" >> "$GITHUB_ENV"
+          echo "FILENAME=${{ env.RELEASE_DIR }}/$exec_name" >> "$GITHUB_ENV"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.FILENAME }}
+          compression-level: 9
