@@ -1,5 +1,8 @@
 name: Build and push artifact
-on: push
+on:
+  push:
+    tags:
+      - '*'
 jobs:
 
   # Builds and pushes artifact for all systems
