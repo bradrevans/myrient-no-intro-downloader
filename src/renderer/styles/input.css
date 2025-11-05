@@ -126,6 +126,7 @@ input[type='checkbox'] {
 #header-back-btn {
     -webkit-app-region: no-drag;
     cursor: pointer;
+    transition: color 0.2s ease-in-out;
 }
 
 #breadcrumbs span {
