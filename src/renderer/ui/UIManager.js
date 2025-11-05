@@ -61,12 +61,19 @@ class UIManager {
     }
 
     updateBreadcrumbs() {
-        let html = `<span class="cursor-pointer hover:text-orange-500 transition-all duration-200" data-view="archives" data-step="0">Myrient Downloader</span>`;
+        const separator = `
+            <span class="mx-2 pointer-events-none">
+                <svg class="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </span>
+        `;
+        let html = `<span title="Myrient Downloader" class="truncate cursor-pointer hover:text-orange-500 transition-all duration-200" data-view="archives" data-step="0">Myrient Downloader</span>`;
         if (stateService.get('archive').name) {
-            html += ` <span class="mx-2">&gt;</span> <span class="cursor-pointer hover:text-orange-500 transition-all duration-200" data-view="directories" data-step="1">${stateService.get('archive').name}</span>`;
+            html += `${separator}<span title="${stateService.get('archive').name}" class="truncate cursor-pointer hover:text-orange-500 transition-all duration-200" data-view="directories" data-step="1">${stateService.get('archive').name}</span>`;
         }
         if (stateService.get('directory').name) {
-            html += ` <span class="mx-2">&gt;</span> <span class="hover:text-orange-500 transition-all duration-200">${stateService.get('directory').name}</span>`;
+            html += `${separator}<span title="${stateService.get('directory').name}" class="truncate hover:text-orange-500 transition-all duration-200">${stateService.get('directory').name}</span>`;
         }
         document.getElementById('breadcrumbs').innerHTML = html;
     }
