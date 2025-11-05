@@ -1,0 +1,28 @@
+name: Build and push artifact
+on: push
+jobs:
+
+  # Builds and pushes artifact for Linux systems
+  build:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_DIR: release
+    steps:
+      - uses: actions/checkout@v4
+      - name:  Install npm
+        run: sudo apt-get update; sudo apt-get install npm
+      - name: Build executable
+        run: |
+          # Generate executable
+          npm install
+          npm run build:linux
+          # Find executable. Keep it and its name for artifact
+          exec_name=$(find "${{ env.RELEASE_DIR }}" -type f -name '*.AppImage' -printf '%f\n')
+          echo "ARTIFACT_NAME=$exec_name" >> "$GITHUB_ENV"
+          echo "FILENAME=${{ env.RELEASE_DIR }}/$exec_name" >> "$GITHUB_ENV"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.FILENAME }}
+          compression-level: 9
