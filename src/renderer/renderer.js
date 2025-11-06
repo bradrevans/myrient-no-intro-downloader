@@ -32,11 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       uiManager.populateList('list-directories', directories, (item) => {
         handleDirectorySelect(item);
       });
-
-      const searchInput = document.getElementById('search-directories');
-      if (searchInput.value) {
-        searchInput.dispatchEvent(new Event('input'));
-      }
     } catch (e) {
       alert(`Error: ${e.message}`);
     } finally {

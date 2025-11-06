@@ -49,6 +49,7 @@ class UIManager {
 
             this.updateBreadcrumbs();
             this.addEventListeners(viewId);
+            this.setupSearchEventListeners(viewId);
         }
     }
 
@@ -172,12 +173,16 @@ class UIManager {
             let visibleItems = getVisibleAvailableItems();
             visibleItems.sort((a, b) => a.text.length - b.text.length);
             visibleItems.forEach(item => priorityList.appendChild(item.el));
+            this.updatePriorityBuilderAvailableTags();
+            this.updatePriorityPlaceholder();
         });
 
         document.getElementById('add-all-longest').addEventListener('click', () => {
             let visibleItems = getVisibleAvailableItems();
             visibleItems.sort((a, b) => b.text.length - a.text.length);
             visibleItems.forEach(item => priorityList.appendChild(item.el));
+            this.updatePriorityBuilderAvailableTags();
+            this.updatePriorityPlaceholder();
         });
 
         document.getElementById('filter-lang-mode').addEventListener('change', (e) => {
@@ -199,6 +204,25 @@ class UIManager {
         document.getElementById('filter-keep-fallbacks').addEventListener('change', (e) => {
             stateService.set('keepFallbacks', e.target.checked);
         });
+    }
+
+    updatePriorityPlaceholder() {
+        const priorityList = document.getElementById('priority-list');
+        if (!priorityList) return;
+
+        let noResultsEl = priorityList.querySelector('.no-results');
+        const itemCount = priorityList.querySelectorAll('.list-group-item').length;
+
+        if (itemCount === 0) {
+            if (!noResultsEl) {
+                noResultsEl = document.createElement('div');
+                noResultsEl.className = 'no-results col-span-full text-center text-neutral-500';
+                noResultsEl.textContent = 'No tags prioritised.';
+                priorityList.appendChild(noResultsEl);
+            }
+        } else if (noResultsEl) {
+            noResultsEl.remove();
+        }
     }
 
     updatePriorityBuilderAvailableTags() {
@@ -232,6 +256,19 @@ class UIManager {
             validPriorityItems.map(item => item.textContent)
         );
 
+        if (priorityAvailable) {
+            const allSelectedTags = Array.from(document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
+            const allSelectedTagsArePrioritised = allSelectedTags.length > 0 && allSelectedTags.every(tag => validPriorityTagsSet.has(tag));
+
+            if (langMode === 'include' && allSelectedTagsArePrioritised) {
+                priorityAvailable.dataset.noItemsText = 'All selected tags prioritised.';
+            } else if (langMode === 'exclude' && availableTags.length === 0) {
+                priorityAvailable.dataset.noItemsText = 'All tags have been selected.';
+            } else {
+                priorityAvailable.dataset.noItemsText = 'No tags have been selected.';
+            }
+        }
+
         const tagsForAvailableList = availableTags.filter(tag =>
             !validPriorityTagsSet.has(tag)
         );
@@ -251,13 +288,13 @@ class UIManager {
             priorityAvailable.appendChild(el);
         });
 
-        const searchInput = document.getElementById('search-priority-tags');
-        if (searchInput && searchInput.value) {
-            searchInput.dispatchEvent(new Event('input'));
-        }
-
         if (stateService.get('prioritySortable')) stateService.get('prioritySortable').destroy();
         if (stateService.get('availableSortable')) stateService.get('availableSortable').destroy();
+
+        const searchInput = document.getElementById('search-priority-tags');
+        if (searchInput) {
+            searchInput.dispatchEvent(new Event('input'));
+        }
 
         stateService.set('availableSortable', new Sortable(priorityAvailable, {
             group: 'shared',
@@ -269,10 +306,18 @@ class UIManager {
                 allItems.forEach(item => priorityAvailable.appendChild(item));
                 const updatedPriorityList = Array.from(priorityList.children).map(el => el.textContent);
                 stateService.set('priorityList', updatedPriorityList);
+                this.updatePriorityPlaceholder();
+                this.updatePriorityBuilderAvailableTags();
             },
             onUpdate: () => {
                 const updatedPriorityList = Array.from(priorityList.children).map(el => el.textContent);
                 stateService.set('priorityList', updatedPriorityList);
+                this.updatePriorityPlaceholder();
+                this.updatePriorityBuilderAvailableTags();
+            },
+            onEnd: () => {
+                this.updatePriorityPlaceholder();
+                this.updatePriorityBuilderAvailableTags();
             }
         }));
 
@@ -282,27 +327,26 @@ class UIManager {
             onAdd: () => {
                 const updatedPriorityList = Array.from(priorityList.children).map(el => el.textContent);
                 stateService.set('priorityList', updatedPriorityList);
+                this.updatePriorityPlaceholder();
+                this.updatePriorityBuilderAvailableTags();
             },
             onUpdate: () => {
                 const updatedPriorityList = Array.from(priorityList.children).map(el => el.textContent);
                 stateService.set('priorityList', updatedPriorityList);
+                this.updatePriorityPlaceholder();
+                this.updatePriorityBuilderAvailableTags();
+            },
+            onEnd: () => {
+                this.updatePriorityPlaceholder();
+                this.updatePriorityBuilderAvailableTags();
             }
         }));
+
+        this.updatePriorityPlaceholder();
     }
 
     addEventListeners(viewId) {
-        if (viewId === 'archives') {
-            setupSearch('search-archives', 'list-archives', '.list-item');
-            setupSearchClearButton('search-archives', 'search-archives-clear');
-        } else if (viewId === 'directories') {
-            setupSearch('search-directories', 'list-directories', '.list-item');
-            setupSearchClearButton('search-directories', 'search-directories-clear');
-        } else if (viewId === 'wizard') {
-            setupSearch('search-tags', 'wizard-tags-list', 'label');
-            setupSearchClearButton('search-tags', 'search-tags-clear');
-            setupSearch('search-priority-tags', 'priority-available', '.list-group-item');
-            setupSearchClearButton('search-priority-tags', 'search-priority-tags-clear');
-
+        if (viewId === 'wizard') {
             document.getElementById('wizard-run-btn').addEventListener('click', async () => {
                 this.showLoading('Filtering files...');
 
@@ -327,6 +371,10 @@ class UIManager {
                     await apiService.runFilter(filters);
                     this.showView('results');
                     populateResults();
+                    const searchInput = document.getElementById('search-results');
+                    if (searchInput) {
+                        searchInput.dispatchEvent(new Event('input'));
+                    }
                 } catch (e) {
                     alert(`Error during filtering: ${e.message}`);
                 } finally {
@@ -334,9 +382,6 @@ class UIManager {
                 }
             });
         } else if (viewId === 'results') {
-            setupSearch('search-results', 'results-list', '.p-1.text-sm.truncate');
-            setupSearchClearButton('search-results', 'search-results-clear');
-
             document.getElementById('download-dir-btn').addEventListener('click', async () => {
                 const dir = await apiService.getDownloadDirectory();
                 if (dir) {
@@ -360,6 +405,24 @@ class UIManager {
 
                 this.loadArchivesCallback();
             });
+        }
+    }
+
+    setupSearchEventListeners(viewId) {
+        if (viewId === 'archives') {
+            setupSearch('search-archives', 'list-archives', '.list-item', 'No archives found matching your search.', 'No archives available.');
+            setupSearchClearButton('search-archives', 'search-archives-clear');
+        } else if (viewId === 'directories') {
+            setupSearch('search-directories', 'list-directories', '.list-item', 'No directories found matching your search.', 'No directories available.');
+            setupSearchClearButton('search-directories', 'search-directories-clear');
+        } else if (viewId === 'wizard') {
+            setupSearch('search-tags', 'wizard-tags-list', 'label', 'No tags found matching your search.', 'No tags available.');
+            setupSearchClearButton('search-tags', 'search-tags-clear');
+            setupSearch('search-priority-tags', 'priority-available', '.list-group-item', 'No tags found matching your search.', 'No tags have been selected.');
+            setupSearchClearButton('search-priority-tags', 'search-priority-tags-clear');
+        } else if (viewId === 'results') {
+            setupSearch('search-results', 'results-list', '.p-1.text-sm.truncate', 'No results found matching your search.', 'No results match your filters.');
+            setupSearchClearButton('search-results', 'search-results-clear');
         }
     }
 }
