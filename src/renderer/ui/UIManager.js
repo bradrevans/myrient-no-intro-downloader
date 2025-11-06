@@ -185,6 +185,10 @@ class UIManager {
             this.updatePriorityPlaceholder();
         });
 
+        document.getElementById('reset-priorities-btn').addEventListener('click', () => {
+            this.resetPriorityList();
+        });
+
         document.getElementById('filter-lang-mode').addEventListener('change', (e) => {
             stateService.set('langMode', e.target.value);
             document.getElementById('lang-tag-ui').classList.toggle('js-hidden', e.target.value === 'all');
@@ -342,6 +346,29 @@ class UIManager {
             }
         }));
 
+        this.updatePriorityPlaceholder();
+    }
+
+    resetPriorityList() {
+        const priorityListEl = document.getElementById('priority-list');
+        const priorityAvailableEl = document.getElementById('priority-available');
+
+        if (!priorityListEl || !priorityAvailableEl) return;
+
+        // Move all items from priorityList to priorityAvailable
+        Array.from(priorityListEl.children).forEach(item => {
+            priorityAvailableEl.appendChild(item);
+        });
+
+        // Clear the priorityList in stateService
+        stateService.set('priorityList', []);
+
+        // Re-sort the available list after adding items
+        const allItems = Array.from(priorityAvailableEl.children);
+        allItems.sort((a, b) => a.textContent.localeCompare(b.textContent));
+        allItems.forEach(item => priorityAvailableEl.appendChild(item));
+
+        this.updatePriorityBuilderAvailableTags();
         this.updatePriorityPlaceholder();
     }
 
