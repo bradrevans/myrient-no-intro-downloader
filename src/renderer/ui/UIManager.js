@@ -20,6 +20,7 @@ class UIManager {
     }
 
     showView(viewId) {
+        document.querySelector('main').scrollTop = 0;
         if (this.views[viewId]) {
             if (this.currentView) {
                 const prevViewElement = this.viewContainer.querySelector('.view.active');
