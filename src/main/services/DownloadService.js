@@ -3,9 +3,8 @@ const path = require('path');
 const https = require('https');
 const { URL } = require('url');
 const axios = require('axios');
-const log = require('electron-log');
 
-class DownloadManagerService {
+class DownloadService {
   constructor() {
     this.downloadCancelled = false;
     this.httpAgent = new https.Agent({ keepAlive: true });
@@ -24,60 +23,6 @@ class DownloadManagerService {
   reset() {
     this.downloadCancelled = false;
     this.abortController = new AbortController();
-  }
-
-  async getDownloadInfo(win, baseUrl, files, targetDir) {
-    let totalSize = 0;
-    let skippedSize = 0;
-    const filesToDownload = [];
-    const skippedFiles = [];
-    const session = axios.create({
-      httpsAgent: this.httpAgent,
-      timeout: 15000,
-      headers: {
-        'User-Agent': 'Wget/1.21.3 (linux-gnu)'
-      },
-      signal: this.abortController.signal
-    });
-
-    for (let i = 0; i < files.length; i++) {
-      if (this.isCancelled()) throw new Error("CANCELLED_SCAN");
-
-      const fileInfo = files[i];
-      const filename = fileInfo.name_raw;
-      const targetPath = path.join(targetDir, filename);
-      const fileUrl = new URL(fileInfo.href, baseUrl).href;
-
-      try {
-        const response = await session.head(fileUrl, { timeout: 15000 });
-        const remoteSize = parseInt(response.headers['content-length'] || '0', 10);
-
-        fileInfo.size = remoteSize;
-        totalSize += remoteSize;
-
-        if (fs.existsSync(targetPath)) {
-          const localSize = fs.statSync(targetPath).size;
-          if (remoteSize > 0 && localSize === remoteSize) {
-            fileInfo.skip = true;
-            skippedSize += remoteSize;
-          } else {
-            fileInfo.skip = false;
-            filesToDownload.push(fileInfo);
-          }
-        } else {
-          fileInfo.skip = false;
-          filesToDownload.push(fileInfo);
-        }
-      } catch (e) {
-        const skipMsg = `SKIP: Could not get info for ${filename}. Error: ${e.message}`;
-        win.webContents.send('download-log', skipMsg);
-        skippedFiles.push(`${filename} (Scan failed)`);
-        fileInfo.skip = true;
-      }
-      win.webContents.send('download-scan-progress', { current: i + 1, total: files.length });
-    }
-
-    return { filesToDownload, totalSize, skippedSize, skippedFiles };
   }
 
   async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0) {
@@ -178,4 +123,4 @@ class DownloadManagerService {
   }
 }
 
-module.exports = DownloadManagerService;
+module.exports = DownloadService;

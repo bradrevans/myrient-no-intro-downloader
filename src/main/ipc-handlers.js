@@ -1,17 +1,22 @@
+const { MYRIENT_BASE_URL } = require('./constants.js');
 const { ipcMain, dialog, shell } = require('electron');
 const fs = require('fs');
 const MyrientService = require('./services/MyrientService.js');
 const FilterService = require('./services/FilterService.js');
-const DownloadManagerService = require('./services/DownloadManagerService.js');
+const DownloadManager = require('./services/DownloadManager.js');
 
 function setupIpcHandlers(win) {
   const myrientService = new MyrientService();
   const filterService = new FilterService();
-  const downloadManager = new DownloadManagerService();
+  const downloadManager = new DownloadManager(win);
+
+  ipcMain.handle('get-myrient-base-url', () => {
+    return MYRIENT_BASE_URL;
+  });
 
   ipcMain.handle('get-main-archives', async () => {
     try {
-      const data = await myrientService.getMainArchives("https://myrient.erista.me/files/");
+      const data = await myrientService.getMainArchives(MYRIENT_BASE_URL);
       return { data };
     } catch (e) {
       return { error: e.message };
@@ -109,55 +114,7 @@ function setupIpcHandlers(win) {
   });
 
   ipcMain.handle('start-download', async (event, baseUrl, files, targetDir) => {
-    downloadManager.reset();
-
-    let allSkippedFiles = [];
-    let totalSize = 0;
-    let skippedSize = 0;
-    let summaryMessage = "";
-    let wasCancelled = false;
-    let partialFile = null;
-
-    try {
-      const scanResult = await downloadManager.getDownloadInfo(win, baseUrl, files, targetDir);
-
-      const filesToDownload = scanResult.filesToDownload;
-      totalSize = scanResult.totalSize;
-      skippedSize = scanResult.skippedSize;
-      allSkippedFiles.push(...scanResult.skippedFiles);
-
-      if (filesToDownload.length === 0) {
-        summaryMessage = "All matched files already exist locally. Nothing to download.";
-      } else {
-        win.webContents.send('download-log', `Total download size: ${(totalSize / (1024 ** 3)).toFixed(2)} GB (${filesToDownload.length} files)`);
-        win.webContents.send('download-overall-progress', { current: skippedSize, total: totalSize, skippedSize: skippedSize });
-
-        const downloadResult = await downloadManager.downloadFiles(win, baseUrl, filesToDownload, targetDir, totalSize, skippedSize);
-        summaryMessage = downloadResult.message;
-        allSkippedFiles.push(...downloadResult.skippedFiles);
-      }
-
-    } catch (e) {
-      if (e.message.startsWith("CANCELLED_")) {
-        summaryMessage = "Download cancelled by user.";
-        wasCancelled = true;
-        if (e.message === "CANCELLED_MID_FILE") {
-          partialFile = e.partialFile || null;
-        }
-      } else {
-        summaryMessage = `Error: ${e.message}`;
-        win.webContents.send('download-log', summaryMessage);
-      }
-    }
-
-    win.webContents.send('download-complete', {
-      message: summaryMessage,
-      skippedFiles: allSkippedFiles,
-      wasCancelled: wasCancelled,
-      partialFile: partialFile
-    });
-
-    return { success: true };
+    return await downloadManager.startDownload(baseUrl, files, targetDir);
   });
 
   ipcMain.on('log-message', (event, level, message) => {

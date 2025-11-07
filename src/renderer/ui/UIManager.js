@@ -436,21 +436,50 @@ class UIManager {
     }
 
     setupSearchEventListeners(viewId) {
-        if (viewId === 'archives') {
-            setupSearch('search-archives', 'list-archives', '.list-item', 'No archives found matching your search.', 'No archives available.');
-            setupSearchClearButton('search-archives', 'search-archives-clear');
-        } else if (viewId === 'directories') {
-            setupSearch('search-directories', 'list-directories', '.list-item', 'No directories found matching your search.', 'No directories available.');
-            setupSearchClearButton('search-directories', 'search-directories-clear');
-        } else if (viewId === 'wizard') {
-            setupSearch('search-tags', 'wizard-tags-list', 'label', 'No tags found matching your search.', 'No tags available.');
-            setupSearchClearButton('search-tags', 'search-tags-clear');
-            setupSearch('search-priority-tags', 'priority-available', '.list-group-item', 'No tags found matching your search.', 'No tags have been selected.');
-            setupSearchClearButton('search-priority-tags', 'search-priority-tags-clear');
-        } else if (viewId === 'results') {
-            setupSearch('search-results', 'results-list', '.p-1.text-sm.truncate', 'No results found matching your search.', 'No results match your filters.');
-            setupSearchClearButton('search-results', 'search-results-clear');
-        }
+        const searchConfigs = {
+            'archives': {
+                searchId: 'search-archives',
+                listId: 'list-archives',
+                itemSelector: '.list-item',
+                noResultsText: 'No archives found matching your search.',
+                noItemsText: 'No archives available.'
+            },
+            'directories': {
+                searchId: 'search-directories',
+                listId: 'list-directories',
+                itemSelector: '.list-item',
+                noResultsText: 'No directories found matching your search.',
+                noItemsText: 'No directories available.'
+            },
+            'wizard': [{
+                searchId: 'search-tags',
+                listId: 'wizard-tags-list',
+                itemSelector: 'label',
+                noResultsText: 'No tags found matching your search.',
+                noItemsText: 'No tags available.'
+            }, {
+                searchId: 'search-priority-tags',
+                listId: 'priority-available',
+                itemSelector: '.list-group-item',
+                noResultsText: 'No tags found matching your search.',
+                noItemsText: 'No tags have been selected.'
+            }],
+            'results': {
+                searchId: 'search-results',
+                listId: 'results-list',
+                itemSelector: '.p-1.text-sm.truncate',
+                noResultsText: 'No results found matching your search.',
+                noItemsText: 'No results match your filters.'
+            }
+        };
+
+        const configs = searchConfigs[viewId];
+        if (!configs) return;
+
+        (Array.isArray(configs) ? configs : [configs]).forEach(config => {
+            setupSearch(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText);
+            setupSearchClearButton(config.searchId, `${config.searchId}-clear`);
+        });
     }
 }
 

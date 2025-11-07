@@ -60,19 +60,7 @@ class MyrientService {
     const links = this.parseLinks(html);
     const files = links.filter(link => !link.isDir);
 
-    const allFiles = [];
-    const allTags = new Set();
-
-    for (const file of files) {
-      const parsed = this.fileParser.parseFilename(file.name);
-      parsed.href = file.href;
-      allFiles.push(parsed);
-      for (const tag of parsed.tags) {
-        allTags.add(tag);
-      }
-    }
-
-    return { files: allFiles, tags: Array.from(allTags) };
+    return this.fileParser.parseFiles(files);
   }
 }
 

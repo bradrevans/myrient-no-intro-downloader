@@ -4,6 +4,7 @@ import { setupDownloadUiListeners, logDownload } from './ui/download-ui.js';
 import UIManager from './ui/UIManager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  await stateService.init();
 
   const uiManager = new UIManager(document.getElementById('view-container'), loadArchives);
   await uiManager.loadViews();

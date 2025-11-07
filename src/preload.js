@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  getMyrientBaseUrl: () => ipcRenderer.invoke('get-myrient-base-url'),
   getMainArchives: () => ipcRenderer.invoke('get-main-archives'),
   getDirectoryList: (archiveUrl) => ipcRenderer.invoke('get-directory-list', archiveUrl),
   scrapeAndParseFiles: (pageUrl) => ipcRenderer.invoke('scrape-and-parse-files', pageUrl),

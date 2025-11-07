@@ -2,9 +2,9 @@ class StateService {
     constructor() {
         this.state = {
             currentView: 'archives',
-            baseUrl: 'https://myrient.erista.me/files/',
+            baseUrl: null,
             archive: { name: '', href: '' },
-            directory: { name: '', href: '' },
+            directory: { name: '' , href: '' },
             allFiles: [],
             allTags: [],
             finalFileList: [],
@@ -21,6 +21,10 @@ class StateService {
             dedupeMode: 'priority',
             keepFallbacks: true,
         };
+    }
+
+    async init() {
+        this.state.baseUrl = await window.electronAPI.getMyrientBaseUrl();
     }
 
     resetWizardState() {
