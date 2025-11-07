@@ -20,6 +20,7 @@ class StateService {
       revisionMode: 'highest',
       dedupeMode: 'priority',
       keepFallbacks: true,
+      createSubfolder: false,
     };
   }
 

@@ -22,7 +22,7 @@ class DownloadInfoService {
     this.abortController = new AbortController();
   }
 
-  async getDownloadInfo(win, baseUrl, files, targetDir) {
+  async getDownloadInfo(win, baseUrl, files, targetDir, createSubfolder = false) {
     let totalSize = 0;
     let skippedSize = 0;
     const filesToDownload = [];
@@ -41,7 +41,14 @@ class DownloadInfoService {
 
       const fileInfo = files[i];
       const filename = fileInfo.name_raw;
-      const targetPath = path.join(targetDir, filename);
+      let finalTargetDir = targetDir;
+
+      if (createSubfolder) {
+        const gameName = path.parse(filename).name;
+        finalTargetDir = path.join(targetDir, gameName);
+      }
+
+      const targetPath = path.join(finalTargetDir, filename);
       const fileUrl = new URL(fileInfo.href, baseUrl).href;
 
       try {

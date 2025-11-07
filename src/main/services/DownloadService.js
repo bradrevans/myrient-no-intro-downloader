@@ -25,7 +25,7 @@ class DownloadService {
     this.abortController = new AbortController();
   }
 
-  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0) {
+  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false) {
     const session = axios.create({
       httpsAgent: this.httpAgent,
       timeout: 15000,
@@ -46,7 +46,21 @@ class DownloadService {
       if (fileInfo.skip) continue;
 
       const filename = fileInfo.name_raw;
-      const targetPath = path.join(targetDir, filename);
+      let finalTargetDir = targetDir;
+
+      if (createSubfolder) {
+        const gameName = path.parse(filename).name; // Get filename without extension
+        finalTargetDir = path.join(targetDir, gameName);
+        if (!fs.existsSync(finalTargetDir)) {
+          try {
+            fs.mkdirSync(finalTargetDir, { recursive: true });
+          } catch (mkdirErr) {
+            win.webContents.send('download-log', `Error creating subfolder ${finalTargetDir}: ${mkdirErr.message}`);
+          }
+        }
+      }
+
+      const targetPath = path.join(finalTargetDir, filename);
       const fileUrl = new URL(fileInfo.href, baseUrl).href;
       const fileSize = fileInfo.size || 0;
       let fileDownloaded = 0;

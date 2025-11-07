@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
 
-  startDownload: (baseUrl, files, targetDir) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir),
+  startDownload: (baseUrl, files, targetDir, createSubfolder) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder),
   cancelDownload: () => ipcRenderer.send('cancel-download'),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
 

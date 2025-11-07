@@ -46,7 +46,8 @@ class ApiService {
 
   startDownload() {
     const baseUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
-    window.electronAPI.startDownload(baseUrl, stateService.get('finalFileList'), stateService.get('downloadDirectory'));
+    const createSubfolder = stateService.get('createSubfolder');
+    window.electronAPI.startDownload(baseUrl, stateService.get('finalFileList'), stateService.get('downloadDirectory'), createSubfolder);
   }
 
   cancelDownload() {

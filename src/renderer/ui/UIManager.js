@@ -430,6 +430,14 @@ class UIManager {
         }
       });
     } else if (viewId === 'results') {
+      const createSubfolderCheckbox = document.getElementById('create-subfolder-checkbox');
+      if (createSubfolderCheckbox) {
+        createSubfolderCheckbox.checked = stateService.get('createSubfolder');
+        createSubfolderCheckbox.addEventListener('change', (e) => {
+          stateService.set('createSubfolder', e.target.checked);
+        });
+      }
+
       document.getElementById('download-dir-btn').addEventListener('click', async () => {
         const dir = await apiService.getDownloadDirectory();
         if (dir) {
