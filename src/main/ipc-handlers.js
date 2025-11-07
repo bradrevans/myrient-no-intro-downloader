@@ -159,8 +159,8 @@ function setupIpcHandlers(win) {
     win.webContents.setZoomFactor(factor);
   });
 
-  ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder) => {
-    return await downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder);
+  ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, unzipFiles = false) => {
+    return await downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, unzipFiles);
   });
 
   ipcMain.on('log-message', (event, level, message) => {

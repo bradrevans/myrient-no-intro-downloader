@@ -477,6 +477,14 @@ class UIManager {
         });
       }
 
+      const unzipFilesCheckbox = document.getElementById('unzip-files-checkbox');
+      if (unzipFilesCheckbox) {
+        unzipFilesCheckbox.checked = stateService.get('unzipFiles');
+        unzipFilesCheckbox.addEventListener('change', (e) => {
+          stateService.set('unzipFiles', e.target.checked);
+        });
+      }
+
       document.getElementById('download-dir-btn').addEventListener('click', async () => {
         const dir = await apiService.getDownloadDirectory();
         if (dir) {

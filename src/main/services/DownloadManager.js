@@ -18,7 +18,7 @@ class DownloadManager {
     this.downloadService.reset();
   }
 
-  async startDownload(baseUrl, files, targetDir, createSubfolder) {
+  async startDownload(baseUrl, files, targetDir, createSubfolder, unzipFiles = false) {
     this.reset();
 
     let allSkippedFiles = [];
@@ -42,7 +42,7 @@ class DownloadManager {
         this.win.webContents.send('download-log', `Total download size: ${(totalSize / (1024 ** 3)).toFixed(2)} GB (${filesToDownload.length} files)`);
         this.win.webContents.send('download-overall-progress', { current: skippedSize, total: totalSize, skippedSize: skippedSize });
 
-        const downloadResult = await this.downloadService.downloadFiles(this.win, baseUrl, filesToDownload, targetDir, totalSize, skippedSize, createSubfolder);
+        const downloadResult = await this.downloadService.downloadFiles(this.win, baseUrl, filesToDownload, targetDir, totalSize, skippedSize, createSubfolder, unzipFiles);
         summaryMessage = downloadResult.message;
         allSkippedFiles.push(...downloadResult.skippedFiles);
       }

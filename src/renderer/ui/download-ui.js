@@ -41,6 +41,7 @@ export async function startDownload() {
 
   const downloadPath = stateService.get('downloadDirectory');
   const createSubfolder = stateService.get('createSubfolder');
+  const unzipFiles = stateService.get('unzipFiles');
   const currentStructure = await apiService.checkDownloadDirectoryStructure(downloadPath);
 
   let shouldProceed = true;

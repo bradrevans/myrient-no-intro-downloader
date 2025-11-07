@@ -25,7 +25,7 @@ class DownloadService {
     this.abortController = new AbortController();
   }
 
-  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false) {
+  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false, unzipFiles = false) {
     const session = axios.create({
       httpsAgent: this.httpAgent,
       timeout: 15000,
@@ -113,6 +113,18 @@ class DownloadService {
             reject(err);
           });
         });
+
+        // If unzip is enabled, unzip the file immediately after download
+        if (unzipFiles && targetPath.endsWith('.zip')) {
+          win.webContents.send('download-log', `Unzipping ${filename}...`);
+          try {
+            const UnzipService = require('./UnzipService.js');
+            const unzipService = new UnzipService();
+            await unzipService.unzipFile(win, targetPath, finalTargetDir);
+          } catch (unzipErr) {
+            win.webContents.send('download-log', `Warning: Failed to unzip ${filename}: ${unzipErr.message}`);
+          }
+        }
 
       } catch (e) {
         if (e.name === 'AbortError') {
