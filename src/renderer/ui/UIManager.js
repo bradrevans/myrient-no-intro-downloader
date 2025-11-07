@@ -178,6 +178,7 @@ class UIManager {
         const updatedSelectedTags = Array.from(document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
         stateService.set('selectedTags', updatedSelectedTags);
         this.updatePriorityBuilderAvailableTags();
+        e.target.parentElement.focus();
       }
     });
 
