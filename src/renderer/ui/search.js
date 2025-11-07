@@ -11,7 +11,7 @@ export function setupSearch(inputId, listContainerId, itemSelector, noResultsTex
     allItems.forEach(item => {
       const name = (item.dataset.name || item.textContent).toLowerCase();
       const isMatch = searchTerms.every(term => name.includes(term));
-      item.classList.toggle('js-hidden', !isMatch);
+      item.classList.toggle('hidden', !isMatch);
       if (isMatch) {
         visibleCount++;
       }
@@ -46,15 +46,14 @@ export function setupSearchClearButton(inputId, clearId) {
   const clearBtn = document.getElementById(clearId);
 
   if (input && clearBtn) {
-    clearBtn.classList.toggle('js-hidden', input.value.length === 0);
-
+    clearBtn.classList.toggle('hidden', input.value.length === 0);
     input.addEventListener('input', () => {
-      clearBtn.classList.toggle('js-hidden', input.value.length === 0);
+      clearBtn.classList.toggle('hidden', input.value.length === 0);
     });
 
     clearBtn.addEventListener('click', () => {
       input.value = '';
-      clearBtn.classList.add('js-hidden');
+      clearBtn.classList.add('hidden');
       input.dispatchEvent(new Event('input'));
       input.focus();
     });

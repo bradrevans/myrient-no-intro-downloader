@@ -3,118 +3,121 @@
 @tailwind utilities;
 
 body {
-    background-color: theme('colors.primary');
-    color: theme('colors.secondary');
+  background-color: theme('colors.primary');
+  color: theme('colors.secondary');
 }
 
 .view {
-    display: none;
+  display: none;
 }
 
 .view.active {
-    display: block;
+  display: block;
 }
 
-.js-hidden {
-    display: none !important;
+.hidden {
+  display: none !important;
 }
 
 .list-item {
-    @apply block w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer hover:bg-neutral-700 hover:border-accent-500 transition-all duration-200 shadow-md;
+  @apply block w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer hover:bg-neutral-700 hover:border-accent-500 focus:bg-neutral-700 focus:border-accent-500 transition-all duration-200 shadow-md;
+}
+
+.list-item:focus {
+  outline: none !important;
 }
 
 .btn {
-    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-primary {
-    @apply bg-accent-600 text-white hover:bg-accent-500;
+  @apply bg-accent-600 text-white hover:bg-accent-500;
 }
 
 .btn-success {
-    @apply bg-success-600 text-white hover:bg-success-500;
+  @apply bg-success-600 text-white hover:bg-success-500;
 }
 
 .btn-danger {
-    @apply bg-danger-600 text-white hover:bg-danger-500;
+  @apply bg-danger-600 text-white hover:bg-danger-500;
 }
 
 .btn-secondary {
-    @apply bg-neutral-700 text-white hover:bg-neutral-600;
+  @apply bg-neutral-700 text-white hover:bg-neutral-600;
 }
 
 .btn-sm {
-    @apply px-2 py-1 text-sm;
+  @apply px-2 py-1 text-sm;
 }
 
 .search-bar {
-    @apply w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-500;
+  @apply w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-500;
 }
 
 .search-container {
-    @apply relative;
+  @apply relative;
 }
 
 .search-clear-btn {
-    @apply absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white font-bold cursor-pointer text-lg p-2;
+  @apply absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white font-bold cursor-pointer text-lg p-2;
 }
 
 .sticky-view-header {
-    @apply sticky z-10 pt-6 pb-4 bg-primary -mx-8 px-8 top-0;
+  @apply sticky z-10 pt-6 pb-4 bg-primary -mx-8 px-8 top-0;
 }
 
 progress {
-    @apply w-full;
+  @apply w-full;
 
 }
 
 progress::-webkit-progress-bar {}
 
 progress::-webkit-progress-value {
-    @apply bg-green-500;
+  @apply bg-green-500;
 }
 
 progress::-moz-progress-bar {}
 
 .list-group-item {
-    @apply p-2 bg-neutral-700 rounded-md cursor-grab active:cursor-grabbing;
+  @apply p-2 bg-neutral-700 rounded-md cursor-grab active:cursor-grabbing focus:outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500;
 }
 
 .sortable-ghost {
-    @apply bg-accent-500 opacity-50;
+  @apply bg-accent-500 opacity-50;
 }
 
 ::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: theme('colors.neutral.800');
+  background: theme('colors.neutral.800');
 }
 
 ::-webkit-scrollbar-thumb {
-    background: theme('colors.neutral.700');
-    border-radius: 4px;
+  background: theme('colors.neutral.700');
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: theme('colors.accent.500');
+  background: theme('colors.accent.500');
 }
 
 .footer {
-    @apply text-center text-xs text-gray-500 p-4 border-t border-neutral-700 bg-neutral-800;
+  @apply text-center text-xs text-gray-500 p-4 border-t border-neutral-700 bg-neutral-800;
 }
 
 .footer-link {
-    @apply text-accent-500 hover:text-accent-600 cursor-pointer;
+  @apply text-accent-500 hover:text-accent-600 cursor-pointer;
 }
 
 
 input[type='checkbox'] {
-    @apply rounded border-neutral-600 bg-neutral-700 text-accent-600 focus:ring-accent-500 focus:ring-offset-neutral-800;
+  @apply rounded border-neutral-600 bg-neutral-700 text-accent-600 focus:ring-accent-500 focus:ring-offset-neutral-800 focus:outline-none;
 }
 
-/* Hide spinner buttons for number input */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -122,30 +125,30 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 input[type="number"] {
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
 }
 
 .loading-spinner-animation {
-    @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent-500;
+  @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent-500;
 }
 
 .app-draggable-area {
-    -webkit-app-region: drag;
+  -webkit-app-region: drag;
 
 }
 
 #header-back-btn {
-    -webkit-app-region: no-drag;
-    cursor: pointer;
-    transition: color 0.2s ease-in-out;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
 }
 
 #breadcrumbs span {
-    -webkit-app-region: no-drag;
-    cursor: pointer;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
 }
 
 .control-btn {
-    -webkit-app-region: no-drag;
-    @apply h-full w-12 text-xl text-white transition-colors duration-100 leading-none flex items-center justify-center;
+  -webkit-app-region: no-drag;
+  @apply h-full w-12 text-xl text-white transition-colors duration-100 leading-none flex items-center justify-center;
 }
