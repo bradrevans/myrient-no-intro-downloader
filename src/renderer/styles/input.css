@@ -161,3 +161,7 @@ input[type="number"] {
   -webkit-app-region: no-drag;
   @apply h-full w-12 text-xl text-white transition-colors duration-100 leading-none flex items-center justify-center;
 }
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
