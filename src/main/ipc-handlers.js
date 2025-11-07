@@ -108,10 +108,6 @@ function setupIpcHandlers(win) {
     win.webContents.setZoomFactor(factor);
   });
 
-  ipcMain.on('set-zoom-factor', (event, factor) => {
-    win.webContents.setZoomFactor(factor);
-  });
-
   ipcMain.handle('start-download', async (event, baseUrl, files, targetDir) => {
     downloadManager.reset();
 
