@@ -149,8 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('zoom-level-display').addEventListener('change', (e) => {
     let newZoomPercentage = parseInt(e.target.value, 10);
-    if (isNaN(newZoomPercentage)) newZoomPercentage = 100; // Default to 100 if invalid
-    newZoomPercentage = Math.max(10, Math.min(400, newZoomPercentage)); // Clamp between 10% and 400%
+    if (isNaN(newZoomPercentage)) newZoomPercentage = 100;
+    newZoomPercentage = Math.max(10, Math.min(400, newZoomPercentage));
     const newZoomFactor = newZoomPercentage / 100;
     apiService.setZoomFactor(newZoomFactor);
     updateZoomDisplay();
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadArchives();
   uiManager.updateBreadcrumbs();
-  setupDownloadUiListeners();
+  setupDownloadUiListeners(uiManager);
   updateZoomDisplay();
 });
 

@@ -63,6 +63,44 @@ class UIManager {
     document.getElementById('loading-spinner').classList.add('hidden');
   }
 
+  async showConfirmationModal(message) {
+    const modal = document.getElementById('confirmation-modal');
+    const modalMessage = document.getElementById('confirmation-modal-message');
+    const continueBtn = document.getElementById('confirmation-modal-continue');
+    const cancelBtn = document.getElementById('confirmation-modal-cancel');
+
+    modalMessage.textContent = message;
+    modal.classList.remove('hidden');
+
+    return new Promise(resolve => {
+      const handleContinue = () => {
+        modal.classList.add('hidden');
+        continueBtn.removeEventListener('click', handleContinue);
+        cancelBtn.removeEventListener('click', handleCancel);
+        modal.removeEventListener('click', handleOverlayClick);
+        resolve(true);
+      };
+
+      const handleCancel = () => {
+        modal.classList.add('hidden');
+        continueBtn.removeEventListener('click', handleContinue);
+        cancelBtn.removeEventListener('click', handleCancel);
+        modal.removeEventListener('click', handleOverlayClick);
+        resolve(false);
+      };
+
+      const handleOverlayClick = (event) => {
+        if (event.target === modal) {
+          handleCancel();
+        }
+      };
+
+      continueBtn.addEventListener('click', handleContinue);
+      cancelBtn.addEventListener('click', handleCancel);
+      modal.addEventListener('click', handleOverlayClick);
+    });
+  }
+
   updateBreadcrumbs() {
     const separator = `
             <span class="mx-2 pointer-events-none">

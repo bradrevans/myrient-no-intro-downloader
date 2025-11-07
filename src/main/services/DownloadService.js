@@ -49,7 +49,7 @@ class DownloadService {
       let finalTargetDir = targetDir;
 
       if (createSubfolder) {
-        const gameName = path.parse(filename).name; // Get filename without extension
+        const gameName = path.parse(filename).name;
         finalTargetDir = path.join(targetDir, gameName);
         if (!fs.existsSync(finalTargetDir)) {
           try {

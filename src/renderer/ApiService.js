@@ -44,6 +44,30 @@ class ApiService {
     return dir;
   }
 
+  async checkDownloadDirectoryStructure(downloadPath) {
+    const result = await window.electronAPI.checkDownloadDirectoryStructure(downloadPath);
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    return result.data;
+  }
+
+  async getDownloadDirectoryStructureEnum() {
+    const result = await window.electronAPI.getDownloadDirectoryStructureEnum();
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    return result.data;
+  }
+
+  async getDownloadDirectoryStructureEnum() {
+    const result = await window.electronAPI.getDownloadDirectoryStructureEnum();
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    return result.data;
+  }
+
   startDownload() {
     const baseUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
     const createSubfolder = stateService.get('createSubfolder');

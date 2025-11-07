@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   filterFiles: (files, allTags, filters) => ipcRenderer.invoke('filter-files', files, allTags, filters),
 
   getDownloadDirectory: () => ipcRenderer.invoke('get-download-directory'),
+  checkDownloadDirectoryStructure: (downloadPath) => ipcRenderer.invoke('check-download-directory-structure', downloadPath),
+  getDownloadDirectoryStructureEnum: () => ipcRenderer.invoke('get-download-directory-structure-enum'),
 
   startDownload: (baseUrl, files, targetDir, createSubfolder) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder),
   cancelDownload: () => ipcRenderer.send('cancel-download'),

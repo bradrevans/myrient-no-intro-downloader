@@ -2,7 +2,10 @@ import stateService from '../StateService.js';
 import { formatBytes, formatTime } from '../utils.js';
 import apiService from '../ApiService.js';
 
-export function populateResults() {
+let DownloadDirectoryStructure;
+let uiManagerInstance;
+
+export async function populateResults() {
   document.getElementById('results-file-count').textContent = stateService.get('finalFileList').length;
   document.getElementById('results-total-count').textContent = stateService.get('allFiles').length;
 
@@ -24,12 +27,42 @@ export function populateResults() {
   document.getElementById('download-cancel-btn').classList.add('hidden');
   document.getElementById('download-restart-btn').classList.add('hidden');
   document.getElementById('download-log').innerHTML = '';
+
+  if (!DownloadDirectoryStructure) {
+    DownloadDirectoryStructure = await apiService.getDownloadDirectoryStructureEnum();
+  }
 }
 
-export function startDownload() {
+export async function startDownload() {
   if (!stateService.get('downloadDirectory')) {
     alert("Please select a download directory first.");
     return;
+  }
+
+  const downloadPath = stateService.get('downloadDirectory');
+  const createSubfolder = stateService.get('createSubfolder');
+  const currentStructure = await apiService.checkDownloadDirectoryStructure(downloadPath);
+
+  let shouldProceed = true;
+  let confirmationMessage = '';
+
+  if (currentStructure === DownloadDirectoryStructure.FLAT && createSubfolder) {
+    confirmationMessage = `The target directory "${downloadPath}" contains flat files, but you have selected to create subfolders. Do you want to continue?`;
+    shouldProceed = false;
+  } else if (currentStructure === DownloadDirectoryStructure.SUBFOLDERS && !createSubfolder) {
+    confirmationMessage = `The target directory "${downloadPath}" contains subfolders, but you have selected to download files directly. Do you want to continue?`;
+    shouldProceed = false;
+  } else if (currentStructure === DownloadDirectoryStructure.MIXED) {
+    confirmationMessage = `The target directory "${downloadPath}" contains both flat files and subfolders. This might lead to an inconsistent structure. Do you want to continue?`;
+    shouldProceed = false;
+  }
+
+  if (!shouldProceed) {
+    const userConfirmed = await uiManagerInstance.showConfirmationModal(confirmationMessage);
+    if (!userConfirmed) {
+      logDownload('Download cancelled by user.');
+      return;
+    }
   }
 
   stateService.set('isDownloading', true);
@@ -65,7 +98,9 @@ export function logDownload(message) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-export function setupDownloadUiListeners() {
+export function setupDownloadUiListeners(uiManager) {
+  uiManagerInstance = uiManager;
+
   window.electronAPI.onDownloadScanProgress(data => {
     document.getElementById('scan-progress').value = data.current;
     document.getElementById('scan-progress').max = data.total;

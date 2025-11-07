@@ -1,9 +1,42 @@
-const { MYRIENT_BASE_URL } = require('./constants.js');
+const { MYRIENT_BASE_URL, DownloadDirectoryStructure } = require('./constants.js');
 const { ipcMain, dialog, shell } = require('electron');
 const fs = require('fs');
+const path = require('path');
 const MyrientService = require('./services/MyrientService.js');
 const FilterService = require('./services/FilterService.js');
 const DownloadManager = require('./services/DownloadManager.js');
+
+async function checkDownloadDirectoryStructure(downloadPath) {
+  try {
+    const entries = await fs.promises.readdir(downloadPath, { withFileTypes: true });
+
+    let hasFiles = false;
+    let hasDirectories = false;
+
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        hasFiles = true;
+      } else if (entry.isDirectory()) {
+        hasDirectories = true;
+      }
+    }
+
+    if (!hasFiles && !hasDirectories) {
+      return DownloadDirectoryStructure.EMPTY;
+    } else if (hasFiles && !hasDirectories) {
+      return DownloadDirectoryStructure.FLAT;
+    } else if (!hasFiles && hasDirectories) {
+      return DownloadDirectoryStructure.SUBFOLDERS;
+    } else {
+      return DownloadDirectoryStructure.MIXED;
+    }
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      return DownloadDirectoryStructure.EMPTY;
+    }
+    throw e;
+  }
+}
 
 function setupIpcHandlers(win) {
   const myrientService = new MyrientService();
@@ -56,6 +89,19 @@ function setupIpcHandlers(win) {
     });
     if (canceled || filePaths.length === 0) return null;
     return filePaths[0];
+  });
+
+  ipcMain.handle('check-download-directory-structure', async (event, downloadPath) => {
+    try {
+      const structure = await checkDownloadDirectoryStructure(downloadPath);
+      return { data: structure };
+    } catch (e) {
+      return { error: e.message };
+    }
+  });
+
+  ipcMain.handle('get-download-directory-structure-enum', () => {
+    return { data: DownloadDirectoryStructure };
   });
 
   ipcMain.on('cancel-download', () => {
