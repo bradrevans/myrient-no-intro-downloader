@@ -116,6 +116,7 @@ class DownloadService {
 
         // If unzip is enabled, unzip the file immediately after download
         if (unzipFiles && targetPath.endsWith('.zip')) {
+          console.log(`Unzipping enabled for ${filename}, unzipFiles:`, unzipFiles);
           win.webContents.send('download-log', `Unzipping ${filename}...`);
           try {
             const UnzipService = require('./UnzipService.js');
@@ -124,6 +125,8 @@ class DownloadService {
           } catch (unzipErr) {
             win.webContents.send('download-log', `Warning: Failed to unzip ${filename}: ${unzipErr.message}`);
           }
+        } else {
+          console.log(`Unzip not triggered for ${filename}, unzipFiles:`, unzipFiles, 'ends with .zip:', targetPath.endsWith('.zip'));
         }
 
       } catch (e) {

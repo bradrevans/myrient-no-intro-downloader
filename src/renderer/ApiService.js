@@ -72,6 +72,7 @@ class ApiService {
     const baseUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
     const createSubfolder = stateService.get('createSubfolder');
     const unzipFiles = stateService.get('unzipFiles');
+    console.log('startDownload called with unzipFiles:', unzipFiles);
     window.electronAPI.startDownload(baseUrl, stateService.get('finalFileList'), stateService.get('downloadDirectory'), createSubfolder, unzipFiles);
   }
 
