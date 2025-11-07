@@ -178,6 +178,7 @@ class UIManager {
       visibleItems.forEach(item => priorityList.appendChild(item.el));
       this.updatePriorityBuilderAvailableTags();
       this.updatePriorityPlaceholder();
+      document.getElementById('search-priority-tags').focus();
     });
 
     document.getElementById('add-all-longest').addEventListener('click', () => {
@@ -186,10 +187,12 @@ class UIManager {
       visibleItems.forEach(item => priorityList.appendChild(item.el));
       this.updatePriorityBuilderAvailableTags();
       this.updatePriorityPlaceholder();
+      document.getElementById('search-priority-tags').focus();
     });
 
     document.getElementById('reset-priorities-btn').addEventListener('click', () => {
       this.resetPriorityList();
+      document.getElementById('search-priority-tags').focus();
     });
 
     document.getElementById('filter-lang-mode').addEventListener('change', (e) => {
