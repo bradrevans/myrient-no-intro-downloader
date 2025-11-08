@@ -6,6 +6,7 @@ export default class DownloadUI {
     this.apiService = apiService;
     this.uiManager = uiManager;
     this.downloadDirectoryStructure = null;
+    this.resultsListChangeListener = null;
 
     this._setupEventListeners();
   }
@@ -35,24 +36,69 @@ export default class DownloadUI {
       extractionProgress: document.getElementById('extraction-progress'),
       extractionProgressName: document.getElementById('extraction-progress-name'),
       extractionProgressText: document.getElementById('extraction-progress-text'),
+      selectAllResultsBtn: document.getElementById('select-all-results-btn'),
+      deselectAllResultsBtn: document.getElementById('deselect-all-results-btn'),
+      resultsSelectedCount: document.getElementById('results-selected-count'),
     };
+  }
+
+  updateSelectedCount() {
+    const elements = this._getElements();
+    if (!elements.resultsSelectedCount) return;
+    const selectedCount = this.stateService.get('selectedResults').length;
+    elements.resultsSelectedCount.innerHTML = `Selected to download: <span class="font-bold text-white">${selectedCount}</span>`;
+  }
+
+  _updateSelectionState() {
+    const elements = this._getElements();
+    if (!elements.resultsList) return;
+
+    const finalFileList = this.stateService.get('finalFileList');
+    const updatedSelectedResults = Array.from(elements.resultsList.querySelectorAll('input[type=checkbox]:checked'))
+      .map(cb => {
+        const name = cb.parentElement.dataset.name;
+        return finalFileList.find(f => f.name_raw === name);
+      })
+      .filter(Boolean); // Filter out any undefined results if a file isn't found
+
+    this.stateService.set('selectedResults', updatedSelectedResults);
+    this.updateSelectedCount();
   }
 
   async populateResults() {
     const elements = this._getElements();
     if (!elements.resultsFileCount) return; // Guard against wrong view
 
-    elements.resultsFileCount.textContent = this.stateService.get('finalFileList').length;
+    const finalFileList = this.stateService.get('finalFileList');
+    elements.resultsFileCount.textContent = finalFileList.length;
     elements.resultsTotalCount.textContent = this.stateService.get('allFiles').length;
 
     elements.resultsList.innerHTML = '';
 
-    this.stateService.get('finalFileList').forEach(file => {
-      const el = document.createElement('div');
-      el.className = 'p-1 text-sm truncate';
-      el.textContent = file.name_raw;
+    finalFileList.forEach(file => {
+      const el = document.createElement('label');
+      el.className = 'flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none';
+      el.dataset.name = file.name_raw;
+      el.tabIndex = 0;
+      el.innerHTML = `
+        <input type="checkbox" class="h-4 w-4" checked>
+        <span class="text-neutral-300 truncate">${file.name_raw}</span>
+      `;
       elements.resultsList.appendChild(el);
     });
+
+    this._updateSelectionState();
+
+    if (this.resultsListChangeListener) {
+      elements.resultsList.removeEventListener('change', this.resultsListChangeListener);
+    }
+
+    this.resultsListChangeListener = (e) => {
+      if (e.target.type === 'checkbox') {
+        this._updateSelectionState();
+      }
+    };
+    elements.resultsList.addEventListener('change', this.resultsListChangeListener);
 
     elements.downloadDirText.textContent = 'No directory selected.';
     elements.downloadScanBtn.disabled = true;
@@ -127,7 +173,7 @@ export default class DownloadUI {
     elements.fileProgress.classList.remove('hidden');
     elements.fileProgressSize.classList.remove('hidden');
 
-    this.apiService.startDownload();
+    this.apiService.startDownload(this.stateService.get('selectedResults'));
   }
 
   log(message) {
@@ -139,6 +185,25 @@ export default class DownloadUI {
   }
 
   _setupEventListeners() {
+    document.addEventListener('click', (e) => {
+      const elements = this._getElements();
+      if (!elements.resultsList) return;
+
+      if (e.target.id === 'select-all-results-btn') {
+        elements.resultsList.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
+          checkbox.checked = true;
+        });
+        this._updateSelectionState();
+      }
+
+      if (e.target.id === 'deselect-all-results-btn') {
+        elements.resultsList.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        this._updateSelectionState();
+      }
+    });
+
     window.electronAPI.onDownloadScanProgress(data => {
       const elements = this._getElements();
       if (!elements.scanProgress) return;

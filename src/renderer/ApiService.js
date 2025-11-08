@@ -60,19 +60,11 @@ class ApiService {
     return result.data;
   }
 
-  async getDownloadDirectoryStructureEnum() {
-    const result = await window.electronAPI.getDownloadDirectoryStructureEnum();
-    if (result.error) {
-      throw new Error(result.error);
-    }
-    return result.data;
-  }
-
-  startDownload() {
+  startDownload(files) {
     const baseUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
     const createSubfolder = stateService.get('createSubfolder');
     const extractAndDelete = stateService.get('extractAndDelete');
-    window.electronAPI.startDownload(baseUrl, stateService.get('finalFileList'), stateService.get('downloadDirectory'), createSubfolder, extractAndDelete);
+    window.electronAPI.startDownload(baseUrl, files, stateService.get('downloadDirectory'), createSubfolder, extractAndDelete);
   }
 
   cancelDownload() {

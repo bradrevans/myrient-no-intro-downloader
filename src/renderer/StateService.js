@@ -8,6 +8,7 @@ class StateService {
       allFiles: [],
       allTags: [],
       finalFileList: [],
+      selectedResults: [],
       downloadDirectory: null,
       prioritySortable: null,
       availableSortable: null,
@@ -30,6 +31,7 @@ class StateService {
   }
 
   resetWizardState() {
+    this.state.selectedResults = [];
     this.state.selectedTags = [];
     this.state.priorityList = [];
     this.state.langMode = 'include';

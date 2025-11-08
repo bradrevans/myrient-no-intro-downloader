@@ -547,7 +547,7 @@ class UIManager {
       'results': {
         searchId: 'search-results',
         listId: 'results-list',
-        itemSelector: '.p-1.text-sm.truncate',
+        itemSelector: 'label',
         noResultsText: 'No results found matching your search.',
         noItemsText: 'No results match your filters.'
       }

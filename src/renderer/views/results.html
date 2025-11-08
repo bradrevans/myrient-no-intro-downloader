@@ -4,14 +4,20 @@
     <p class="text-gray-400 mb-4">Found <span id="results-file-count" class="font-bold text-white">0</span>
       matching files out of <span id="results-total-count" class="font-bold text-white">0</span> total.
     </p>
-    <div class="search-container">
+    <p id="results-selected-count" class="text-gray-400 mb-4">
+    </p>
+    <div class="search-container mb-2">
       <input type="text" id="search-results" class="search-bar" placeholder="Search results...">
       <span id="search-results-clear" class="search-clear-btn">&times;</span>
+    </div>
+    <div class="flex gap-2 mt-2">
+      <button id="select-all-results-btn" class="btn btn-secondary">Select All (Displayed)</button>
+      <button id="deselect-all-results-btn" class="btn btn-secondary">Deselect All (Displayed)</button>
     </div>
   </div>
 
   <div id="results-list"
-    class="h-64 min-h-64 resize-y overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mb-4">
+    class="h-64 min-h-64 resize-y overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mb-4 space-y-2">
   </div>
   <div id="download-ui" class="space-y-4">
     <div>
