@@ -500,9 +500,8 @@ class UIManager {
       document.getElementById('download-scan-btn').addEventListener('click', () => this.downloadUI.startDownload());
 
       document.getElementById('download-cancel-btn').addEventListener('click', () => {
-        this.downloadUI.log('Cancelling download, please wait...');
-        document.getElementById('download-cancel-btn').disabled = true;
-        apiService.cancelDownload();
+        if (this.downloadUI?.handleCancelClick) this.downloadUI.handleCancelClick();
+        if (this.downloadUI?.apiService) this.downloadUI.apiService.cancelDownload();
       });
 
       document.getElementById('download-restart-btn').addEventListener('click', () => {

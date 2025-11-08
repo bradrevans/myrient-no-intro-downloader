@@ -7,8 +7,24 @@ export default class DownloadUI {
     this.uiManager = uiManager;
     this.downloadDirectoryStructure = null;
     this.resultsListChangeListener = null;
-
+    this._isExtracting = false;
     this._setupEventListeners();
+    if (window.electronAPI && window.electronAPI.onExtractionStarted) {
+      window.electronAPI.onExtractionStarted(() => {
+        this._isExtracting = true;
+      });
+    }
+    if (window.electronAPI && window.electronAPI.onExtractionEnded) {
+      window.electronAPI.onExtractionEnded(() => {
+        this._isExtracting = false;
+      });
+    }
+  }
+
+  handleCancelClick() {
+    const elements = this._getElements();
+    if (elements.downloadCancelBtn) elements.downloadCancelBtn.disabled = true;
+    this.log(this._isExtracting ? 'Cancelling extraction, please wait...' : 'Cancelling download, please wait...');
   }
 
   _getElements() {
@@ -199,6 +215,25 @@ export default class DownloadUI {
   }
 
   _setupEventListeners() {
+    window.electronAPI.onHideDownloadUi(() => {
+      const elements = this._getElements();
+      elements.scanProgressBar.classList.add('hidden');
+      elements.downloadProgressBars.classList.add('hidden');
+      elements.downloadCancelBtn.classList.add('hidden');
+      elements.downloadRestartBtn.classList.add('hidden');
+      elements.extractionProgressBar.classList.add('hidden');
+      elements.overallExtractionProgressBar.classList.add('hidden');
+      elements.fileProgress.classList.add('hidden');
+      elements.fileProgressName.classList.add('hidden');
+      elements.fileProgressSize.classList.add('hidden');
+      elements.fileProgressLabel.classList.add('hidden');
+      elements.extractionProgress.value = 0;
+      elements.overallExtractionProgress.value = 0;
+      elements.overallExtractionProgressText.textContent = "";
+      elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
+      elements.extractionProgressName.textContent = "";
+      elements.extractionProgressText.textContent = "";
+    });
     document.addEventListener('click', (e) => {
       const elements = this._getElements();
       if (!elements.resultsList) return;

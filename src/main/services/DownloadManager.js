@@ -112,6 +112,7 @@ class DownloadManager {
 
   async extractFiles(downloadedFiles, targetDir, createSubfolder) {
     const extractionStartTime = performance.now();
+    this.win.webContents.send('extraction-started');
     const archiveFiles = downloadedFiles.filter(f => f.name_raw.toLowerCase().endsWith('.zip'));
     if (archiveFiles.length === 0) {
       this.downloadConsole.logNoArchivesToExtract();
@@ -148,6 +149,7 @@ class DownloadManager {
 
     this.downloadConsole.logTotalUncompressedSize(formatBytes(totalUncompressedSizeOfAllArchives));
 
+
     for (let i = 0; i < archiveFiles.length; i++) {
       const file = archiveFiles[i];
       const subfolder = createSubfolder ? file.name_raw.replace(/\.[^/.]+$/, "") : '';
@@ -155,6 +157,7 @@ class DownloadManager {
       const extractPath = path.join(targetDir, subfolder);
 
       let zipfile;
+      const extractedFiles = [];
       try {
         this.win.webContents.send('extraction-progress', {
           current: i,
@@ -170,7 +173,6 @@ class DownloadManager {
         });
 
         zipfile = await open(filePath);
-
         let totalEntries = 0;
         let entry = await zipfile.readEntry();
         while (entry) {
@@ -184,33 +186,32 @@ class DownloadManager {
         let extractedEntryCount = 0;
         entry = await zipfile.readEntry();
         while (entry) {
+          if (this.isCancelled) {
+            this.downloadConsole.logExtractionCancelled();
+            break;
+          }
           extractedEntryCount++;
           const currentEntryFileName = entry.fileName || entry.filename;
           if (!currentEntryFileName || typeof currentEntryFileName !== 'string') {
-            this.downloadConsole.logSkippingInvalidEntry(entry);
             entry = await zipfile.readEntry();
             continue;
           }
 
           const entryPath = path.join(extractPath, currentEntryFileName);
-
           if (/\/$/.test(currentEntryFileName) && entry.uncompressedSize === 0) {
             await fs.promises.mkdir(entryPath, { recursive: true });
             entry = await zipfile.readEntry();
             continue;
           }
-
           if (/\/$/.test(currentEntryFileName)) {
             await fs.promises.mkdir(entryPath, { recursive: true });
           } else {
             await fs.promises.mkdir(path.dirname(entryPath), { recursive: true });
-
+            extractedFiles.push(entryPath);
             const readStream = await entry.openReadStream();
             const writeStream = fs.createWriteStream(entryPath);
-
             let bytesRead = 0;
             const totalBytes = entry.uncompressedSize;
-
             this.win.webContents.send('extraction-progress', {
               current: i,
               total: archiveFiles.length,
@@ -225,66 +226,97 @@ class DownloadManager {
               formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
               eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
             });
-
-            readStream.on('data', (chunk) => {
-              bytesRead += chunk.length;
-              overallExtractedBytes += chunk.length;
-
-              const now = performance.now();
-              if (now - lastExtractionProgressUpdateTime > 100 || bytesRead === totalBytes) {
-                lastExtractionProgressUpdateTime = now;
-                this.win.webContents.send('extraction-progress', {
-                  current: i,
-                  total: archiveFiles.length,
-                  filename: file.name_raw,
-                  fileProgress: bytesRead,
-                  fileTotal: totalBytes,
-                  currentEntry: extractedEntryCount,
-                  totalEntries: totalEntries,
-                  overallExtractedBytes: overallExtractedBytes,
-                  totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
-                  formattedOverallExtractedBytes: formatBytes(overallExtractedBytes),
-                  formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
-                  eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
-                });
-              }
-            });
-
             await new Promise((resolve, reject) => {
+              let cancelledDuringWrite = false;
+              readStream.on('data', (chunk) => {
+                bytesRead += chunk.length;
+                overallExtractedBytes += chunk.length;
+                const now = performance.now();
+                if (now - lastExtractionProgressUpdateTime > 100 || bytesRead === totalBytes) {
+                  lastExtractionProgressUpdateTime = now;
+                  this.win.webContents.send('extraction-progress', {
+                    current: i,
+                    total: archiveFiles.length,
+                    filename: file.name_raw,
+                    fileProgress: bytesRead,
+                    fileTotal: totalBytes,
+                    currentEntry: extractedEntryCount,
+                    totalEntries: totalEntries,
+                    overallExtractedBytes: overallExtractedBytes,
+                    totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
+                    formattedOverallExtractedBytes: formatBytes(overallExtractedBytes),
+                    formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
+                    eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
+                  });
+                }
+                if (this.isCancelled && !cancelledDuringWrite) {
+                  cancelledDuringWrite = true;
+                  readStream.destroy(new Error('Extraction cancelled'));
+                  writeStream.destroy(new Error('Extraction cancelled'));
+                }
+              });
               readStream.pipe(writeStream);
               writeStream.on('finish', () => {
-                this.win.webContents.send('extraction-progress', {
-                  current: i,
-                  total: archiveFiles.length,
-                  filename: file.name_raw,
-                  fileProgress: totalBytes,
-                  fileTotal: totalBytes,
-                  currentEntry: extractedEntryCount,
-                  totalEntries: totalEntries,
-                  overallExtractedBytes: overallExtractedBytes,
-                  totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
-                  formattedOverallExtractedBytes: formatBytes(overallExtractedBytes),
-                  formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
-                  eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
-                });
+                if (!this.isCancelled) {
+                  this.win.webContents.send('extraction-progress', {
+                    current: i,
+                    total: archiveFiles.length,
+                    filename: file.name_raw,
+                    fileProgress: totalBytes,
+                    fileTotal: totalBytes,
+                    currentEntry: extractedEntryCount,
+                    totalEntries: totalEntries,
+                    overallExtractedBytes: overallExtractedBytes,
+                    totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
+                    formattedOverallExtractedBytes: formatBytes(overallExtractedBytes),
+                    formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
+                    eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
+                  });
+                }
                 resolve();
               });
-              writeStream.on('error', reject);
-              readStream.on('error', reject);
+              writeStream.on('error', (err) => {
+                if (!this.isCancelled || err.message !== 'Extraction cancelled') {
+                  this.downloadConsole.logError('Write stream error during extraction: ' + err.message);
+                }
+                reject(err);
+              });
+              readStream.on('error', (err) => {
+                if (!this.isCancelled || err.message !== 'Extraction cancelled') {
+                  this.downloadConsole.logError('Read stream error during extraction: ' + err.message);
+                }
+                reject(err);
+              });
             });
           }
           entry = await zipfile.readEntry();
         }
-        await fs.promises.unlink(filePath);
-
+        if (!this.isCancelled) {
+          await fs.promises.unlink(filePath);
+        }
       } catch (e) {
         this.downloadConsole.logExtractionError(file.name_raw, e.message);
       } finally {
         if (zipfile) {
           await zipfile.close();
         }
+        if (this.isCancelled && extractedFiles.length > 0) {
+          for (const extractedFile of extractedFiles) {
+            try {
+              if (fs.existsSync(extractedFile)) {
+                await fs.promises.unlink(extractedFile);
+              }
+            } catch (cleanupErr) {
+              this.downloadConsole.logError(`Failed to clean up ${extractedFile}: ${cleanupErr.message}`);
+            }
+          }
+        }
+      }
+      if (this.isCancelled) {
+        break;
       }
     }
+
     this.win.webContents.send('extraction-progress', {
       current: archiveFiles.length,
       total: archiveFiles.length,
@@ -293,13 +325,19 @@ class DownloadManager {
       fileTotal: 0,
       currentEntry: 0,
       totalEntries: 0,
-      overallExtractedBytes: totalUncompressedSizeOfAllArchives,
+      overallExtractedBytes: this.isCancelled ? overallExtractedBytes : totalUncompressedSizeOfAllArchives,
       totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
-      formattedOverallExtractedBytes: formatBytes(totalUncompressedSizeOfAllArchives),
+      formattedOverallExtractedBytes: formatBytes(this.isCancelled ? overallExtractedBytes : totalUncompressedSizeOfAllArchives),
       formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
       eta: '--'
     });
-    this.downloadConsole.logExtractionProcessComplete();
+    if (this.isCancelled) {
+      this.downloadConsole.logExtractionCancelled();
+      this.win.webContents.send('extraction-ended');
+    } else {
+      this.downloadConsole.logExtractionProcessComplete();
+      this.win.webContents.send('extraction-ended');
+    }
   }
 }
 

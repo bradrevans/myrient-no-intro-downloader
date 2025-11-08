@@ -134,7 +134,11 @@ class IpcManager {
     });
 
     ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete) => {
-      return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete);
+      try {
+        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete);
+      } catch (e) {
+        return { error: e && e.message ? e.message : String(e) };
+      }
     });
 
     ipcMain.on('log-message', (event, level, message) => {

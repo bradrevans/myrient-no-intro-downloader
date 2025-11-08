@@ -43,6 +43,10 @@ class DownloadConsole {
     this.log(`Error extracting ${filename}: ${message}`);
   }
 
+  logExtractionCancelled() {
+    this.log('Extraction cancelled!');
+  }
+
   logNoArchivesToExtract() {
     this.log('No .zip archives found to extract.');
   }

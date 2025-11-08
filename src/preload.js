@@ -35,6 +35,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDownloadFileProgress: (callback) => ipcRenderer.on('download-file-progress', (event, data) => callback(data)),
   onDownloadLog: (callback) => ipcRenderer.on('download-log', (event, message) => callback(message)),
   onDownloadComplete: (callback) => ipcRenderer.on('download-complete', (event, summary) => callback(summary)),
+  onExtractionStarted: (callback) => ipcRenderer.on('extraction-started', () => callback()),
+  onExtractionEnded: (callback) => ipcRenderer.on('extraction-ended', () => callback()),
   onExtractionProgress: (callback) => ipcRenderer.on('extraction-progress', (event, data) => callback(data)),
   onHideDownloadUi: (callback) => ipcRenderer.on('hide-download-ui', (event) => callback()),
 
