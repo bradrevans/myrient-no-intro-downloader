@@ -98,10 +98,7 @@ class IpcManager {
     });
 
     ipcMain.on('open-external', (event, url) => {
-      if (url.startsWith('https://github.com') || url.startsWith('https://myrient.erista.me')) {
-        shell.openExternal(url);
-      } else {
-      }
+      shell.openExternal(url);
     });
 
     ipcMain.on('window-minimize', () => this.win.minimize());

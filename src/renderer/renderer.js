@@ -169,6 +169,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     apiService.openExternal('https://github.com/bradrevans/myrient-downloader');
   });
 
+  document.getElementById('kofi-link').addEventListener('click', () => {
+    apiService.openExternal('https://ko-fi.com/bradrevans');
+  });
+
   document.getElementById('donate-link').addEventListener('click', () => {
     apiService.openExternal('https://myrient.erista.me/donate/');
   });
