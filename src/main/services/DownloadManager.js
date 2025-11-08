@@ -6,18 +6,22 @@ import path from 'path';
 import { formatBytes, calculateEta } from '../utils.js';
 
 class DownloadManager {
-  constructor(win) {
+  constructor(win, downloadConsole) {
     this.win = win;
     this.downloadInfoService = new DownloadInfoService();
-    this.downloadService = new DownloadService();
+    this.downloadConsole = downloadConsole;
+    this.downloadService = new DownloadService(downloadConsole);
+    this.isCancelled = false; // Add internal cancellation flag
   }
 
   cancel() {
+    this.isCancelled = true; // Set internal flag
     this.downloadInfoService.cancel();
     this.downloadService.cancel();
   }
 
   reset() {
+    this.isCancelled = false; // Reset internal flag
     this.downloadInfoService.reset();
     this.downloadService.reset();
   }
@@ -33,11 +37,17 @@ class DownloadManager {
     let wasCancelled = false;
     let partialFile = null;
     let downloadedFiles = [];
+    let filesToDownload = []; // Declare and initialize here
 
     try {
       const scanResult = await this.downloadInfoService.getDownloadInfo(this.win, baseUrl, files, targetDir, createSubfolder);
 
-      const filesToDownload = scanResult.filesToDownload;
+      // Check for cancellation after the scan, in case it didn't throw
+      if (this.isCancelled) {
+        throw new Error("CANCELLED_DURING_SCAN");
+      }
+
+      filesToDownload = scanResult.filesToDownload; // Assign here
       totalSize = scanResult.totalSize;
       skippedSize = scanResult.skippedSize;
       allSkippedFiles.push(...scanResult.skippedFiles);
@@ -46,7 +56,7 @@ class DownloadManager {
         summaryMessage = "All matched files already exist locally. Nothing to download.";
       } else {
         const remainingSize = totalSize - skippedSize;
-        this.win.webContents.send('download-log', `Total download size: ${formatBytes(remainingSize)}.`);
+        this.downloadConsole.logTotalDownloadSize(formatBytes(remainingSize));
         this.win.webContents.send('download-overall-progress', { current: skippedSize, total: totalSize, skippedSize: skippedSize, eta: calculateEta(skippedSize, totalSize, downloadStartTime) });
 
         const totalFilesOverall = files.length; // Total files originally considered
@@ -63,34 +73,41 @@ class DownloadManager {
           totalFilesOverall, // Pass total files overall
           initialSkippedFileCount // Pass initial skipped file count
         );
-        summaryMessage = downloadResult.message;
         allSkippedFiles.push(...downloadResult.skippedFiles);
         downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.some(s => s.name === f.name));
       }
 
     } catch (e) {
-      if (e.message.startsWith("CANCELLED_")) {
-        summaryMessage = "Download cancelled by user.";
-        wasCancelled = true;
-        if (e.message === "CANCELLED_MID_FILE") {
-          partialFile = e.partialFile || null;
-        }
+      // Distinguish between controlled cancellations and other errors
+      if (e.message.startsWith('CANCELLED_')) {
+        console.log(`DownloadManager: Cancellation caught: ${e.message}`);
+        summaryMessage = ""; // No error message needed for a clean cancel
       } else {
-        summaryMessage = `Error: ${e.message}`;
-        this.win.webContents.send('download-log', summaryMessage);
+        console.error("DownloadManager: Generic error caught in startDownload:", e);
+        summaryMessage = `Error: ${e.message || e}`;
       }
+      wasCancelled = true;
+      partialFile = e.partialFile || null;
+    }
+
+    // Check both the error-based flag AND the internal manager flag
+    if (wasCancelled || this.isCancelled) {
+      this.downloadConsole.logDownloadCancelled();
+      summaryMessage = ""; // Ensure message is blank on cancel
+      wasCancelled = true; // Ensure this is set for the 'download-complete' event
+    } else if (downloadedFiles.length > 0 || filesToDownload.length === 0) {
+      this.downloadConsole.logDownloadComplete();
     }
 
     if (extractAndDelete && !wasCancelled && downloadedFiles.length > 0) {
-      this.win.webContents.send('download-log', 'Download complete. Starting extraction...');
-      this.win.webContents.send('download-phase-complete'); // New event
+      this.downloadConsole.logDownloadStartingExtraction();
       await this.extractFiles(downloadedFiles, targetDir, createSubfolder);
     }
 
     this.win.webContents.send('download-complete', {
       message: summaryMessage,
       skippedFiles: allSkippedFiles,
-      wasCancelled: wasCancelled,
+      wasCancelled: wasCancelled, // This will now be correct
       partialFile: partialFile
     });
 
@@ -101,11 +118,11 @@ class DownloadManager {
     const extractionStartTime = performance.now();
     const archiveFiles = downloadedFiles.filter(f => f.name_raw.toLowerCase().endsWith('.zip'));
     if (archiveFiles.length === 0) {
-      this.win.webContents.send('download-log', 'No .zip archives found to extract.');
+      this.downloadConsole.logNoArchivesToExtract();
       return;
     }
 
-    this.win.webContents.send('download-log', `Found ${archiveFiles.length} archive${archiveFiles.length > 1 ? 's' : ''} to extract.`);
+    this.downloadConsole.logFoundArchivesToExtract(archiveFiles.length);
 
     let totalUncompressedSizeOfAllArchives = 0;
     let overallExtractedBytes = 0;
@@ -126,7 +143,7 @@ class DownloadManager {
           entry = await zipfile.readEntry();
         }
       } catch (e) {
-        this.win.webContents.send('download-log', `Error calculating size for ${file.name_raw}: ${e.message}`);
+        this.downloadConsole.logError(`Error calculating size for ${file.name_raw}: ${e.message}`);
       } finally {
         if (zipfile) {
           await zipfile.close();
@@ -134,7 +151,7 @@ class DownloadManager {
       }
     }
 
-    this.win.webContents.send('download-log', `Total uncompressed size for all archives: ${formatBytes(totalUncompressedSizeOfAllArchives)}.`);
+    this.downloadConsole.logTotalUncompressedSize(formatBytes(totalUncompressedSizeOfAllArchives));
 
     // Second pass: Extract files and track progress
     for (let i = 0; i < archiveFiles.length; i++) {
@@ -145,7 +162,6 @@ class DownloadManager {
 
       let zipfile;
       try {
-        this.win.webContents.send('download-log', `Extracting ${file.name_raw}...`);
         this.win.webContents.send('extraction-progress', {
           current: i,
           total: archiveFiles.length,
@@ -178,7 +194,7 @@ class DownloadManager {
           extractedEntryCount++;
           const currentEntryFileName = entry.fileName || entry.filename; // Use entry.filename if entry.fileName is undefined
           if (!currentEntryFileName || typeof currentEntryFileName !== 'string') {
-            this.win.webContents.send('download-log', `Skipping invalid entry: ${JSON.stringify(entry)}`);
+            this.downloadConsole.logSkippingInvalidEntry(entry);
             entry = await zipfile.readEntry();
             continue;
           }
@@ -272,10 +288,9 @@ class DownloadManager {
           entry = await zipfile.readEntry();
         }
         await fs.promises.unlink(filePath);
-        this.win.webContents.send('download-log', `Successfully extracted and deleted ${file.name_raw}.`);
 
       } catch (e) {
-        this.win.webContents.send('download-log', `Error extracting ${file.name_raw}: ${e.message}`);
+        this.downloadConsole.logExtractionError(file.name_raw, e.message);
       } finally {
         if (zipfile) {
           await zipfile.close();
@@ -296,7 +311,7 @@ class DownloadManager {
       formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
       eta: '--'
     });
-    this.win.webContents.send('download-log', 'Extraction process complete.');
+    this.downloadConsole.logExtractionProcessComplete();
   }
 }
 

@@ -5,10 +5,11 @@ import { URL } from 'url';
 import axios from 'axios';
 
 class DownloadService {
-  constructor() {
+  constructor(downloadConsole) {
     this.downloadCancelled = false;
     this.httpAgent = new https.Agent({ keepAlive: true });
     this.abortController = new AbortController();
+    this.downloadConsole = downloadConsole;
   }
 
   cancel() {
@@ -57,7 +58,7 @@ class DownloadService {
           try {
             fs.mkdirSync(finalTargetDir, { recursive: true });
           } catch (mkdirErr) {
-            win.webContents.send('download-log', `Error creating subfolder ${finalTargetDir}: ${mkdirErr.message}`);
+            this.downloadConsole.logCreatingSubfolderError(finalTargetDir, mkdirErr.message);
           }
         }
       }
@@ -73,7 +74,7 @@ class DownloadService {
 
       if (fileDownloaded > 0) {
         headers['Range'] = `bytes=${fileDownloaded}-`;
-        win.webContents.send('download-log', `Resuming download for ${filename} from ${fileDownloaded} bytes.`);
+        this.downloadConsole.logResumingDownload(filename, fileDownloaded);
       }
 
       try {
@@ -104,7 +105,7 @@ class DownloadService {
             writer.close();
             const err = new Error("CANCELLED_MID_FILE");
             err.partialFile = { path: targetPath, name: filename };
-            currentFileError = err;
+            reject(err); // Directly reject the promise
             return;
           }
           fileDownloaded += chunk.length;
@@ -132,22 +133,7 @@ class DownloadService {
 
         await new Promise((resolve, reject) => {
           writer.on('finish', () => {
-            // Ensure final progress update is sent
-            win.webContents.send('download-file-progress', {
-              name: filename,
-              current: fileSize,
-              total: fileSize,
-              currentFileIndex: initialSkippedFileCount + fileIndex + 1, // Account for initially skipped files
-              totalFilesToDownload: totalFilesOverall // Use the overall total file count
-            });
-            win.webContents.send('download-overall-progress', {
-              current: totalDownloaded,
-              total: totalSize,
-              skippedSize: initialDownloadedSize
-            });
-
-            if (currentFileError) reject(currentFileError);
-            else resolve();
+            resolve();
           });
           writer.on('error', (err) => {
             reject(err);
@@ -158,15 +144,13 @@ class DownloadService {
         });
 
       } catch (e) {
-        if (e.name === 'AbortError') {
+        if (e.name === 'AbortError' || e.message.startsWith("CANCELLED_")) {
           const err = new Error("CANCELLED_MID_FILE");
           err.partialFile = { path: targetPath, name: filename };
           throw err;
         }
-        if (e.message.startsWith("CANCELLED_")) throw e;
 
-        const errorMsg = `ERROR: Failed to download ${filename}. ${e.message}`;
-        win.webContents.send('download-log', errorMsg);
+        this.downloadConsole.logError(`Failed to download ${filename}. ${e.message}`);
         skippedFiles.push(`${filename} (Download failed)`);
 
         try {
@@ -176,7 +160,8 @@ class DownloadService {
       }
     }
 
-    return { message: "Download complete!", skippedFiles };
+    console.log("DownloadService: downloadFiles returning normally.");
+    return { skippedFiles };
   }
 }
 

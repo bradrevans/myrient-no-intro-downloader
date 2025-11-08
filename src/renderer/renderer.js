@@ -179,8 +179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 window.electronAPI.onDownloadComplete(async (summary) => {
-  downloadUI.log(summary.message);
-
   if (summary.wasCancelled && summary.partialFile) {
     const userWantsDelete = confirm(`Download cancelled. Do you want to delete the incomplete file?\n\nFile: ${summary.partialFile.name}`);
     if (userWantsDelete) {

@@ -7,12 +7,15 @@ import FilterService from './services/FilterService.js';
 import DownloadManager from './services/DownloadManager.js';
 import FileSystemService from './services/FileSystemService.js';
 
+import DownloadConsole from './services/DownloadConsole.js';
+
 class IpcManager {
   constructor(win) {
     this.win = win;
     this.myrientService = new MyrientService();
     this.filterService = new FilterService();
-    this.downloadManager = new DownloadManager(win);
+    this.downloadConsole = new DownloadConsole(win);
+    this.downloadManager = new DownloadManager(win, this.downloadConsole);
     this.fileSystemService = new FileSystemService();
   }
 
