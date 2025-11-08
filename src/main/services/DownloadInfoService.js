@@ -78,8 +78,20 @@ class DownloadInfoService {
             // Extracted files exist - skip this download
             fileInfo.skip = true;
             skippedSize += remoteSize;
+          } else if (fs.existsSync(targetPath)) {
+            const localSize = fs.statSync(targetPath).size;
+            if (remoteSize > 0 && localSize === remoteSize) {
+              // Zip file exists with correct size but not extracted - mark for unzipping only
+              fileInfo.skip = false;
+              fileInfo.unzipOnly = true;
+              filesToDownload.push(fileInfo);
+            } else {
+              // Zip file exists but wrong size - re-download
+              fileInfo.skip = false;
+              filesToDownload.push(fileInfo);
+            }
           } else {
-            // No extracted files found - need to download and unzip
+            // No zip file - download and unzip
             fileInfo.skip = false;
             filesToDownload.push(fileInfo);
           }

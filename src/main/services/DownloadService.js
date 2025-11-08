@@ -46,6 +46,7 @@ class DownloadService {
       if (fileInfo.skip) continue;
 
       const filename = fileInfo.name_raw;
+      const unzipOnly = fileInfo.unzipOnly || false;
       let finalTargetDir = targetDir;
 
       if (createSubfolder) {
@@ -66,55 +67,58 @@ class DownloadService {
       let fileDownloaded = 0;
 
       try {
-        const response = await session.get(fileUrl, {
-          responseType: 'stream',
-          timeout: 30000,
-          signal: this.abortController.signal
-        });
-
-        const writer = fs.createWriteStream(targetPath, {
-          highWaterMark: 1024 * 1024
-        });
-
-        response.data.on('data', (chunk) => {
-          if (this.isCancelled()) {
-            response.request.abort();
-            writer.close();
-            const err = new Error("CANCELLED_MID_FILE");
-            err.partialFile = { path: targetPath, name: filename };
-            currentFileError = err;
-            return;
-          }
-          fileDownloaded += chunk.length;
-          totalDownloaded += chunk.length;
-          win.webContents.send('download-file-progress', {
-            name: filename,
-            current: fileDownloaded,
-            total: fileSize
+        // Skip download if this is unzip-only
+        if (!unzipOnly) {
+          const response = await session.get(fileUrl, {
+            responseType: 'stream',
+            timeout: 30000,
+            signal: this.abortController.signal
           });
-          win.webContents.send('download-overall-progress', {
-            current: totalDownloaded,
-            total: totalSize,
-            skippedSize: initialDownloadedSize
-          });
-        });
 
-        response.data.pipe(writer);
+          const writer = fs.createWriteStream(targetPath, {
+            highWaterMark: 1024 * 1024
+          });
 
-        await new Promise((resolve, reject) => {
-          writer.on('finish', () => {
-            if (currentFileError) reject(currentFileError);
-            else resolve();
+          response.data.on('data', (chunk) => {
+            if (this.isCancelled()) {
+              response.request.abort();
+              writer.close();
+              const err = new Error("CANCELLED_MID_FILE");
+              err.partialFile = { path: targetPath, name: filename };
+              currentFileError = err;
+              return;
+            }
+            fileDownloaded += chunk.length;
+            totalDownloaded += chunk.length;
+            win.webContents.send('download-file-progress', {
+              name: filename,
+              current: fileDownloaded,
+              total: fileSize
+            });
+            win.webContents.send('download-overall-progress', {
+              current: totalDownloaded,
+              total: totalSize,
+              skippedSize: initialDownloadedSize
+            });
           });
-          writer.on('error', (err) => {
-            reject(err);
-          });
-          response.data.on('error', (err) => {
-            reject(err);
-          });
-        });
 
-        // If unzip is enabled, unzip the file immediately after download
+          response.data.pipe(writer);
+
+          await new Promise((resolve, reject) => {
+            writer.on('finish', () => {
+              if (currentFileError) reject(currentFileError);
+              else resolve();
+            });
+            writer.on('error', (err) => {
+              reject(err);
+            });
+            response.data.on('error', (err) => {
+              reject(err);
+            });
+          });
+        }
+
+        // If unzip is enabled, unzip the file (whether just downloaded or pre-existing)
         if (unzipFiles && targetPath.endsWith('.zip')) {
           try {
             const UnzipService = require('./UnzipService.js');
