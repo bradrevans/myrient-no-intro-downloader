@@ -7,6 +7,12 @@ Download the latest release here:
 
 [![Latest Release](https://img.shields.io/github/v/release/bradrevans/myrient-downloader?style=flat-square&color=22c55e&label=latest)](https://github.com/bradrevans/myrient-downloader/releases)
 
+Please consider donating to support my work and Myrient's service.
+
+<a href="https://ko-fi.com/bradrevans"><img alt="Static Badge" src="https://img.shields.io/badge/Donate-To%20Support%20Me-orange?style=flat-square"></a>
+
+<a href="https://myrient.erista.me/donate/"><img alt="Static Badge" src="https://img.shields.io/badge/Donate-To%20Support%20Myrient-red?style=flat-square"></a>
+
 ***
 
 ## What the Application Does
@@ -71,4 +77,4 @@ The project is configured with `electron-builder` to generate ready-to-run execu
 
 ## Disclaimer
 
-This is a web-scraping tool. Please be respectful of [Myrient's](https://myrient.erista.me/) bandwidth and service and please consider [Donating to support Myrient](https://myrient.erista.me/donate/). This tool would not exist if it wasn't for their incredible service.
+This is a web-scraping tool. Please be respectful of [Myrient's](https://myrient.erista.me/) bandwidth and service. This tool would not exist if it wasn't for them.
