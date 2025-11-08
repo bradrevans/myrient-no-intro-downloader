@@ -116,7 +116,6 @@ class DownloadService {
 
         // If unzip is enabled, unzip the file immediately after download
         if (unzipFiles && targetPath.endsWith('.zip')) {
-          win.webContents.send('download-log', `Unzipping ${filename}...`);
           try {
             const UnzipService = require('./UnzipService.js');
             const unzipService = new UnzipService();
@@ -125,7 +124,6 @@ class DownloadService {
             // Clean up the zip file after successful extraction
             try {
               fs.unlinkSync(targetPath);
-              win.webContents.send('download-log', `Cleaned up ${filename}`);
             } catch (cleanupErr) {
               win.webContents.send('download-log', `Warning: Failed to clean up ${filename}: ${cleanupErr.message}`);
             }

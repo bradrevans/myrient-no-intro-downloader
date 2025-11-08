@@ -86,8 +86,6 @@ class UnzipService {
             
             // Clean up temp directory
             fs.rmSync(tempDir, { recursive: true });
-            
-            win.webContents.send('download-log', `Successfully extracted ${extractedEntries} files from ${path.basename(zipFilePath)}`);
             resolve({ message: `Successfully extracted ${extractedEntries} files`, files: extractedFiles });
           } catch (moveErr) {
             win.webContents.send('download-log', `Error moving extracted files: ${moveErr.message}`);
