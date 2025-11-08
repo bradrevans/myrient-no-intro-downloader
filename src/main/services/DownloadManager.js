@@ -29,7 +29,7 @@ class DownloadManager {
     let partialFile = null;
 
     try {
-      const scanResult = await this.downloadInfoService.getDownloadInfo(this.win, baseUrl, files, targetDir, createSubfolder);
+      const scanResult = await this.downloadInfoService.getDownloadInfo(this.win, baseUrl, files, targetDir, createSubfolder, unzipFiles);
 
       const filesToDownload = scanResult.filesToDownload;
       totalSize = scanResult.totalSize;

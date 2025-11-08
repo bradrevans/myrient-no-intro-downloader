@@ -22,7 +22,20 @@ class DownloadInfoService {
     this.abortController = new AbortController();
   }
 
-  async getDownloadInfo(win, baseUrl, files, targetDir, createSubfolder = false) {
+  checkIfExtractedFilesExist(targetDir, zipFilename) {
+    try {
+      // Simple check: look for any files in the target directory that might be from this zip
+      const files = fs.readdirSync(targetDir);
+      const baseName = path.parse(zipFilename).name;
+
+      // Look for files that start with the same base name (common pattern for zip contents)
+      return files.some(file => file.startsWith(baseName) && !file.endsWith('.zip'));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async getDownloadInfo(win, baseUrl, files, targetDir, createSubfolder = false, unzipFiles = false) {
     let totalSize = 0;
     let skippedSize = 0;
     const filesToDownload = [];
@@ -58,18 +71,33 @@ class DownloadInfoService {
         fileInfo.size = remoteSize;
         totalSize += remoteSize;
 
-        if (fs.existsSync(targetPath)) {
-          const localSize = fs.statSync(targetPath).size;
-          if (remoteSize > 0 && localSize === remoteSize) {
+        if (unzipFiles && targetPath.endsWith('.zip')) {
+          // For zip files when unzipping is enabled, check if extracted files exist
+          const extractedFilesExist = this.checkIfExtractedFilesExist(finalTargetDir, filename);
+          if (extractedFilesExist) {
+            // Extracted files exist - skip this download
             fileInfo.skip = true;
             skippedSize += remoteSize;
           } else {
+            // No extracted files found - need to download and unzip
             fileInfo.skip = false;
             filesToDownload.push(fileInfo);
           }
         } else {
-          fileInfo.skip = false;
-          filesToDownload.push(fileInfo);
+          // Regular file handling - check if file exists with correct size
+          if (fs.existsSync(targetPath)) {
+            const localSize = fs.statSync(targetPath).size;
+            if (remoteSize > 0 && localSize === remoteSize) {
+              fileInfo.skip = true;
+              skippedSize += remoteSize;
+            } else {
+              fileInfo.skip = false;
+              filesToDownload.push(fileInfo);
+            }
+          } else {
+            fileInfo.skip = false;
+            filesToDownload.push(fileInfo);
+          }
         }
       } catch (e) {
         const skipMsg = `SKIP: Could not get info for ${filename}. Error: ${e.message}`;
