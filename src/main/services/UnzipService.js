@@ -32,11 +32,6 @@ class UnzipService {
         return;
       }
 
-      // Create a temporary directory for extraction
-      const tempDir = path.join(targetDir, 'temp_extract');
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
-      }
 
       // Open the zip file
       yauzl.open(zipFilePath, { lazyEntries: true }, (err, zipfile) => {
@@ -51,46 +46,16 @@ class UnzipService {
         }
 
         const extractedFiles = [];
-        let totalEntries = 0;
         let extractedEntries = 0;
-
-        // Get total number of entries
-        zipfile.on('entry', () => {
-          totalEntries++;
-        });
 
         zipfile.on('end', () => {
           // All entries processed
           if (this.isCancelled()) {
-            // Clean up temp directory
-            try {
-              if (fs.existsSync(tempDir)) {
-                fs.rmSync(tempDir, { recursive: true });
-              }
-            } catch (cleanupErr) {
-              win.webContents.send('download-log', `Warning: Failed to clean up temp directory: ${cleanupErr.message}`);
-            }
             reject(new Error("CANCELLED_UNZIP"));
             return;
           }
 
-          // Move files from temp to target directory
-          try {
-            const files = fs.readdirSync(tempDir);
-            files.forEach(file => {
-              const sourcePath = path.join(tempDir, file);
-              const destPath = path.join(targetDir, file);
-              fs.renameSync(sourcePath, destPath);
-              extractedFiles.push(file);
-            });
-            
-            // Clean up temp directory
-            fs.rmSync(tempDir, { recursive: true });
-            resolve({ message: `Successfully extracted ${extractedEntries} files`, files: extractedFiles });
-          } catch (moveErr) {
-            win.webContents.send('download-log', `Error moving extracted files: ${moveErr.message}`);
-            reject(moveErr);
-          }
+          resolve({ message: `Successfully extracted ${extractedEntries} files`, files: extractedFiles });
         });
 
         zipfile.readEntry();
@@ -112,8 +77,8 @@ class UnzipService {
             return;
           }
 
-          // Extract file
-          const targetPath = path.join(tempDir, entry.fileName);
+          // Extract file directly to target directory
+          const targetPath = path.join(targetDir, entry.fileName);
           const dirPath = path.dirname(targetPath);
           
           if (!fs.existsSync(dirPath)) {
@@ -143,14 +108,6 @@ class UnzipService {
         });
 
         zipfile.on('error', (err) => {
-          // Clean up temp directory
-          try {
-            if (fs.existsSync(tempDir)) {
-              fs.rmSync(tempDir, { recursive: true });
-            }
-          } catch (cleanupErr) {
-            win.webContents.send('download-log', `Warning: Failed to clean up temp directory: ${cleanupErr.message}`);
-          }
           reject(err);
         });
       });
