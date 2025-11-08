@@ -1,12 +1,16 @@
 import stateService from './StateService.js';
 import apiService from './ApiService.js';
-import { setupDownloadUiListeners, logDownload } from './ui/download-ui.js';
 import UIManager from './ui/UIManager.js';
+import DownloadUI from './ui/DownloadUI.js';
+
+let downloadUI;
 
 document.addEventListener('DOMContentLoaded', async () => {
   await stateService.init();
 
   const uiManager = new UIManager(document.getElementById('view-container'), loadArchives);
+  downloadUI = new DownloadUI(stateService, apiService, uiManager);
+  uiManager.setDownloadUI(downloadUI);
   await uiManager.loadViews();
 
   async function loadArchives() {
@@ -171,18 +175,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadArchives();
   uiManager.updateBreadcrumbs();
-  setupDownloadUiListeners(uiManager);
   updateZoomDisplay();
 });
 
 window.electronAPI.onDownloadComplete(async (summary) => {
-  logDownload(summary.message);
+  downloadUI.log(summary.message);
 
   if (summary.wasCancelled && summary.partialFile) {
     const userWantsDelete = confirm(`Download cancelled. Do you want to delete the incomplete file?\n\nFile: ${summary.partialFile.name}`);
     if (userWantsDelete) {
       await apiService.deleteFile(summary.partialFile.path);
-      logDownload(`Deleted partial file: ${summary.partialFile.name}`);
+      downloadUI.log(`Deleted partial file: ${summary.partialFile.name}`);
     }
   }
 

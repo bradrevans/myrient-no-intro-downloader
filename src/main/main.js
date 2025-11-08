@@ -1,6 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const { setupIpcHandlers } = require('./ipc-handlers.js');
+const IpcManager = require('./IpcManager.js');
 
 let win;
 
@@ -25,7 +25,8 @@ function createWindow() {
 
 app.whenReady().then(() => {
   const win = createWindow();
-  setupIpcHandlers(win);
+  const ipcManager = new IpcManager(win);
+  ipcManager.setupIpcHandlers();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

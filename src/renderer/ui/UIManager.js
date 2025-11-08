@@ -1,7 +1,6 @@
 import stateService from '../StateService.js';
 import apiService from '../ApiService.js';
-import { populateResults, startDownload, logDownload } from './download-ui.js';
-import { setupSearch, setupSearchClearButton } from './search.js';
+import Search from './Search.js';
 import KeyboardNavigator from './KeyboardNavigator.js';
 
 class UIManager {
@@ -10,6 +9,11 @@ class UIManager {
     this.views = {};
     this.currentView = null;
     this.loadArchivesCallback = loadArchivesCallback;
+    this.downloadUI = null;
+  }
+
+  setDownloadUI(downloadUI) {
+    this.downloadUI = downloadUI;
   }
 
   async loadViews() {
@@ -457,7 +461,7 @@ class UIManager {
         try {
           await apiService.runFilter(filters);
           this.showView('results');
-          populateResults();
+          this.downloadUI.populateResults();
           const searchInput = document.getElementById('search-results');
           if (searchInput) {
             searchInput.dispatchEvent(new Event('input'));
@@ -485,10 +489,10 @@ class UIManager {
         }
       });
 
-      document.getElementById('download-scan-btn').addEventListener('click', () => startDownload());
+      document.getElementById('download-scan-btn').addEventListener('click', () => this.downloadUI.startDownload());
 
       document.getElementById('download-cancel-btn').addEventListener('click', () => {
-        logDownload('Cancelling download, please wait...');
+        this.downloadUI.log('Cancelling download, please wait...');
         document.getElementById('download-cancel-btn').disabled = true;
         apiService.cancelDownload();
       });
@@ -547,8 +551,7 @@ class UIManager {
     let firstSearchInputFocused = false;
 
     (Array.isArray(configs) ? configs : [configs]).forEach(config => {
-      setupSearch(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText);
-      setupSearchClearButton(config.searchId, `${config.searchId}-clear`);
+      new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
 
       const listContainer = document.getElementById(config.listId);
       const searchInput = document.getElementById(config.searchId);
