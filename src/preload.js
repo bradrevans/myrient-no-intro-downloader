@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkDownloadDirectoryStructure: (downloadPath) => ipcRenderer.invoke('check-download-directory-structure', downloadPath),
   getDownloadDirectoryStructureEnum: () => ipcRenderer.invoke('get-download-directory-structure-enum'),
 
-  startDownload: (baseUrl, files, targetDir, createSubfolder) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder),
+  startDownload: (baseUrl, files, targetDir, createSubfolder, unzipFiles) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder, unzipFiles),
   cancelDownload: () => ipcRenderer.send('cancel-download'),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
 
