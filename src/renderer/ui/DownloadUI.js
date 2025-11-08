@@ -31,6 +31,10 @@ export default class DownloadUI {
       fileProgressName: document.getElementById('file-progress-name'),
       fileProgressSize: document.getElementById('file-progress-size'),
       downloadDirBtn: document.getElementById('download-dir-btn'),
+      extractionProgressBar: document.getElementById('extraction-progress-bar'),
+      extractionProgress: document.getElementById('extraction-progress'),
+      extractionProgressName: document.getElementById('extraction-progress-name'),
+      extractionProgressText: document.getElementById('extraction-progress-text'),
     };
   }
 
@@ -187,6 +191,24 @@ export default class DownloadUI {
 
     window.electronAPI.onDownloadLog(message => {
       this.log(message);
+    });
+
+    window.electronAPI.onExtractionProgress(data => {
+      const elements = this._getElements();
+      if (!elements.extractionProgress) return;
+
+      const extractionProgressBar = document.getElementById('extraction-progress-bar');
+      if (data.total > 0) {
+        extractionProgressBar.classList.remove('hidden');
+      } else {
+        extractionProgressBar.classList.add('hidden');
+      }
+
+      elements.extractionProgress.value = data.current;
+      elements.extractionProgress.max = data.total;
+      elements.extractionProgressName.textContent = data.filename;
+      const percent = data.total > 0 ? ((data.current / data.total) * 100).toFixed(0) : 0;
+      elements.extractionProgressText.textContent = `${percent}% (${data.current} / ${data.total} files)`;
     });
   }
 }

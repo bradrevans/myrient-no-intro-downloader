@@ -21,6 +21,7 @@ class StateService {
       dedupeMode: 'priority',
       keepFallbacks: true,
       createSubfolder: false,
+      extractAndDelete: false,
     };
   }
 

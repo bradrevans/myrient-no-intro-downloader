@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-const { URL } = require('url');
-const axios = require('axios');
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+import { URL } from 'url';
+import axios from 'axios';
 
 class DownloadService {
   constructor() {
@@ -137,4 +137,4 @@ class DownloadService {
   }
 }
 
-module.exports = DownloadService;
+export default DownloadService;

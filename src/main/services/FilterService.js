@@ -122,4 +122,4 @@ class FilterService {
   }
 }
 
-module.exports = FilterService;
+export default FilterService;

@@ -24,6 +24,11 @@
       <label for="create-subfolder-checkbox" class="text-neutral-300">Create subfolder for each game</label>
     </div>
 
+    <div class="flex items-center space-x-2">
+      <input type="checkbox" id="extract-archives-checkbox" class="h-4 w-4">
+      <label for="extract-archives-checkbox" class="text-neutral-300">Extract then delete archives</label>
+    </div>
+
     <button id="download-scan-btn" class="btn btn-success w-full" disabled>Scan & Download</button>
 
     <button id="download-cancel-btn" class="btn btn-danger w-full hidden">Cancel Download</button>
@@ -51,6 +56,14 @@
         <div class="flex justify-between text-sm text-gray-100">
           <span id="file-progress-name" class="truncate"></span>
           <span id="file-progress-size" class="flex-shrink-0 ml-2"></span>
+        </div>
+      </div>
+      <div id="extraction-progress-bar" class="hidden w-full">
+        <label for="extraction-progress" class="text-sm font-semibold">Extraction Progress</label>
+        <progress id="extraction-progress" class="w-full" max="100" value="0"></progress>
+        <div class="flex justify-between text-sm text-gray-100">
+            <span id="extraction-progress-name" class="truncate"></span>
+            <span id="extraction-progress-text" class="flex-shrink-0 ml-2"></span>
         </div>
       </div>
     </div>

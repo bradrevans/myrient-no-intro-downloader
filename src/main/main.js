@@ -1,6 +1,11 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const IpcManager = require('./IpcManager.js');
+import electron from 'electron';
+const { app, BrowserWindow } = electron;
+import path from 'path';
+import { fileURLToPath } from 'url';
+import IpcManager from './IpcManager.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let win;
 

@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "A desktop app to browse, filter, and download from Myrient.",
   "main": "src/main/main.js",
+  "type": "module",
   "scripts": {
     "start": "tailwindcss -i ./src/renderer/styles/input.css -o ./src/renderer/styles/style.css && electron .",
     "build:all": "npm run build:css && electron-builder --publish never",
@@ -15,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
     "electron-log": "^5.1.5",

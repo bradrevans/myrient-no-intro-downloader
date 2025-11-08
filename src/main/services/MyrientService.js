@@ -1,7 +1,7 @@
-const https = require('https');
-const axios = require('axios');
-const cheerio = require('cheerio');
-const FileParserService = require('./FileParserService.js');
+import https from 'https';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import FileParserService from './FileParserService.js';
 
 class MyrientService {
   constructor() {
@@ -64,4 +64,4 @@ class MyrientService {
   }
 }
 
-module.exports = MyrientService;
+export default MyrientService;

@@ -1,5 +1,5 @@
-const fs = require('fs');
-const { DownloadDirectoryStructure } = require('../constants.js');
+import fs from 'fs';
+import { DownloadDirectoryStructure } from '../constants.js';
 
 class FileSystemService {
   async checkDownloadDirectoryStructure(downloadPath) {
@@ -35,4 +35,4 @@ class FileSystemService {
   }
 }
 
-module.exports = FileSystemService;
+export default FileSystemService;

@@ -1,10 +1,11 @@
-const { MYRIENT_BASE_URL, DownloadDirectoryStructure } = require('./constants.js');
-const { ipcMain, dialog, shell } = require('electron');
-const fs = require('fs');
-const MyrientService = require('./services/MyrientService.js');
-const FilterService = require('./services/FilterService.js');
-const DownloadManager = require('./services/DownloadManager.js');
-const FileSystemService = require('./services/FileSystemService.js');
+import { MYRIENT_BASE_URL, DownloadDirectoryStructure } from './constants.js';
+import electron from 'electron';
+const { ipcMain, dialog, shell } = electron;
+import fs from 'fs';
+import MyrientService from './services/MyrientService.js';
+import FilterService from './services/FilterService.js';
+import DownloadManager from './services/DownloadManager.js';
+import FileSystemService from './services/FileSystemService.js';
 
 class IpcManager {
   constructor(win) {
@@ -132,8 +133,8 @@ class IpcManager {
       this.win.webContents.setZoomFactor(factor);
     });
 
-    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder) => {
-      return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder);
+    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete) => {
+      return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete);
     });
 
     ipcMain.on('log-message', (event, level, message) => {
@@ -150,4 +151,4 @@ class IpcManager {
   }
 }
 
-module.exports = IpcManager;
+export default IpcManager;

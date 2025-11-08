@@ -1,5 +1,8 @@
-const DownloadInfoService = require('./DownloadInfoService.js');
-const DownloadService = require('./DownloadService.js');
+import DownloadInfoService from './DownloadInfoService.js';
+import DownloadService from './DownloadService.js';
+import AdmZip from 'adm-zip';
+import fs from 'fs';
+import path from 'path';
 
 class DownloadManager {
   constructor(win) {
@@ -18,7 +21,7 @@ class DownloadManager {
     this.downloadService.reset();
   }
 
-  async startDownload(baseUrl, files, targetDir, createSubfolder) {
+  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete) {
     this.reset();
 
     let allSkippedFiles = [];
@@ -27,6 +30,7 @@ class DownloadManager {
     let summaryMessage = "";
     let wasCancelled = false;
     let partialFile = null;
+    let downloadedFiles = [];
 
     try {
       const scanResult = await this.downloadInfoService.getDownloadInfo(this.win, baseUrl, files, targetDir, createSubfolder);
@@ -45,6 +49,7 @@ class DownloadManager {
         const downloadResult = await this.downloadService.downloadFiles(this.win, baseUrl, filesToDownload, targetDir, totalSize, skippedSize, createSubfolder);
         summaryMessage = downloadResult.message;
         allSkippedFiles.push(...downloadResult.skippedFiles);
+        downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.some(s => s.name === f.name));
       }
 
     } catch (e) {
@@ -60,6 +65,11 @@ class DownloadManager {
       }
     }
 
+    if (extractAndDelete && !wasCancelled && downloadedFiles.length > 0) {
+      this.win.webContents.send('download-log', 'Download complete. Starting extraction...');
+      await this.extractFiles(downloadedFiles, targetDir, createSubfolder);
+    }
+
     this.win.webContents.send('download-complete', {
       message: summaryMessage,
       skippedFiles: allSkippedFiles,
@@ -69,6 +79,37 @@ class DownloadManager {
 
     return { success: true };
   }
+
+  async extractFiles(downloadedFiles, targetDir, createSubfolder) {
+    const archiveFiles = downloadedFiles.filter(f => f.name_raw.toLowerCase().endsWith('.zip'));
+    if (archiveFiles.length === 0) {
+      this.win.webContents.send('download-log', 'No .zip archives found to extract.');
+      return;
+    }
+
+    this.win.webContents.send('download-log', `Found ${archiveFiles.length} .zip archives to extract.`);
+
+    for (let i = 0; i < archiveFiles.length; i++) {
+      const file = archiveFiles[i];
+      const subfolder = createSubfolder ? file.name_raw.replace(/\.[^/.]+$/, "") : '';
+      const filePath = path.join(targetDir, subfolder, file.name_raw);
+
+      try {
+        this.win.webContents.send('download-log', `Extracting ${file.name_raw}...`);
+        this.win.webContents.send('extraction-progress', { current: i, total: archiveFiles.length, filename: file.name_raw });
+
+        const zip = new AdmZip(filePath);
+        zip.extractAllTo(path.join(targetDir, subfolder), true);
+
+        fs.unlinkSync(filePath);
+
+      } catch (e) {
+        this.win.webContents.send('download-log', `Error extracting ${file.name_raw}: ${e.message}`);
+      }
+    }
+    this.win.webContents.send('extraction-progress', { current: archiveFiles.length, total: archiveFiles.length, filename: '' });
+    this.win.webContents.send('download-log', 'Extraction process complete.');
+  }
 }
 
-module.exports = DownloadManager;
+export default DownloadManager;

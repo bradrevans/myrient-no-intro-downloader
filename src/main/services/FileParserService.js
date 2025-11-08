@@ -1,4 +1,4 @@
-const path = require('path');
+import path from 'path';
 
 class FileParserService {
   parseFilename(filename) {
@@ -48,4 +48,4 @@ class FileParserService {
   }
 }
 
-module.exports = FileParserService;
+export default FileParserService;

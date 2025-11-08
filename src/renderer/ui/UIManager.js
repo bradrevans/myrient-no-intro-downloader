@@ -481,6 +481,14 @@ class UIManager {
         });
       }
 
+      const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
+      if (extractArchivesCheckbox) {
+        extractArchivesCheckbox.checked = stateService.get('extractAndDelete');
+        extractArchivesCheckbox.addEventListener('change', (e) => {
+          stateService.set('extractAndDelete', e.target.checked);
+        });
+      }
+
       document.getElementById('download-dir-btn').addEventListener('click', async () => {
         const dir = await apiService.getDownloadDirectory();
         if (dir) {
