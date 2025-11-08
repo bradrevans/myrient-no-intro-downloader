@@ -48,7 +48,7 @@
 
     <div id="download-progress-bars" class="hidden w-full space-y-4">
       <div>
-        <label for="overall-progress" class="text-sm font-semibold">Overall Progress (by size)</label>
+        <label for="overall-progress" class="text-sm font-semibold">Overall Download Progress</label>
         <progress id="overall-progress" class="w-full" max="100" value="0"></progress>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="overall-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
@@ -57,11 +57,20 @@
         </div>
       </div>
       <div>
-        <label for="file-progress" class="text-sm font-semibold">Current File</label>
+        <label for="file-progress" class="text-sm font-semibold">Download Progress</label>
         <progress id="file-progress" class="w-full" max="100" value="0"></progress>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="file-progress-name" class="truncate"></span>
           <span id="file-progress-size" class="flex-shrink-0 ml-2"></span>
+        </div>
+      </div>
+      <div id="overall-extraction-progress-bar" class="hidden w-full">
+        <label for="overall-extraction-progress" class="text-sm font-semibold">Overall Extraction Progress</label>
+        <progress id="overall-extraction-progress" class="w-full" max="100" value="0"></progress>
+        <div class="flex justify-between text-sm text-gray-100">
+            <span id="overall-extraction-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
+            --</span>
+            <span id="overall-extraction-progress-text" class="truncate">0% (0 B / 0 B)</span>
         </div>
       </div>
       <div id="extraction-progress-bar" class="hidden w-full">

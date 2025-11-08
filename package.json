@@ -20,7 +20,9 @@
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
     "electron-log": "^5.1.5",
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "yauzl": "^3.2.0",
+    "yauzl-promise": "^4.0.0"
   },
   "devDependencies": {
     "electron": "^39.0.0",

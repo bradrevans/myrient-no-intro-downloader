@@ -25,7 +25,7 @@ class DownloadService {
     this.abortController = new AbortController();
   }
 
-  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false) {
+  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false, totalFilesOverall, initialSkippedFileCount) {
     const session = axios.create({
       httpsAgent: this.httpAgent,
       timeout: 15000,
@@ -37,8 +37,10 @@ class DownloadService {
     let totalDownloaded = initialDownloadedSize;
     let currentFileError = null;
     const skippedFiles = [];
+    let lastDownloadProgressUpdateTime = 0; // Added for throttling
 
-    for (const fileInfo of files) {
+    for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
+      const fileInfo = files[fileIndex];
       if (this.isCancelled()) {
         throw new Error("CANCELLED_BETWEEN_FILES");
       }
@@ -63,17 +65,37 @@ class DownloadService {
       const targetPath = path.join(finalTargetDir, filename);
       const fileUrl = new URL(fileInfo.href, baseUrl).href;
       const fileSize = fileInfo.size || 0;
-      let fileDownloaded = 0;
+      let fileDownloaded = fileInfo.downloadedBytes || 0; // Initialize with already downloaded bytes
+
+      const headers = {
+        'User-Agent': 'Wget/1.21.3 (linux-gnu)'
+      };
+
+      if (fileDownloaded > 0) {
+        headers['Range'] = `bytes=${fileDownloaded}-`;
+        win.webContents.send('download-log', `Resuming download for ${filename} from ${fileDownloaded} bytes.`);
+      }
 
       try {
         const response = await session.get(fileUrl, {
           responseType: 'stream',
           timeout: 30000,
-          signal: this.abortController.signal
+          signal: this.abortController.signal,
+          headers: headers // Use the modified headers
         });
 
         const writer = fs.createWriteStream(targetPath, {
-          highWaterMark: 1024 * 1024
+          highWaterMark: 1024 * 1024,
+          flags: fileDownloaded > 0 ? 'a' : 'w' // Append if resuming, otherwise write
+        });
+
+        // Send initial progress update for the file
+        win.webContents.send('download-file-progress', {
+          name: filename,
+          current: fileDownloaded, // Start current progress from downloadedBytes
+          total: fileSize,
+          currentFileIndex: initialSkippedFileCount + fileIndex + 1, // Account for initially skipped files
+          totalFilesToDownload: totalFilesOverall // Use the overall total file count
         });
 
         response.data.on('data', (chunk) => {
@@ -87,22 +109,43 @@ class DownloadService {
           }
           fileDownloaded += chunk.length;
           totalDownloaded += chunk.length;
-          win.webContents.send('download-file-progress', {
-            name: filename,
-            current: fileDownloaded,
-            total: fileSize
-          });
-          win.webContents.send('download-overall-progress', {
-            current: totalDownloaded,
-            total: totalSize,
-            skippedSize: initialDownloadedSize
-          });
+
+          const now = performance.now();
+          if (now - lastDownloadProgressUpdateTime > 100 || fileDownloaded === fileSize) { // Throttle updates
+            lastDownloadProgressUpdateTime = now;
+            win.webContents.send('download-file-progress', {
+              name: filename,
+              current: fileDownloaded,
+              total: fileSize,
+              currentFileIndex: initialSkippedFileCount + fileIndex + 1, // Account for initially skipped files
+              totalFilesToDownload: totalFilesOverall // Use the overall total file count
+            });
+            win.webContents.send('download-overall-progress', {
+              current: totalDownloaded,
+              total: totalSize,
+              skippedSize: initialDownloadedSize
+            });
+          }
         });
 
         response.data.pipe(writer);
 
         await new Promise((resolve, reject) => {
           writer.on('finish', () => {
+            // Ensure final progress update is sent
+            win.webContents.send('download-file-progress', {
+              name: filename,
+              current: fileSize,
+              total: fileSize,
+              currentFileIndex: initialSkippedFileCount + fileIndex + 1, // Account for initially skipped files
+              totalFilesToDownload: totalFilesOverall // Use the overall total file count
+            });
+            win.webContents.send('download-overall-progress', {
+              current: totalDownloaded,
+              total: totalSize,
+              skippedSize: initialDownloadedSize
+            });
+
             if (currentFileError) reject(currentFileError);
             else resolve();
           });

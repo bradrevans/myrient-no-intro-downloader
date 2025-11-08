@@ -1,8 +1,9 @@
 import electron from 'electron';
-const { app, BrowserWindow } = electron;
+const { app, BrowserWindow, ipcMain } = electron;
 import path from 'path';
 import { fileURLToPath } from 'url';
 import IpcManager from './IpcManager.js';
+import { formatBytes } from './utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +33,11 @@ app.whenReady().then(() => {
   const win = createWindow();
   const ipcManager = new IpcManager(win);
   ipcManager.setupIpcHandlers();
+
+  // Added IPC handler for formatBytes
+  ipcMain.handle('format-bytes', (event, bytes, decimals) => {
+    return formatBytes(bytes, decimals);
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

@@ -1,4 +1,4 @@
-import { formatBytes, formatTime } from '../utils.js';
+import { formatTime } from '../utils.js';
 
 export default class DownloadUI {
   constructor(stateService, apiService, uiManager) {
@@ -29,6 +29,7 @@ export default class DownloadUI {
       overallProgressText: document.getElementById('overall-progress-text'),
       overallProgressTime: document.getElementById('overall-progress-time'),
       fileProgress: document.getElementById('file-progress'),
+      fileProgressLabel: document.querySelector('label[for="file-progress"]'),
       fileProgressName: document.getElementById('file-progress-name'),
       fileProgressSize: document.getElementById('file-progress-size'),
       downloadDirBtn: document.getElementById('download-dir-btn'),
@@ -36,6 +37,10 @@ export default class DownloadUI {
       extractionProgress: document.getElementById('extraction-progress'),
       extractionProgressName: document.getElementById('extraction-progress-name'),
       extractionProgressText: document.getElementById('extraction-progress-text'),
+      overallExtractionProgressBar: document.getElementById('overall-extraction-progress-bar'),
+      overallExtractionProgress: document.getElementById('overall-extraction-progress'),
+      overallExtractionProgressText: document.getElementById('overall-extraction-progress-text'),
+      overallExtractionProgressTime: document.getElementById('overall-extraction-progress-time'),
       selectAllResultsBtn: document.getElementById('select-all-results-btn'),
       deselectAllResultsBtn: document.getElementById('deselect-all-results-btn'),
       resultsSelectedCount: document.getElementById('results-selected-count'),
@@ -168,10 +173,21 @@ export default class DownloadUI {
     elements.overallProgressTime.textContent = "Estimated Time Remaining: --";
     elements.overallProgressText.textContent = "0.00 MB / 0.00 MB";
 
+    // Show the file progress label
+    elements.fileProgressLabel.classList.remove('hidden');
+
+    // Reset extraction progress bars
+    elements.extractionProgress.value = 0;
+    elements.overallExtractionProgress.value = 0;
+    elements.overallExtractionProgressText.textContent = "";
+    elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
+    elements.extractionProgressName.textContent = "";
+    elements.extractionProgressText.textContent = "";
+
     elements.scanProgressBar.classList.remove('hidden');
     elements.downloadProgressBars.classList.remove('hidden');
-    elements.fileProgress.classList.remove('hidden');
-    elements.fileProgressSize.classList.remove('hidden');
+    elements.extractionProgressBar.classList.add('hidden'); // Hide individual extraction progress bar
+    elements.overallExtractionProgressBar.classList.add('hidden'); // Hide overall extraction progress bar
 
     this.apiService.startDownload(this.stateService.get('selectedResults'));
   }
@@ -213,14 +229,14 @@ export default class DownloadUI {
       elements.scanProgressText.textContent = `${percent}% (${data.current} / ${data.total} files)`;
     });
 
-    window.electronAPI.onDownloadOverallProgress(data => {
+    window.electronAPI.onDownloadOverallProgress(async data => {
       const elements = this._getElements();
       if (!elements.overallProgress) return;
       elements.overallProgress.value = data.current;
       elements.overallProgress.max = data.total;
       const percent = data.total > 0 ? ((data.current / data.total) * 100).toFixed(1) : 0;
       elements.overallProgressText.textContent =
-        `${formatBytes(data.current)} / ${formatBytes(data.total)} (${percent}%)`;
+        `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percent}%)`;
 
       this.stateService.set('totalBytesDownloadedThisSession', data.current - data.skippedSize);
 
@@ -232,48 +248,82 @@ export default class DownloadUI {
 
         if (avgSpeed > 0 && sizeRemaining > 0) {
           const secondsRemaining = sizeRemaining / avgSpeed;
-          elements.overallProgressTime.textContent = `Time: ${formatTime(secondsRemaining)}`;
+          elements.overallProgressTime.textContent = `Estimated Time Remaining: ${formatTime(secondsRemaining)}`;
         } else {
           elements.overallProgressTime.textContent = "Estimated Time Remaining: --";
         }
       }
     });
 
-    window.electronAPI.onDownloadFileProgress(data => {
+    window.electronAPI.onDownloadFileProgress(async data => {
       const elements = this._getElements();
       if (!elements.fileProgress) return;
-      if (elements.fileProgressName.textContent !== data.name) {
+
+      elements.fileProgress.classList.remove('hidden');
+      elements.fileProgressSize.classList.remove('hidden');
+      elements.fileProgressName.classList.remove('hidden'); // Explicitly unhide fileProgressName
+
+      const newFileNameText = `${data.name} (${data.currentFileIndex}/${data.totalFilesToDownload})`;
+      if (elements.fileProgressName.textContent !== newFileNameText) {
         elements.fileProgress.value = 0;
-        elements.fileProgressName.textContent = data.name;
+        elements.fileProgressName.textContent = newFileNameText;
       }
 
       elements.fileProgress.value = data.current;
       elements.fileProgress.max = data.total;
       const percent = data.total > 0 ? ((data.current / data.total) * 100).toFixed(0) : 0;
       elements.fileProgressSize.textContent =
-        `${formatBytes(data.current)} / ${formatBytes(data.total)} (${percent}%)`;
+        `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percent}%)`;
     });
 
     window.electronAPI.onDownloadLog(message => {
       this.log(message);
     });
 
-    window.electronAPI.onExtractionProgress(data => {
+
+
+    window.electronAPI.onDownloadComplete((summary) => {
+      const elements = this._getElements();
+      if (!elements.fileProgress) return;
+      elements.fileProgress.classList.add('hidden');
+      elements.fileProgressName.classList.add('hidden');
+      elements.fileProgressSize.classList.add('hidden');
+      elements.fileProgressLabel.classList.add('hidden');
+    });
+
+    window.electronAPI.onExtractionProgress(async data => {
       const elements = this._getElements();
       if (!elements.extractionProgress) return;
 
+      // Overall extraction progress bar (across all archives)
+      const overallExtractionProgressBar = document.getElementById('overall-extraction-progress-bar');
+      if (data.totalUncompressedSizeOfAllArchives > 0) {
+        overallExtractionProgressBar.classList.remove('hidden');
+        elements.overallExtractionProgress.value = data.overallExtractedBytes;
+        elements.overallExtractionProgress.max = data.totalUncompressedSizeOfAllArchives;
+        const overallPercent = ((data.overallExtractedBytes / data.totalUncompressedSizeOfAllArchives) * 100).toFixed(1);
+        elements.overallExtractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.overallExtractedBytes)} / ${await window.electronAPI.formatBytes(data.totalUncompressedSizeOfAllArchives)} (${overallPercent}%)`;
+        if (data.eta !== undefined) { // Changed from timeRemaining to eta
+          elements.overallExtractionProgressTime.textContent = `Estimated Time Remaining: ${data.eta}`; // Use eta directly
+        } else {
+          elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
+        }
+      } else {
+        overallExtractionProgressBar.classList.add('hidden');
+      }
+
+      // Current file within archive extraction progress
       const extractionProgressBar = document.getElementById('extraction-progress-bar');
-      if (data.total > 0) {
+      if (data.fileTotal > 0) {
         extractionProgressBar.classList.remove('hidden');
+        elements.extractionProgress.value = data.fileProgress;
+        elements.extractionProgress.max = data.fileTotal;
+        const filePercent = ((data.fileProgress / data.fileTotal) * 100).toFixed(0);
+        elements.extractionProgressName.textContent = `${data.filename} (${data.currentEntry}/${data.totalEntries})`;
+        elements.extractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.fileProgress)} / ${await window.electronAPI.formatBytes(data.fileTotal)} (${filePercent}%)`;
       } else {
         extractionProgressBar.classList.add('hidden');
       }
-
-      elements.extractionProgress.value = data.current;
-      elements.extractionProgress.max = data.total;
-      elements.extractionProgressName.textContent = data.filename;
-      const percent = data.total > 0 ? ((data.current / data.total) * 100).toFixed(0) : 0;
-      elements.extractionProgressText.textContent = `${percent}% (${data.current} / ${data.total} files)`;
     });
   }
 }
