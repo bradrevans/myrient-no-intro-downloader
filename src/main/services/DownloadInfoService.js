@@ -61,17 +61,15 @@ class DownloadInfoService {
         if (fs.existsSync(targetPath)) {
           const localSize = fs.statSync(targetPath).size;
           if (remoteSize > 0 && localSize === remoteSize) {
-                      fileInfo.skip = true;
-                      skippedSize += remoteSize;
-                      skippedFiles.push(fileInfo); // Add fully skipped files to the skippedFiles array
-                    } else if (remoteSize > 0 && localSize < remoteSize) {            // Partially downloaded file
-            fileInfo.skip = false; // Still needs to be downloaded
+            fileInfo.skip = true;
+            skippedSize += remoteSize;
+            skippedFiles.push(fileInfo);
+          } else if (remoteSize > 0 && localSize < remoteSize) {
+            fileInfo.skip = false;
             fileInfo.downloadedBytes = localSize;
-            skippedSize += localSize; // Add partial size to skipped for overall progress
+            skippedSize += localSize;
             filesToDownload.push(fileInfo);
           } else {
-            // Local file exists but is larger than remote, or remoteSize is 0
-            // Treat as a new download for now, or handle as an error/skip if appropriate
             fileInfo.skip = false;
             filesToDownload.push(fileInfo);
           }

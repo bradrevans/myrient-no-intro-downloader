@@ -64,7 +64,7 @@ export default class DownloadUI {
         const name = cb.parentElement.dataset.name;
         return finalFileList.find(f => f.name_raw === name);
       })
-      .filter(Boolean); // Filter out any undefined results if a file isn't found
+      .filter(Boolean);
 
     this.stateService.set('selectedResults', updatedSelectedResults);
     this.updateSelectedCount();
@@ -72,7 +72,7 @@ export default class DownloadUI {
 
   async populateResults() {
     const elements = this._getElements();
-    if (!elements.resultsFileCount) return; // Guard against wrong view
+    if (!elements.resultsFileCount) return;
 
     const finalFileList = this.stateService.get('finalFileList');
     elements.resultsFileCount.textContent = finalFileList.length;
@@ -173,10 +173,8 @@ export default class DownloadUI {
     elements.overallProgressTime.textContent = "Estimated Time Remaining: --";
     elements.overallProgressText.textContent = "0.00 MB / 0.00 MB";
 
-    // Show the file progress label
     elements.fileProgressLabel.classList.remove('hidden');
 
-    // Reset extraction progress bars
     elements.extractionProgress.value = 0;
     elements.overallExtractionProgress.value = 0;
     elements.overallExtractionProgressText.textContent = "";
@@ -186,8 +184,8 @@ export default class DownloadUI {
 
     elements.scanProgressBar.classList.remove('hidden');
     elements.downloadProgressBars.classList.remove('hidden');
-    elements.extractionProgressBar.classList.add('hidden'); // Hide individual extraction progress bar
-    elements.overallExtractionProgressBar.classList.add('hidden'); // Hide overall extraction progress bar
+    elements.extractionProgressBar.classList.add('hidden');
+    elements.overallExtractionProgressBar.classList.add('hidden');
 
     this.apiService.startDownload(this.stateService.get('selectedResults'));
   }
@@ -261,7 +259,7 @@ export default class DownloadUI {
 
       elements.fileProgress.classList.remove('hidden');
       elements.fileProgressSize.classList.remove('hidden');
-      elements.fileProgressName.classList.remove('hidden'); // Explicitly unhide fileProgressName
+      elements.fileProgressName.classList.remove('hidden');
 
       const newFileNameText = `${data.name} (${data.currentFileIndex}/${data.totalFilesToDownload})`;
       if (elements.fileProgressName.textContent !== newFileNameText) {
@@ -295,7 +293,6 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (!elements.extractionProgress) return;
 
-      // Overall extraction progress bar (across all archives)
       const overallExtractionProgressBar = document.getElementById('overall-extraction-progress-bar');
       if (data.totalUncompressedSizeOfAllArchives > 0) {
         overallExtractionProgressBar.classList.remove('hidden');
@@ -303,8 +300,8 @@ export default class DownloadUI {
         elements.overallExtractionProgress.max = data.totalUncompressedSizeOfAllArchives;
         const overallPercent = ((data.overallExtractedBytes / data.totalUncompressedSizeOfAllArchives) * 100).toFixed(1);
         elements.overallExtractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.overallExtractedBytes)} / ${await window.electronAPI.formatBytes(data.totalUncompressedSizeOfAllArchives)} (${overallPercent}%)`;
-        if (data.eta !== undefined) { // Changed from timeRemaining to eta
-          elements.overallExtractionProgressTime.textContent = `Estimated Time Remaining: ${data.eta}`; // Use eta directly
+        if (data.eta !== undefined) {
+          elements.overallExtractionProgressTime.textContent = `Estimated Time Remaining: ${data.eta}`;
         } else {
           elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
         }
@@ -312,7 +309,6 @@ export default class DownloadUI {
         overallExtractionProgressBar.classList.add('hidden');
       }
 
-      // Current file within archive extraction progress
       const extractionProgressBar = document.getElementById('extraction-progress-bar');
       if (data.fileTotal > 0) {
         extractionProgressBar.classList.remove('hidden');

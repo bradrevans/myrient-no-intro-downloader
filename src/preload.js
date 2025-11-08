@@ -38,7 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onExtractionProgress: (callback) => ipcRenderer.on('extraction-progress', (event, data) => callback(data)),
   onHideDownloadUi: (callback) => ipcRenderer.on('hide-download-ui', (event) => callback()),
 
-  formatBytes: (bytes, decimals) => ipcRenderer.invoke('format-bytes', bytes, decimals), // Expose formatBytes via IPC
+  formatBytes: (bytes, decimals) => ipcRenderer.invoke('format-bytes', bytes, decimals),
 
   readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
 });

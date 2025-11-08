@@ -51,7 +51,7 @@ export function calculateEta(current, total, startTime) {
   if (minutes % 60 > 0) {
     parts.push(`${minutes % 60}m`);
   }
-  if (seconds % 60 > 0 || parts.length === 0) { // Always show seconds if no hours/minutes, or if it's just seconds
+  if (seconds % 60 > 0 || parts.length === 0) {
     parts.push(`${seconds % 60}s`);
   }
 

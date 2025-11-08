@@ -11,17 +11,17 @@ class DownloadManager {
     this.downloadInfoService = new DownloadInfoService();
     this.downloadConsole = downloadConsole;
     this.downloadService = new DownloadService(downloadConsole);
-    this.isCancelled = false; // Add internal cancellation flag
+    this.isCancelled = false;
   }
 
   cancel() {
-    this.isCancelled = true; // Set internal flag
+    this.isCancelled = true;
     this.downloadInfoService.cancel();
     this.downloadService.cancel();
   }
 
   reset() {
-    this.isCancelled = false; // Reset internal flag
+    this.isCancelled = false;
     this.downloadInfoService.reset();
     this.downloadService.reset();
   }
@@ -37,17 +37,16 @@ class DownloadManager {
     let wasCancelled = false;
     let partialFile = null;
     let downloadedFiles = [];
-    let filesToDownload = []; // Declare and initialize here
+    let filesToDownload = [];
 
     try {
       const scanResult = await this.downloadInfoService.getDownloadInfo(this.win, baseUrl, files, targetDir, createSubfolder);
 
-      // Check for cancellation after the scan, in case it didn't throw
       if (this.isCancelled) {
         throw new Error("CANCELLED_DURING_SCAN");
       }
 
-      filesToDownload = scanResult.filesToDownload; // Assign here
+      filesToDownload = scanResult.filesToDownload;
       totalSize = scanResult.totalSize;
       skippedSize = scanResult.skippedSize;
       allSkippedFiles.push(...scanResult.skippedFiles);
@@ -59,8 +58,8 @@ class DownloadManager {
         this.downloadConsole.logTotalDownloadSize(formatBytes(remainingSize));
         this.win.webContents.send('download-overall-progress', { current: skippedSize, total: totalSize, skippedSize: skippedSize, eta: calculateEta(skippedSize, totalSize, downloadStartTime) });
 
-        const totalFilesOverall = files.length; // Total files originally considered
-        const initialSkippedFileCount = scanResult.skippedFiles.length; // Files skipped in the initial scan
+        const totalFilesOverall = files.length;
+        const initialSkippedFileCount = scanResult.skippedFiles.length;
 
         const downloadResult = await this.downloadService.downloadFiles(
           this.win,
@@ -70,18 +69,16 @@ class DownloadManager {
           totalSize,
           skippedSize,
           createSubfolder,
-          totalFilesOverall, // Pass total files overall
-          initialSkippedFileCount // Pass initial skipped file count
+          totalFilesOverall,
+          initialSkippedFileCount
         );
         allSkippedFiles.push(...downloadResult.skippedFiles);
         downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.some(s => s.name === f.name));
       }
 
     } catch (e) {
-      // Distinguish between controlled cancellations and other errors
       if (e.message.startsWith('CANCELLED_')) {
-        console.log(`DownloadManager: Cancellation caught: ${e.message}`);
-        summaryMessage = ""; // No error message needed for a clean cancel
+        summaryMessage = "";
       } else {
         console.error("DownloadManager: Generic error caught in startDownload:", e);
         summaryMessage = `Error: ${e.message || e}`;
@@ -90,11 +87,10 @@ class DownloadManager {
       partialFile = e.partialFile || null;
     }
 
-    // Check both the error-based flag AND the internal manager flag
     if (wasCancelled || this.isCancelled) {
       this.downloadConsole.logDownloadCancelled();
-      summaryMessage = ""; // Ensure message is blank on cancel
-      wasCancelled = true; // Ensure this is set for the 'download-complete' event
+      summaryMessage = "";
+      wasCancelled = true;
     } else if (downloadedFiles.length > 0 || filesToDownload.length === 0) {
       this.downloadConsole.logDownloadComplete();
     }
@@ -107,7 +103,7 @@ class DownloadManager {
     this.win.webContents.send('download-complete', {
       message: summaryMessage,
       skippedFiles: allSkippedFiles,
-      wasCancelled: wasCancelled, // This will now be correct
+      wasCancelled: wasCancelled,
       partialFile: partialFile
     });
 
@@ -126,9 +122,8 @@ class DownloadManager {
 
     let totalUncompressedSizeOfAllArchives = 0;
     let overallExtractedBytes = 0;
-    let lastExtractionProgressUpdateTime = 0; // Added for throttling
+    let lastExtractionProgressUpdateTime = 0;
 
-    // First pass: Calculate total uncompressed size of all archives
     for (const file of archiveFiles) {
       const subfolder = createSubfolder ? file.name_raw.replace(/\.[^/.]+$/, "") : '';
       const filePath = path.join(targetDir, subfolder, file.name_raw);
@@ -137,7 +132,7 @@ class DownloadManager {
         zipfile = await open(filePath);
         let entry = await zipfile.readEntry();
         while (entry) {
-          if (entry.uncompressedSize > 0) { // Only count actual files
+          if (entry.uncompressedSize > 0) {
             totalUncompressedSizeOfAllArchives += entry.uncompressedSize;
           }
           entry = await zipfile.readEntry();
@@ -153,7 +148,6 @@ class DownloadManager {
 
     this.downloadConsole.logTotalUncompressedSize(formatBytes(totalUncompressedSizeOfAllArchives));
 
-    // Second pass: Extract files and track progress
     for (let i = 0; i < archiveFiles.length; i++) {
       const file = archiveFiles[i];
       const subfolder = createSubfolder ? file.name_raw.replace(/\.[^/.]+$/, "") : '';
@@ -183,16 +177,15 @@ class DownloadManager {
           totalEntries++;
           entry = await zipfile.readEntry();
         }
-        await zipfile.close(); // Close after counting
+        await zipfile.close();
 
-        // Reopen the zipfile to reset the internal pointer for actual processing
         zipfile = await open(filePath);
 
         let extractedEntryCount = 0;
         entry = await zipfile.readEntry();
         while (entry) {
           extractedEntryCount++;
-          const currentEntryFileName = entry.fileName || entry.filename; // Use entry.filename if entry.fileName is undefined
+          const currentEntryFileName = entry.fileName || entry.filename;
           if (!currentEntryFileName || typeof currentEntryFileName !== 'string') {
             this.downloadConsole.logSkippingInvalidEntry(entry);
             entry = await zipfile.readEntry();
@@ -201,18 +194,15 @@ class DownloadManager {
 
           const entryPath = path.join(extractPath, currentEntryFileName);
 
-          // Skip if it's a directory entry with 0 uncompressed size
           if (/\/$/.test(currentEntryFileName) && entry.uncompressedSize === 0) {
             await fs.promises.mkdir(entryPath, { recursive: true });
             entry = await zipfile.readEntry();
             continue;
           }
 
-          // Create directories
           if (/\/$/.test(currentEntryFileName)) {
             await fs.promises.mkdir(entryPath, { recursive: true });
           } else {
-            // Ensure parent directory exists for files
             await fs.promises.mkdir(path.dirname(entryPath), { recursive: true });
 
             const readStream = await entry.openReadStream();
@@ -221,7 +211,6 @@ class DownloadManager {
             let bytesRead = 0;
             const totalBytes = entry.uncompressedSize;
 
-            // Send initial progress update for the entry
             this.win.webContents.send('extraction-progress', {
               current: i,
               total: archiveFiles.length,
@@ -239,10 +228,10 @@ class DownloadManager {
 
             readStream.on('data', (chunk) => {
               bytesRead += chunk.length;
-              overallExtractedBytes += chunk.length; // Update overall progress
+              overallExtractedBytes += chunk.length;
 
               const now = performance.now();
-              if (now - lastExtractionProgressUpdateTime > 100 || bytesRead === totalBytes) { // Throttle updates
+              if (now - lastExtractionProgressUpdateTime > 100 || bytesRead === totalBytes) {
                 lastExtractionProgressUpdateTime = now;
                 this.win.webContents.send('extraction-progress', {
                   current: i,
@@ -264,7 +253,6 @@ class DownloadManager {
             await new Promise((resolve, reject) => {
               readStream.pipe(writeStream);
               writeStream.on('finish', () => {
-                // Ensure final progress update is sent for this entry
                 this.win.webContents.send('extraction-progress', {
                   current: i,
                   total: archiveFiles.length,
@@ -305,7 +293,7 @@ class DownloadManager {
       fileTotal: 0,
       currentEntry: 0,
       totalEntries: 0,
-      overallExtractedBytes: totalUncompressedSizeOfAllArchives, // Ensure overall progress is 100% at the end
+      overallExtractedBytes: totalUncompressedSizeOfAllArchives,
       totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
       formattedOverallExtractedBytes: formatBytes(totalUncompressedSizeOfAllArchives),
       formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),

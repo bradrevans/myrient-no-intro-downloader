@@ -34,7 +34,6 @@ app.whenReady().then(() => {
   const ipcManager = new IpcManager(win);
   ipcManager.setupIpcHandlers();
 
-  // Added IPC handler for formatBytes
   ipcMain.handle('format-bytes', (event, bytes, decimals) => {
     return formatBytes(bytes, decimals);
   });

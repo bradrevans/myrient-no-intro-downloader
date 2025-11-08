@@ -38,7 +38,7 @@ class DownloadService {
     let totalDownloaded = initialDownloadedSize;
     let currentFileError = null;
     const skippedFiles = [];
-    let lastDownloadProgressUpdateTime = 0; // Added for throttling
+    let lastDownloadProgressUpdateTime = 0;
 
     for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
       const fileInfo = files[fileIndex];
@@ -66,7 +66,7 @@ class DownloadService {
       const targetPath = path.join(finalTargetDir, filename);
       const fileUrl = new URL(fileInfo.href, baseUrl).href;
       const fileSize = fileInfo.size || 0;
-      let fileDownloaded = fileInfo.downloadedBytes || 0; // Initialize with already downloaded bytes
+      let fileDownloaded = fileInfo.downloadedBytes || 0;
 
       const headers = {
         'User-Agent': 'Wget/1.21.3 (linux-gnu)'
@@ -82,21 +82,20 @@ class DownloadService {
           responseType: 'stream',
           timeout: 30000,
           signal: this.abortController.signal,
-          headers: headers // Use the modified headers
+          headers: headers
         });
 
         const writer = fs.createWriteStream(targetPath, {
           highWaterMark: 1024 * 1024,
-          flags: fileDownloaded > 0 ? 'a' : 'w' // Append if resuming, otherwise write
+          flags: fileDownloaded > 0 ? 'a' : 'w'
         });
 
-        // Send initial progress update for the file
         win.webContents.send('download-file-progress', {
           name: filename,
-          current: fileDownloaded, // Start current progress from downloadedBytes
+          current: fileDownloaded,
           total: fileSize,
-          currentFileIndex: initialSkippedFileCount + fileIndex + 1, // Account for initially skipped files
-          totalFilesToDownload: totalFilesOverall // Use the overall total file count
+          currentFileIndex: initialSkippedFileCount + fileIndex + 1,
+          totalFilesToDownload: totalFilesOverall
         });
 
         response.data.on('data', (chunk) => {
@@ -105,21 +104,21 @@ class DownloadService {
             writer.close();
             const err = new Error("CANCELLED_MID_FILE");
             err.partialFile = { path: targetPath, name: filename };
-            reject(err); // Directly reject the promise
+            reject(err);
             return;
           }
           fileDownloaded += chunk.length;
           totalDownloaded += chunk.length;
 
           const now = performance.now();
-          if (now - lastDownloadProgressUpdateTime > 100 || fileDownloaded === fileSize) { // Throttle updates
+          if (now - lastDownloadProgressUpdateTime > 100 || fileDownloaded === fileSize) {
             lastDownloadProgressUpdateTime = now;
             win.webContents.send('download-file-progress', {
               name: filename,
               current: fileDownloaded,
               total: fileSize,
-              currentFileIndex: initialSkippedFileCount + fileIndex + 1, // Account for initially skipped files
-              totalFilesToDownload: totalFilesOverall // Use the overall total file count
+              currentFileIndex: initialSkippedFileCount + fileIndex + 1,
+              totalFilesToDownload: totalFilesOverall
             });
             win.webContents.send('download-overall-progress', {
               current: totalDownloaded,
@@ -160,7 +159,6 @@ class DownloadService {
       }
     }
 
-    console.log("DownloadService: downloadFiles returning normally.");
     return { skippedFiles };
   }
 }
