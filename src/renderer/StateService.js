@@ -23,6 +23,7 @@ class StateService {
       keepFallbacks: true,
       createSubfolder: false,
       extractAndDelete: false,
+      extractPreviouslyDownloaded: false,
     };
   }
 

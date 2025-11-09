@@ -133,9 +133,9 @@ class IpcManager {
       this.win.webContents.setZoomFactor(factor);
     });
 
-    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete) => {
+    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) => {
       try {
-        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete);
+        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded);
       } catch (e) {
         return { error: e && e.message ? e.message : String(e) };
       }

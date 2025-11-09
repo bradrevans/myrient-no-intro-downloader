@@ -482,10 +482,25 @@ class UIManager {
       }
 
       const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
-      if (extractArchivesCheckbox) {
+      const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
+
+      if (extractArchivesCheckbox && extractPreviouslyDownloadedCheckbox) {
         extractArchivesCheckbox.checked = stateService.get('extractAndDelete');
+        extractPreviouslyDownloadedCheckbox.checked = stateService.get('extractPreviouslyDownloaded');
+        extractPreviouslyDownloadedCheckbox.disabled = !extractArchivesCheckbox.checked;
+
         extractArchivesCheckbox.addEventListener('change', (e) => {
-          stateService.set('extractAndDelete', e.target.checked);
+          const isChecked = e.target.checked;
+          stateService.set('extractAndDelete', isChecked);
+          extractPreviouslyDownloadedCheckbox.disabled = !isChecked;
+          if (!isChecked) {
+            extractPreviouslyDownloadedCheckbox.checked = false;
+            stateService.set('extractPreviouslyDownloaded', false);
+          }
+        });
+
+        extractPreviouslyDownloadedCheckbox.addEventListener('change', (e) => {
+          stateService.set('extractPreviouslyDownloaded', e.target.checked);
         });
       }
 

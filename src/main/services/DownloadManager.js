@@ -26,7 +26,7 @@ class DownloadManager {
     this.downloadService.reset();
   }
 
-  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete) {
+  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) {
     this.reset();
 
     const downloadStartTime = performance.now();
@@ -38,9 +38,10 @@ class DownloadManager {
     let partialFile = null;
     let downloadedFiles = [];
     let filesToDownload = [];
+    let scanResult;
 
     try {
-      const scanResult = await this.downloadInfoService.getDownloadInfo(this.win, baseUrl, files, targetDir, createSubfolder);
+      scanResult = await this.downloadInfoService.getDownloadInfo(this.win, baseUrl, files, targetDir, createSubfolder);
 
       if (this.isCancelled) {
         throw new Error("CANCELLED_DURING_SCAN");
@@ -95,9 +96,14 @@ class DownloadManager {
       this.downloadConsole.logDownloadComplete();
     }
 
-    if (extractAndDelete && !wasCancelled && downloadedFiles.length > 0) {
+    let filesForExtraction = [...downloadedFiles];
+    if (extractPreviouslyDownloaded && scanResult && scanResult.skippedFiles) {
+      filesForExtraction.push(...scanResult.skippedFiles);
+    }
+
+    if (extractAndDelete && !wasCancelled && filesForExtraction.length > 0) {
       this.downloadConsole.logDownloadStartingExtraction();
-      await this.extractFiles(downloadedFiles, targetDir, createSubfolder);
+      await this.extractFiles(filesForExtraction, targetDir, createSubfolder);
     }
 
     this.win.webContents.send('download-complete', {
