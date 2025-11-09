@@ -72,26 +72,29 @@ class UIManager {
     const modalMessage = document.getElementById('confirmation-modal-message');
     const continueBtn = document.getElementById('confirmation-modal-continue');
     const cancelBtn = document.getElementById('confirmation-modal-cancel');
+    const settingsButton = document.getElementById('settings-btn');
+
+    if (settingsButton) {
+      settingsButton.disabled = true;
+    }
 
     modalMessage.textContent = message;
     modal.classList.remove('hidden');
 
     return new Promise(resolve => {
-      const handleContinue = () => {
+      const cleanup = (result) => {
         modal.classList.add('hidden');
+        if (settingsButton) {
+          settingsButton.disabled = false;
+        }
         continueBtn.removeEventListener('click', handleContinue);
         cancelBtn.removeEventListener('click', handleCancel);
         modal.removeEventListener('click', handleOverlayClick);
-        resolve(true);
+        resolve(result);
       };
 
-      const handleCancel = () => {
-        modal.classList.add('hidden');
-        continueBtn.removeEventListener('click', handleContinue);
-        cancelBtn.removeEventListener('click', handleCancel);
-        modal.removeEventListener('click', handleOverlayClick);
-        resolve(false);
-      };
+      const handleContinue = () => cleanup(true);
+      const handleCancel = () => cleanup(false);
 
       const handleOverlayClick = (event) => {
         if (event.target === modal) {
