@@ -106,24 +106,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     apiService.closeWindow();
   });
 
+  const settingsBtn = document.getElementById('settings-btn');
   const settingsPanel = document.getElementById('settings-panel');
   const settingsOverlay = document.getElementById('settings-overlay');
   const closeSettingsBtn = document.getElementById('close-settings-btn');
 
-  document.getElementById('settings-btn').addEventListener('click', () => {
+  function openSettings() {
     settingsPanel.classList.remove('translate-x-full');
     settingsOverlay.classList.remove('hidden');
-  });
+    settingsBtn.classList.add('settings-open');
+  }
 
-  closeSettingsBtn.addEventListener('click', () => {
+  function closeSettings() {
     settingsPanel.classList.add('translate-x-full');
     settingsOverlay.classList.add('hidden');
+    settingsBtn.classList.remove('settings-open');
+  }
+
+  settingsBtn.addEventListener('click', () => {
+    if (settingsPanel.classList.contains('translate-x-full')) {
+      openSettings();
+    } else {
+      closeSettings();
+    }
   });
 
-  settingsOverlay.addEventListener('click', () => {
-    settingsPanel.classList.add('translate-x-full');
-    settingsOverlay.classList.add('hidden');
-  });
+  closeSettingsBtn.addEventListener('click', closeSettings);
+
+  settingsOverlay.addEventListener('click', closeSettings);
 
   async function updateZoomDisplay() {
     const zoomFactor = await apiService.getZoomFactor();
@@ -177,9 +187,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     apiService.openExternal('https://myrient.erista.me/donate/');
   });
 
+  document.getElementById('check-for-updates-btn').addEventListener('click', async () => {
+    const updateStatusElement = document.getElementById('update-status');
+    updateStatusElement.textContent = 'Checking for updates...';
+    const result = await apiService.checkForUpdates();
+    if (result.error) {
+      updateStatusElement.textContent = result.error;
+    } else if (result.isUpdateAvailable) {
+      updateStatusElement.innerHTML = `Update available: <a href="#" id="release-link" class="text-accent-500 hover:underline">${result.latestVersion}</a>`;
+      document.getElementById('release-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        apiService.openExternal(result.releaseUrl);
+      });
+    } else {
+      updateStatusElement.textContent = 'You are on the latest version.';
+    }
+  });
+
+  async function setAppVersion() {
+    const version = await apiService.getAppVersion();
+    const versionElement = document.getElementById('app-version');
+    if (versionElement) {
+      versionElement.textContent = version;
+    }
+  }
+
   loadArchives();
   uiManager.updateBreadcrumbs();
   updateZoomDisplay();
+  setAppVersion();
 });
 
 window.electronAPI.onDownloadComplete(async (summary) => {

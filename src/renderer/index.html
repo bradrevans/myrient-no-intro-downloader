@@ -22,16 +22,17 @@
     </button>
     <nav id="breadcrumbs" class="text-base font-semibold text-white flex items-center flex-shrink min-w-0"></nav>
     <div id="window-controls" class="flex-shrink-0 flex-grow flex justify-end items-center relative">
-      <button id="settings-btn" class="control-btn hover:text-accent-500 app-non-draggable-area">
+      <button id="settings-btn" class="control-btn app-non-draggable-area">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </button>
-      <div id="settings-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden backdrop-blur-sm"></div>
+      <div id="settings-overlay"
+        class="fixed inset-x-0 bottom-0 top-16 bg-black bg-opacity-50 z-40 hidden backdrop-blur-sm"></div>
       <div id="settings-panel"
-        class="fixed top-0 right-0 w-64 h-full bg-neutral-900 shadow-lg z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+        class="fixed top-16 right-0 w-64 h-[calc(100vh-4rem)] bg-neutral-900 shadow-lg z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
         <div class="flex justify-between items-center p-4 border-b border-neutral-700">
           <h3 class="text-white text-lg font-bold">Settings</h3>
           <button id="close-settings-btn" class="control-btn hover:bg-danger-500">
@@ -55,6 +56,12 @@
             <button id="zoom-reset-btn"
               class="text-white hover:text-accent-500 px-2 py-1 rounded app-non-draggable-area bg-transparent border-none text-lg">&#x21BA;</button>
           </div>
+        </div>
+        <div class="p-4 border-t border-neutral-700">
+            <h6 class="text-white text-base font-bold mb-2">About</h6>
+            <p class="text-neutral-400 text-sm">Version: <span id="app-version"></span></p>
+            <button id="check-for-updates-btn" class="btn btn-secondary btn-sm mt-2">Check for Updates</button>
+            <p id="update-status" class="text-neutral-400 text-sm mt-2"></p>
         </div>
       </div>
       <div class="w-px h-6 bg-neutral-700 mx-2"></div>

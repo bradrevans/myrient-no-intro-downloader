@@ -1,6 +1,14 @@
 import stateService from './StateService.js';
 
 class ApiService {
+  async getAppVersion() {
+    return await window.electronAPI.getAppVersion();
+  }
+
+  async checkForUpdates() {
+    return await window.electronAPI.checkForUpdates();
+  }
+
   async loadArchives() {
     const result = await window.electronAPI.getMainArchives();
     if (result.error) {

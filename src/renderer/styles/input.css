@@ -168,3 +168,8 @@ input[type="number"] {
 .backdrop-blur-sm {
   backdrop-filter: blur(4px);
 }
+
+#settings-btn.settings-open,
+#settings-btn:hover {
+  @apply text-accent-500;
+}
