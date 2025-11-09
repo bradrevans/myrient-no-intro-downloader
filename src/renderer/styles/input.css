@@ -67,18 +67,15 @@ body {
   @apply sticky z-10 pt-6 pb-4 bg-primary -mx-8 px-8 top-0;
 }
 
-progress {
-  @apply w-full;
-
+.progress-track {
+  @apply w-full bg-neutral-700 rounded-full h-3.5 mb-1 overflow-hidden;
 }
 
-progress::-webkit-progress-bar {}
-
-progress::-webkit-progress-value {
-  @apply bg-green-500;
+.progress-fill {
+  @apply bg-success-500 h-3.5 rounded-full;
+  width: 0%;
+  transition: width 0.35s ease-out;
 }
-
-progress::-moz-progress-bar {}
 
 .list-group-item {
   @apply p-2 bg-neutral-700 rounded-md cursor-grab active:cursor-grabbing focus:outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500;

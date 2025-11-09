@@ -46,7 +46,7 @@
 
     <div id="scan-progress-bar" class="hidden w-full">
       <label for="scan-progress" class="text-sm font-semibold">Scanning file sizes...</label>
-      <progress id="scan-progress" class="w-full" max="100" value="0"></progress>
+      <div class="progress-track"><div id="scan-progress" class="progress-fill"></div></div>
       <div class="text-right"><span id="scan-progress-text" class="text-sm text-gray-100">0 / 0
           files</span></div>
     </div>
@@ -54,7 +54,7 @@
     <div id="download-progress-bars" class="hidden w-full space-y-4">
       <div>
         <label for="overall-progress" class="text-sm font-semibold">Overall Download Progress</label>
-        <progress id="overall-progress" class="w-full" max="100" value="0"></progress>
+        <div class="progress-track"><div id="overall-progress" class="progress-fill"></div></div>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="overall-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
             --</span>
@@ -63,7 +63,7 @@
       </div>
       <div>
         <label for="file-progress" class="text-sm font-semibold">Download Progress</label>
-        <progress id="file-progress" class="w-full" max="100" value="0"></progress>
+        <div class="progress-track"><div id="file-progress" class="progress-fill"></div></div>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="file-progress-name" class="truncate"></span>
           <span id="file-progress-size" class="flex-shrink-0 ml-2"></span>
@@ -71,7 +71,7 @@
       </div>
       <div id="overall-extraction-progress-bar" class="hidden w-full">
         <label for="overall-extraction-progress" class="text-sm font-semibold">Overall Extraction Progress</label>
-        <progress id="overall-extraction-progress" class="w-full" max="100" value="0"></progress>
+        <div class="progress-track"><div id="overall-extraction-progress" class="progress-fill"></div></div>
         <div class="flex justify-between text-sm text-gray-100">
             <span id="overall-extraction-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
             --</span>
@@ -80,7 +80,7 @@
       </div>
       <div id="extraction-progress-bar" class="hidden w-full">
         <label for="extraction-progress" class="text-sm font-semibold">Extraction Progress</label>
-        <progress id="extraction-progress" class="w-full" max="100" value="0"></progress>
+        <div class="progress-track"><div id="extraction-progress" class="progress-fill"></div></div>
         <div class="flex justify-between text-sm text-gray-100">
             <span id="extraction-progress-name" class="truncate"></span>
             <span id="extraction-progress-text" class="flex-shrink-0 ml-2"></span>
