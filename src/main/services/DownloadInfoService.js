@@ -22,11 +22,39 @@ class DownloadInfoService {
     this.abortController = new AbortController();
   }
 
+  async _isAlreadyExtracted(targetDir, gameName, filename, createSubfolder) {
+    if (createSubfolder) {
+      const subfolderPath = path.join(targetDir, gameName);
+      try {
+        if (fs.existsSync(subfolderPath) && fs.lstatSync(subfolderPath).isDirectory()) {
+          const subfolderFiles = await fs.promises.readdir(subfolderPath);
+          if (subfolderFiles.length > 0 && subfolderFiles.some(f => f.toLowerCase() !== filename.toLowerCase())) {
+            return true;
+          }
+        }
+      } catch (e) {
+      }
+    } else {
+      try {
+        const filesInDir = await fs.promises.readdir(targetDir);
+        if (filesInDir.some(f => path.parse(f).name === gameName && path.extname(f).toLowerCase() !== '.zip')) {
+          return true;
+        }
+      }
+      catch (e) {
+      }
+    }
+    return false;
+  }
+
   async getDownloadInfo(win, baseUrl, files, targetDir, createSubfolder = false) {
     let totalSize = 0;
     let skippedSize = 0;
     const filesToDownload = [];
     const skippedFiles = [];
+    let skippedBecauseExtractedCount = 0;
+    let skippedBecauseDownloadedCount = 0;
+
     const session = axios.create({
       httpsAgent: this.httpAgent,
       timeout: 15000,
@@ -41,15 +69,30 @@ class DownloadInfoService {
 
       const fileInfo = files[i];
       const filename = fileInfo.name_raw;
-      let finalTargetDir = targetDir;
+      const gameName = path.parse(filename).name;
+      const fileUrl = new URL(fileInfo.href, baseUrl).href;
 
-      if (createSubfolder) {
-        const gameName = path.parse(filename).name;
-        finalTargetDir = path.join(targetDir, gameName);
+      if (await this._isAlreadyExtracted(targetDir, gameName, filename, createSubfolder)) {
+        fileInfo.skip = true;
+        skippedBecauseExtractedCount++;
+        try {
+          const response = await session.head(fileUrl, { timeout: 15000 });
+          const remoteSize = parseInt(response.headers['content-length'] || '0', 10);
+          fileInfo.size = remoteSize;
+          totalSize += remoteSize;
+          skippedSize += remoteSize;
+        } catch (e) {
+        }
+        skippedFiles.push(fileInfo);
+        win.webContents.send('download-scan-progress', { current: i + 1, total: files.length });
+        continue;
       }
 
+      let finalTargetDir = targetDir;
+      if (createSubfolder) {
+        finalTargetDir = path.join(targetDir, gameName);
+      }
       const targetPath = path.join(finalTargetDir, filename);
-      const fileUrl = new URL(fileInfo.href, baseUrl).href;
 
       try {
         const response = await session.head(fileUrl, { timeout: 15000 });
@@ -62,6 +105,7 @@ class DownloadInfoService {
           const localSize = fs.statSync(targetPath).size;
           if (remoteSize > 0 && localSize === remoteSize) {
             fileInfo.skip = true;
+            skippedBecauseDownloadedCount++;
             skippedSize += remoteSize;
             skippedFiles.push(fileInfo);
           } else if (remoteSize > 0 && localSize < remoteSize) {
@@ -78,15 +122,13 @@ class DownloadInfoService {
           filesToDownload.push(fileInfo);
         }
       } catch (e) {
-        const skipMsg = `SKIP: Could not get info for ${filename}. Error: ${e.message}`;
-        win.webContents.send('download-log', skipMsg);
         skippedFiles.push(`${filename} (Scan failed)`);
         fileInfo.skip = true;
       }
       win.webContents.send('download-scan-progress', { current: i + 1, total: files.length });
     }
 
-    return { filesToDownload, totalSize, skippedSize, skippedFiles };
+    return { filesToDownload, totalSize, skippedSize, skippedFiles, skippedBecauseExtractedCount, skippedBecauseDownloadedCount };
   }
 }
 

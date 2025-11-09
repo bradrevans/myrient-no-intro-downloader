@@ -53,7 +53,13 @@ class DownloadManager {
       allSkippedFiles.push(...scanResult.skippedFiles);
 
       if (filesToDownload.length === 0) {
-        summaryMessage = "All matched files already exist locally. Nothing to download.";
+        if (scanResult.skippedBecauseExtractedCount === files.length) {
+          summaryMessage = "All files already extracted!";
+        } else if (scanResult.skippedBecauseDownloadedCount === files.length) {
+          summaryMessage = "All files already downloaded!";
+        } else {
+          summaryMessage = "All matched files already exist locally. Nothing to download.";
+        }
       } else {
         const remainingSize = totalSize - skippedSize;
         this.downloadConsole.logTotalDownloadSize(formatBytes(remainingSize));
@@ -96,9 +102,19 @@ class DownloadManager {
       this.downloadConsole.logDownloadComplete();
     }
 
+    if (summaryMessage) {
+      this.downloadConsole.log(summaryMessage);
+    }
+
     let filesForExtraction = [...downloadedFiles];
     if (extractPreviouslyDownloaded && scanResult && scanResult.skippedFiles) {
-      filesForExtraction.push(...scanResult.skippedFiles);
+      const previouslyDownloadedArchives = scanResult.skippedFiles.filter(file => {
+        const gameName = path.parse(file.name_raw).name;
+        const subfolderPath = createSubfolder ? path.join(targetDir, gameName) : targetDir;
+        const filePath = path.join(subfolderPath, file.name_raw);
+        return fs.existsSync(filePath);
+      });
+      filesForExtraction.push(...previouslyDownloadedArchives);
     }
 
     if (extractAndDelete && !wasCancelled && filesForExtraction.length > 0) {
@@ -107,7 +123,7 @@ class DownloadManager {
     }
 
     this.win.webContents.send('download-complete', {
-      message: summaryMessage,
+      message: "",
       skippedFiles: allSkippedFiles,
       wasCancelled: wasCancelled,
       partialFile: partialFile
