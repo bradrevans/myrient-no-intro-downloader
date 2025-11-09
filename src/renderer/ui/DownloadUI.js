@@ -117,6 +117,7 @@ export default class DownloadUI {
     this.resultsListChangeListener = (e) => {
       if (e.target.type === 'checkbox') {
         this._updateSelectionState();
+        e.target.parentElement.focus();
       }
     };
     elements.resultsList.addEventListener('change', this.resultsListChangeListener);
