@@ -113,13 +113,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function openSettings() {
     settingsPanel.classList.remove('translate-x-full');
-    settingsOverlay.classList.remove('hidden');
+    settingsOverlay.classList.add('open');
     settingsBtn.classList.add('settings-open');
   }
 
   function closeSettings() {
     settingsPanel.classList.add('translate-x-full');
-    settingsOverlay.classList.add('hidden');
+    settingsOverlay.classList.remove('open');
     settingsBtn.classList.remove('settings-open');
   }
 

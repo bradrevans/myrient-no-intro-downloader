@@ -73,17 +73,24 @@ class UIManager {
     const continueBtn = document.getElementById('confirmation-modal-continue');
     const cancelBtn = document.getElementById('confirmation-modal-cancel');
     const settingsButton = document.getElementById('settings-btn');
+    const modalContent = modal.querySelector('.modal-transition');
 
     if (settingsButton) {
       settingsButton.disabled = true;
     }
 
     modalMessage.textContent = message;
-    modal.classList.remove('hidden');
+    modal.classList.add('open');
+    if (modalContent) {
+      modalContent.classList.add('open');
+    }
 
     return new Promise(resolve => {
       const cleanup = (result) => {
-        modal.classList.add('hidden');
+        modal.classList.remove('open');
+        if (modalContent) {
+          modalContent.classList.remove('open');
+        }
         if (settingsButton) {
           settingsButton.disabled = false;
         }

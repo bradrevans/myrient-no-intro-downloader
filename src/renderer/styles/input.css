@@ -173,3 +173,30 @@ input[type="number"] {
 #settings-btn:hover {
   @apply text-accent-500;
 }
+
+.overlay-transition {
+  opacity: 0;
+  visibility: hidden;
+  backdrop-filter: blur(0);
+  will-change: opacity;
+  transition: opacity 300ms ease-in-out, visibility 0s linear 300ms;
+}
+
+.overlay-transition.open {
+  opacity: 1;
+  visibility: visible;
+  backdrop-filter: blur(4px);
+  transition-delay: 0s;
+}
+
+.modal-transition {
+  transition: transform 300ms ease-in-out, opacity 300ms ease-in-out;
+  transform: scale(0.95);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.modal-transition.open {
+  transform: scale(1);
+  opacity: 1;
+}
