@@ -109,6 +109,61 @@ export default class DownloadUI {
 
     this.stateService.set('selectedResults', updatedSelectedResults);
     this.updateSelectedCount();
+    this.updateScanButtonState();
+  }
+
+  /**
+   * Updates the text of the Scan & Download button based on extract checkbox state.
+   */
+  updateScanButtonText() {
+    const elements = this._getElements();
+    const scanBtn = elements.downloadScanBtn;
+    const extractCheckbox = document.getElementById('extract-archives-checkbox');
+    if (scanBtn) {
+      if (extractCheckbox && extractCheckbox.checked) {
+        scanBtn.textContent = 'Scan, Download & Extract';
+      } else {
+        scanBtn.textContent = 'Scan & Download';
+      }
+    }
+  }
+
+  /**
+   * Updates the title (tooltip) of the Scan & Download button based on state.
+   */
+  updateScanButtonTitle() {
+    const elements = this._getElements();
+    const scanBtn = elements.downloadScanBtn;
+    if (scanBtn) {
+      const selectedResults = this.stateService.get('selectedResults') || [];
+      const noResults = selectedResults.length === 0;
+      const noDir = !this.stateService.get('downloadDirectory');
+      if (noResults && noDir) {
+        scanBtn.title = "Select at least one result and a target directory to enable downloading.";
+      } else if (noResults) {
+        scanBtn.title = "Select at least one result to enable downloading.";
+      } else if (noDir) {
+        scanBtn.title = "Select a target directory to enable downloading.";
+      } else {
+        scanBtn.title = '';
+      }
+    }
+  }
+
+  /**
+   * Updates the enabled/disabled state, text, and tooltip of the Scan & Download button.
+   */
+  updateScanButtonState() {
+    const elements = this._getElements();
+    const scanBtn = elements.downloadScanBtn;
+    if (scanBtn) {
+      const selectedResults = this.stateService.get('selectedResults') || [];
+      const noResults = selectedResults.length === 0;
+      const noDir = !this.stateService.get('downloadDirectory');
+      scanBtn.disabled = noResults || noDir;
+      this.updateScanButtonText();
+      this.updateScanButtonTitle();
+    }
   }
 
   /**
@@ -139,6 +194,8 @@ export default class DownloadUI {
     });
 
     this._updateSelectionState();
+    this.updateScanButtonText();
+    this.updateScanButtonState();
 
     if (this.resultsListChangeListener) {
       elements.resultsList.removeEventListener('change', this.resultsListChangeListener);

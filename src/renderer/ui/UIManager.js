@@ -597,6 +597,9 @@ class UIManager {
             extractPreviouslyDownloadedCheckbox.checked = false;
             stateService.set('extractPreviouslyDownloaded', false);
           }
+          if (this.downloadUI && typeof this.downloadUI.updateScanButtonText === 'function') {
+            this.downloadUI.updateScanButtonText();
+          }
         });
 
         extractPreviouslyDownloadedCheckbox.addEventListener('change', (e) => {
@@ -608,7 +611,10 @@ class UIManager {
         const dir = await apiService.getDownloadDirectory();
         if (dir) {
           document.getElementById('download-dir-text').textContent = dir;
-          document.getElementById('download-scan-btn').disabled = false;
+          stateService.set('downloadDirectory', dir);
+          if (this.downloadUI && typeof this.downloadUI.updateScanButtonState === 'function') {
+            this.downloadUI.updateScanButtonState();
+          }
         }
       });
 
