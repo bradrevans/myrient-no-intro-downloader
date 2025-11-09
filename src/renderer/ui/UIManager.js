@@ -220,7 +220,8 @@ class UIManager {
     const langTagList = document.getElementById('wizard-tags-list');
     langTagList.innerHTML = '';
     const currentSelectedTags = stateService.get('selectedTags');
-    stateService.get('allTags').forEach(tag => {
+    const allTags = stateService.get('allTags').sort((a, b) => a.localeCompare(b));
+    allTags.forEach(tag => {
       const el = document.createElement('label');
       el.className = 'flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500';
       el.dataset.name = tag;
