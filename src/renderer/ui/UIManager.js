@@ -125,7 +125,12 @@ class UIManager {
     modalTitle.textContent = title;
     modalMessage.textContent = message;
     continueBtn.textContent = confirmText;
-    cancelBtn.textContent = cancelText;
+    if (cancelText === null) {
+      cancelBtn.classList.add('hidden');
+    } else {
+      cancelBtn.textContent = cancelText;
+      cancelBtn.classList.remove('hidden');
+    }
 
     modal.classList.add('open');
     if (modalContent) {
@@ -526,7 +531,6 @@ class UIManager {
   addEventListeners(viewId) {
     if (viewId === 'wizard') {
       document.getElementById('wizard-run-btn').addEventListener('click', async () => {
-        this.showLoading('Filtering files...');
 
         const langMode = document.getElementById('filter-lang-mode').value;
         const selectedTags = [];
@@ -547,6 +551,15 @@ class UIManager {
 
         try {
           await apiService.runFilter(filters);
+          if (stateService.get('finalFileList').length === 0) {
+            await this.showConfirmationModal('No files matched your filters. Please adjust your filter settings and try again.', {
+              title: 'No Results',
+              confirmText: 'OK',
+              cancelText: null
+            });
+            return;
+          }
+          this.showLoading('Filtering files...');
           this.showView('results');
           this.downloadUI.populateResults();
           const searchInput = document.getElementById('search-results');
