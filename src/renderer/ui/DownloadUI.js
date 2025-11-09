@@ -165,7 +165,7 @@ export default class DownloadUI {
     }
 
     if (!shouldProceed) {
-      const userConfirmed = await this.uiManager.showConfirmationModal(confirmationMessage);
+      const userConfirmed = await this.uiManager.showConfirmationModal(confirmationMessage, { title: 'File Structure Mismatch' });
       if (!userConfirmed) {
         return;
       }

@@ -67,8 +67,15 @@ class UIManager {
     document.getElementById('loading-spinner').classList.add('hidden');
   }
 
-  async showConfirmationModal(message) {
+  async showConfirmationModal(message, options = {}) {
+    const {
+      title = 'Confirmation',
+      confirmText = 'Continue',
+      cancelText = 'Cancel'
+    } = options;
+
     const modal = document.getElementById('confirmation-modal');
+    const modalTitle = document.getElementById('confirmation-modal-title');
     const modalMessage = document.getElementById('confirmation-modal-message');
     const continueBtn = document.getElementById('confirmation-modal-continue');
     const cancelBtn = document.getElementById('confirmation-modal-cancel');
@@ -79,7 +86,11 @@ class UIManager {
       settingsButton.disabled = true;
     }
 
+    modalTitle.textContent = title;
     modalMessage.textContent = message;
+    continueBtn.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+
     modal.classList.add('open');
     if (modalContent) {
       modalContent.classList.add('open');

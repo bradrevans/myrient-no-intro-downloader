@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import axios from 'axios';
 import IpcManager from './IpcManager.js';
-import { formatBytes } from './utils.js';
+import { formatBytes, compareVersions } from './utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,7 +48,7 @@ app.whenReady().then(() => {
     try {
       const response = await axios.get('https://api.github.com/repos/bradrevans/myrient-downloader/releases/latest');
       const latestVersion = response.data.tag_name.replace('v', '');
-      const isUpdateAvailable = latestVersion !== appVersion;
+      const isUpdateAvailable = compareVersions(latestVersion, appVersion) > 0;
       return {
         isUpdateAvailable,
         latestVersion,

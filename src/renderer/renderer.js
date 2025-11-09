@@ -212,10 +212,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  async function checkForUpdatesOnStartup() {
+    const result = await apiService.checkForUpdates();
+    if (result.isUpdateAvailable) {
+      const updateStatusElement = document.getElementById('update-status');
+      updateStatusElement.innerHTML = `Update available: <a href="#" id="release-link" class="text-accent-500 hover:underline">${result.latestVersion}</a>`;
+      document.getElementById('release-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        apiService.openExternal(result.releaseUrl);
+      });
+
+      const userChoseDownload = await uiManager.showConfirmationModal(
+        `A new version (${result.latestVersion}) is available. Would you like to download it?`,
+        {
+          title: 'Update Available',
+          confirmText: 'Download',
+          cancelText: 'Ignore'
+        }
+      );
+      if (userChoseDownload) {
+        apiService.openExternal(result.releaseUrl);
+      }
+    }
+  }
+
   loadArchives();
   uiManager.updateBreadcrumbs();
   updateZoomDisplay();
   setAppVersion();
+  checkForUpdatesOnStartup();
 });
 
 window.electronAPI.onDownloadComplete(async (summary) => {
