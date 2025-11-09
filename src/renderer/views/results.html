@@ -1,19 +1,19 @@
 <div id="view-results" class="view">
   <div class="sticky-view-header">
-    <h2 class="text-2xl font-bold mb-4">Step 4: Final Result</h2>
+    <h2 class="text-2xl font-bold mb-4">Final Result</h2>
     <p class="text-gray-400 mb-4">Found <span id="results-file-count" class="font-bold text-white">0</span>
       matching files out of <span id="results-total-count" class="font-bold text-white">0</span> total.
     </p>
-    <p id="results-selected-count" class="text-gray-400 mb-4">
+    <p id="results-selected-count" class="text-gray-400">
     </p>
-    <div class="search-container mb-2">
-      <input type="text" id="search-results" class="search-bar" placeholder="Search results...">
-      <span id="search-results-clear" class="search-clear-btn">&times;</span>
-    </div>
-    <div class="flex gap-2 mt-2">
-      <button id="select-all-results-btn" class="btn btn-secondary">Select All (Displayed)</button>
-      <button id="deselect-all-results-btn" class="btn btn-secondary">Deselect All (Displayed)</button>
-    </div>
+  </div>
+  <div class="search-container mt-2 mb-4">
+    <input type="text" id="search-results" class="search-bar" placeholder="Search results...">
+    <span id="search-results-clear" class="search-clear-btn">&times;</span>
+  </div>
+  <div class="flex gap-2 mt-4 mb-2">
+    <button id="select-all-results-btn" class="btn btn-secondary">Select All (Displayed)</button>
+    <button id="deselect-all-results-btn" class="btn btn-secondary">Deselect All (Displayed)</button>
   </div>
 
   <div id="results-list"
@@ -37,7 +37,8 @@
 
     <div class="flex items-center space-x-2 ml-6">
       <input type="checkbox" id="extract-previously-downloaded-checkbox" class="h-4 w-4" disabled>
-      <label for="extract-previously-downloaded-checkbox" class="text-neutral-300 select-none">Extract previously downloaded archives</label>
+      <label for="extract-previously-downloaded-checkbox" class="text-neutral-300 select-none">Extract previously
+        downloaded archives</label>
     </div>
 
     <button id="download-scan-btn" class="btn btn-success w-full" disabled>Scan & Download</button>
@@ -46,7 +47,9 @@
 
     <div id="scan-progress-bar" class="hidden w-full">
       <label for="scan-progress" class="text-sm font-semibold">Scanning file sizes...</label>
-      <div class="progress-track"><div id="scan-progress" class="progress-fill"></div></div>
+      <div class="progress-track">
+        <div id="scan-progress" class="progress-fill"></div>
+      </div>
       <div class="text-right"><span id="scan-progress-text" class="text-sm text-gray-100">0 / 0
           files</span></div>
     </div>
@@ -54,7 +57,9 @@
     <div id="download-progress-bars" class="hidden w-full space-y-4">
       <div>
         <label for="overall-progress" class="text-sm font-semibold">Overall Download Progress</label>
-        <div class="progress-track"><div id="overall-progress" class="progress-fill"></div></div>
+        <div class="progress-track">
+          <div id="overall-progress" class="progress-fill"></div>
+        </div>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="overall-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
             --</span>
@@ -63,7 +68,9 @@
       </div>
       <div id="file-progress-container" class="hidden">
         <label for="file-progress" class="text-sm font-semibold">Download Progress</label>
-        <div class="progress-track"><div id="file-progress" class="progress-fill"></div></div>
+        <div class="progress-track">
+          <div id="file-progress" class="progress-fill"></div>
+        </div>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="file-progress-name" class="truncate"></span>
           <span id="file-progress-size" class="flex-shrink-0 ml-2"></span>
@@ -71,19 +78,23 @@
       </div>
       <div id="overall-extraction-progress-bar" class="hidden w-full">
         <label for="overall-extraction-progress" class="text-sm font-semibold">Overall Extraction Progress</label>
-        <div class="progress-track"><div id="overall-extraction-progress" class="progress-fill"></div></div>
+        <div class="progress-track">
+          <div id="overall-extraction-progress" class="progress-fill"></div>
+        </div>
         <div class="flex justify-between text-sm text-gray-100">
-            <span id="overall-extraction-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
+          <span id="overall-extraction-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
             --</span>
-            <span id="overall-extraction-progress-text" class="truncate">0% (0 B / 0 B)</span>
+          <span id="overall-extraction-progress-text" class="truncate">0% (0 B / 0 B)</span>
         </div>
       </div>
       <div id="extraction-progress-bar" class="hidden w-full">
         <label for="extraction-progress" class="text-sm font-semibold">Extraction Progress</label>
-        <div class="progress-track"><div id="extraction-progress" class="progress-fill"></div></div>
+        <div class="progress-track">
+          <div id="extraction-progress" class="progress-fill"></div>
+        </div>
         <div class="flex justify-between text-sm text-gray-100">
-            <span id="extraction-progress-name" class="truncate"></span>
-            <span id="extraction-progress-text" class="flex-shrink-0 ml-2"></span>
+          <span id="extraction-progress-name" class="truncate"></span>
+          <span id="extraction-progress-text" class="flex-shrink-0 ml-2"></span>
         </div>
       </div>
     </div>
