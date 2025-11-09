@@ -165,7 +165,6 @@ export default class DownloadUI {
     if (!shouldProceed) {
       const userConfirmed = await this.uiManager.showConfirmationModal(confirmationMessage);
       if (!userConfirmed) {
-        this.log('Download cancelled by user.');
         return;
       }
     }
