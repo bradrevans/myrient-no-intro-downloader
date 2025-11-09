@@ -3,7 +3,15 @@ import apiService from '../ApiService.js';
 import Search from './Search.js';
 import KeyboardNavigator from './KeyboardNavigator.js';
 
+/**
+ * Manages the overall user interface, including view switching, loading states, modals, and event listeners.
+ */
 class UIManager {
+  /**
+   * Creates an instance of UIManager.
+   * @param {HTMLElement} viewContainer The DOM element where different views will be rendered.
+   * @param {function} loadArchivesCallback A callback function to load archives.
+   */
   constructor(viewContainer, loadArchivesCallback) {
     this.viewContainer = viewContainer;
     this.views = {};
@@ -12,10 +20,18 @@ class UIManager {
     this.downloadUI = null;
   }
 
+  /**
+   * Sets the DownloadUI instance for interaction.
+   * @param {object} downloadUI The DownloadUI instance.
+   */
   setDownloadUI(downloadUI) {
     this.downloadUI = downloadUI;
   }
 
+  /**
+   * Asynchronously loads HTML content for various views into memory.
+   * @returns {Promise<void>}
+   */
   async loadViews() {
     const viewFiles = ['archives', 'directories', 'wizard', 'results'];
     for (const view of viewFiles) {
@@ -24,6 +40,10 @@ class UIManager {
     }
   }
 
+  /**
+   * Displays a specified view in the main content area.
+   * @param {string} viewId The ID of the view to display (e.g., 'archives', 'directories').
+   */
   showView(viewId) {
     document.querySelector('main').scrollTop = 0;
     if (this.views[viewId]) {
@@ -58,15 +78,31 @@ class UIManager {
     }
   }
 
+  /**
+   * Displays a loading spinner with an optional message.
+   * @param {string} [text='Loading...'] The message to display alongside the spinner.
+   */
   showLoading(text = 'Loading...') {
     document.getElementById('loading-text').textContent = text;
     document.getElementById('loading-spinner').classList.remove('hidden');
   }
 
+  /**
+   * Hides the loading spinner.
+   */
   hideLoading() {
     document.getElementById('loading-spinner').classList.add('hidden');
   }
 
+  /**
+   * Displays a confirmation modal to the user.
+   * @param {string} message The message to display in the modal.
+   * @param {object} [options={}] Optional settings for the modal.
+   * @param {string} [options.title='Confirmation'] The title of the modal.
+   * @param {string} [options.confirmText='Continue'] The text for the confirmation button.
+   * @param {string} [options.cancelText='Cancel'] The text for the cancel button.
+   * @returns {Promise<boolean>} A promise that resolves to true if the user confirms, false otherwise.
+   */
   async showConfirmationModal(message, options = {}) {
     const {
       title = 'Confirmation',
@@ -126,6 +162,9 @@ class UIManager {
     });
   }
 
+  /**
+   * Updates the breadcrumbs navigation based on the current application state.
+   */
   updateBreadcrumbs() {
     const separator = `
             <span class="mx-2 pointer-events-none">
@@ -144,6 +183,12 @@ class UIManager {
     document.getElementById('breadcrumbs').innerHTML = html;
   }
 
+  /**
+   * Populates a given list element with items.
+   * @param {string} listId The ID of the HTML element to populate.
+   * @param {Array<object>} items An array of objects, each with `name` and `href` properties.
+   * @param {function} clickHandler The function to call when an item is clicked.
+   */
   populateList(listId, items, clickHandler) {
     const listEl = document.getElementById(listId);
     if (!listEl) return;
@@ -160,6 +205,9 @@ class UIManager {
     });
   }
 
+  /**
+   * Sets up the wizard view, including populating filter options and event listeners.
+   */
   setupWizard() {
     document.getElementById('filter-lang-mode').value = stateService.get('langMode');
     document.getElementById('filter-revision-mode').value = stateService.get('revisionMode');
@@ -280,6 +328,9 @@ class UIManager {
     });
   }
 
+  /**
+   * Updates the placeholder text in the priority list based on whether tags are prioritized or not.
+   */
   updatePriorityPlaceholder() {
     const priorityList = document.getElementById('priority-list');
     if (!priorityList) return;
@@ -299,6 +350,9 @@ class UIManager {
     }
   }
 
+  /**
+   * Updates the list of available tags in the priority builder based on language filter mode and selected tags.
+   */
   updatePriorityBuilderAvailableTags() {
     const langMode = document.getElementById('filter-lang-mode').value;
     let availableTags = [];
@@ -422,6 +476,10 @@ class UIManager {
     this.updatePriorityPlaceholder();
   }
 
+  /**
+   * Moves a specified tag from the available tags list to the priority list.
+   * @param {string} tagName The name of the tag to move.
+   */
   moveTagToPriorityList(tagName) {
     const priorityList = document.getElementById('priority-list');
     const priorityAvailable = document.getElementById('priority-available');
@@ -436,6 +494,9 @@ class UIManager {
     }
   }
 
+  /**
+   * Resets the priority list, moving all tags back to the available tags list and clearing the state.
+   */
   resetPriorityList() {
     const priorityListEl = document.getElementById('priority-list');
     const priorityAvailableEl = document.getElementById('priority-available');
@@ -457,6 +518,10 @@ class UIManager {
     this.updatePriorityPlaceholder();
   }
 
+  /**
+   * Adds event listeners specific to the currently displayed view.
+   * @param {string} viewId The ID of the current view.
+   */
   addEventListeners(viewId) {
     if (viewId === 'wizard') {
       document.getElementById('wizard-run-btn').addEventListener('click', async () => {
@@ -550,6 +615,10 @@ class UIManager {
     }
   }
 
+  /**
+   * Sets up search and keyboard navigation event listeners for views that require them.
+   * @param {string} viewId The ID of the current view.
+   */
   setupSearchEventListeners(viewId) {
     const searchConfigs = {
       'archives': {

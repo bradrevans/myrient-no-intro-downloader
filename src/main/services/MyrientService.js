@@ -3,7 +3,13 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import FileParserService from './FileParserService.js';
 
+/**
+ * Service responsible for interacting with the Myrient website to fetch directory listings and file information.
+ */
 class MyrientService {
+  /**
+   * Creates an instance of MyrientService.
+   */
   constructor() {
     this.fileParser = new FileParserService();
     this.httpAgent = new https.Agent({ keepAlive: true });
@@ -13,6 +19,12 @@ class MyrientService {
     });
   }
 
+  /**
+   * Fetches the content of a given URL.
+   * @param {string} url The URL to fetch.
+   * @returns {Promise<string>} A promise that resolves with the HTML content of the page.
+   * @throws {Error} If the page fails to fetch.
+   */
   async getPage(url) {
     try {
       const response = await this.scrapeClient.get(url);
@@ -22,6 +34,11 @@ class MyrientService {
     }
   }
 
+  /**
+   * Parses HTML content to extract relevant links.
+   * @param {string} html The HTML content to parse.
+   * @returns {Array<object>} An array of link objects, each with `name`, `href`, and `isDir` properties.
+   */
   parseLinks(html) {
     const $ = cheerio.load(html);
     const links = [];
@@ -43,18 +60,33 @@ class MyrientService {
     return links;
   }
 
+  /**
+   * Fetches and parses the main archive directories from a given URL.
+   * @param {string} url The URL of the Myrient base page.
+   * @returns {Promise<Array<object>>} A promise that resolves with an array of archive directory link objects.
+   */
   async getMainArchives(url) {
     const html = await this.getPage(url);
     const links = this.parseLinks(html);
     return links.filter(link => link.isDir);
   }
 
+  /**
+   * Fetches and parses the list of directories within a given archive URL.
+   * @param {string} url The URL of the archive directory.
+   * @returns {Promise<{data: Array<object>}>} A promise that resolves with an object containing a sorted array of directory link objects.
+   */
   async getDirectoryList(url) {
     const html = await this.getPage(url);
     const links = this.parseLinks(html).filter(link => link.isDir);
     return { data: links.sort((a, b) => a.name.localeCompare(b.name)) };
   }
 
+  /**
+   * Scrapes a given URL for file links and parses their information.
+   * @param {string} url The URL of the page containing file links.
+   * @returns {Promise<{files: Array<object>, tags: Array<string>}>} A promise that resolves with an object containing parsed file information and unique tags.
+   */
   async scrapeAndParseFiles(url) {
     const html = await this.getPage(url);
     const links = this.parseLinks(html);

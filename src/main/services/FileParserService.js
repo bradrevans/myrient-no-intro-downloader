@@ -1,6 +1,14 @@
 import path from 'path';
 
+/**
+ * Service responsible for parsing filenames and extracting relevant information.
+ */
 class FileParserService {
+  /**
+   * Parses a given filename to extract its base name, tags, and revision.
+   * @param {string} filename The full filename to parse (e.g., "Game Name (USA) (Rev 1).zip").
+   * @returns {{name_raw: string, base_name: string, tags: Array<string>, revision: number}} An object containing the parsed information.
+   */
   parseFilename(filename) {
     const nameNoExt = path.parse(filename).name;
     const baseNameMatch = nameNoExt.split(/\s*\(/, 1);
@@ -31,6 +39,11 @@ class FileParserService {
     };
   }
 
+  /**
+   * Parses a list of file objects to extract information for each and aggregates all unique tags.
+   * @param {Array<object>} files An array of file objects, each with a `name` and `href` property.
+   * @returns {{files: Array<object>, tags: Array<string>}} An object containing an array of parsed file objects and an array of all unique tags found.
+   */
   parseFiles(files) {
     const allFiles = [];
     const allTags = new Set();

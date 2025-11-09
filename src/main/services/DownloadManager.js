@@ -5,7 +5,16 @@ import fs from 'fs';
 import path from 'path';
 import { formatBytes, calculateEta } from '../utils.js';
 
+/**
+ * Manages the overall download and extraction process.
+ * Orchestrates DownloadInfoService and DownloadService.
+ */
 class DownloadManager {
+  /**
+   * Creates an instance of DownloadManager.
+   * @param {object} win The Electron BrowserWindow instance.
+   * @param {object} downloadConsole An instance of DownloadConsole for logging.
+   */
   constructor(win, downloadConsole) {
     this.win = win;
     this.downloadInfoService = new DownloadInfoService();
@@ -14,18 +23,34 @@ class DownloadManager {
     this.isCancelled = false;
   }
 
+  /**
+   * Cancels any ongoing download and information retrieval processes.
+   */
   cancel() {
     this.isCancelled = true;
     this.downloadInfoService.cancel();
     this.downloadService.cancel();
   }
 
+  /**
+   * Resets the download manager's state, allowing for new download operations.
+   */
   reset() {
     this.isCancelled = false;
     this.downloadInfoService.reset();
     this.downloadService.reset();
   }
 
+  /**
+   * Initiates the download process for a given set of files.
+   * @param {string} baseUrl The base URL for the files to download.
+   * @param {Array<object>} files An array of file objects to download.
+   * @param {string} targetDir The target directory for the download.
+   * @param {boolean} createSubfolder Whether to create subfolders for the download.
+   * @param {boolean} extractAndDelete Whether to extract archives and delete them after download.
+   * @param {boolean} extractPreviouslyDownloaded Whether to extract previously downloaded archives.
+   * @returns {Promise<{success: boolean}>} A promise that resolves with a success status.
+   */
   async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) {
     this.reset();
 
@@ -132,6 +157,13 @@ class DownloadManager {
     return { success: true };
   }
 
+  /**
+   * Extracts downloaded archive files.
+   * @param {Array<object>} downloadedFiles An array of file objects that have been downloaded.
+   * @param {string} targetDir The target directory for extraction.
+   * @param {boolean} createSubfolder Whether to extract into subfolders based on archive name.
+   * @returns {Promise<void>}
+   */
   async extractFiles(downloadedFiles, targetDir, createSubfolder) {
     const extractionStartTime = performance.now();
     this.win.webContents.send('extraction-started');

@@ -1,4 +1,25 @@
+/**
+ * Manages search functionality and filtering of displayed items in a list.
+ */
+/**
+ * Manages search functionality and filtering of displayed items in a list.
+ */
 export default class Search {
+  /**
+   * Creates an instance of Search.
+   * @param {HTMLElement} searchInput The input element used for searching.
+   * @param {HTMLElement} listContainer The container element holding the items to be filtered.
+   * @param {string} itemSelector A CSS selector to identify individual items within the listContainer.
+   */
+  /**
+   * Creates an instance of Search.
+   * @param {string} inputId The ID of the input element used for searching.
+   * @param {string} listContainerId The ID of the container element holding the items to be filtered.
+   * @param {string} itemSelector A CSS selector to identify individual items within the listContainer.
+   * @param {string} noResultsText The text to display when no search results are found.
+   * @param {string} noItemsText The text to display when there are no items in the list.
+   * @param {string} clearId The ID of the button to clear the search input.
+   */
   constructor(inputId, listContainerId, itemSelector, noResultsText, noItemsText, clearId) {
     this.searchInput = document.getElementById(inputId);
     this.listContainer = document.getElementById(listContainerId);
@@ -27,6 +48,10 @@ export default class Search {
     }
   }
 
+  /**
+   * Handles the search input event, filtering the list items based on the query.
+   * Shows/hides items and displays messages for no results or no items.
+   */
   handleSearch() {
     const allItems = this.listContainer.querySelectorAll(this.itemSelector);
     const query = this.searchInput.value.toLowerCase();

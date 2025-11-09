@@ -1,6 +1,15 @@
 import { formatTime } from '../utils.js';
 
+/**
+ * Manages the user interface elements and interactions related to the download process.
+ */
 export default class DownloadUI {
+  /**
+   * Creates an instance of DownloadUI.
+   * @param {object} stateService The StateService instance for managing application state.
+   * @param {object} apiService The ApiService instance for interacting with the main process.
+   * @param {object} uiManager The UIManager instance for managing overall UI.
+   */
   constructor(stateService, apiService, uiManager) {
     this.stateService = stateService;
     this.apiService = apiService;
@@ -21,12 +30,20 @@ export default class DownloadUI {
     }
   }
 
+  /**
+   * Handles the click event for the cancel button, disabling it and logging a cancellation message.
+   */
   handleCancelClick() {
     const elements = this._getElements();
     if (elements.downloadCancelBtn) elements.downloadCancelBtn.disabled = true;
     this.log(this._isExtracting ? 'Cancelling extraction, please wait...' : 'Cancelling download, please wait...');
   }
 
+  /**
+   * Retrieves and returns an object containing references to various DOM elements used in the download UI.
+   * @returns {object} An object with keys as element IDs and values as the corresponding DOM elements.
+   * @private
+   */
   _getElements() {
     return {
       resultsFileCount: document.getElementById('results-file-count'),
@@ -64,6 +81,9 @@ export default class DownloadUI {
     };
   }
 
+  /**
+   * Updates the displayed count of selected results.
+   */
   updateSelectedCount() {
     const elements = this._getElements();
     if (!elements.resultsSelectedCount) return;
@@ -71,6 +91,10 @@ export default class DownloadUI {
     elements.resultsSelectedCount.innerHTML = `Selected to download: <span class="font-bold text-white">${selectedCount}</span>`;
   }
 
+  /**
+   * Updates the application's state with the currently selected download results based on UI checkboxes.
+   * @private
+   */
   _updateSelectionState() {
     const elements = this._getElements();
     if (!elements.resultsList) return;
@@ -87,6 +111,11 @@ export default class DownloadUI {
     this.updateSelectedCount();
   }
 
+  /**
+   * Populates the results list in the UI with the final filtered file list.
+   * Sets up event listeners for checkbox changes and resets download-related UI elements.
+   * @returns {Promise<void>}
+   */
   async populateResults() {
     const elements = this._getElements();
     if (!elements.resultsFileCount) return;
@@ -137,6 +166,11 @@ export default class DownloadUI {
     }
   }
 
+  /**
+   * Initiates the download process after performing necessary checks and UI updates.
+   * Displays confirmation modals for directory structure mismatches.
+   * @returns {Promise<void>}
+   */
   async startDownload() {
     const elements = this._getElements();
     if (!elements.downloadDirBtn) return;
@@ -207,6 +241,10 @@ export default class DownloadUI {
     this.apiService.startDownload(this.stateService.get('selectedResults'));
   }
 
+  /**
+   * Appends a message to the download log display.
+   * @param {string} message The message to log.
+   */
   log(message) {
     const elements = this._getElements();
     if (!elements.downloadLog) return;
@@ -215,6 +253,10 @@ export default class DownloadUI {
     logEl.scrollTop = logEl.scrollHeight;
   }
 
+  /**
+   * Sets up all event listeners for UI interactions and IPC communications related to downloads.
+   * @private
+   */
   _setupEventListeners() {
     window.electronAPI.onHideDownloadUi(() => {
       const elements = this._getElements();

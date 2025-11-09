@@ -1,4 +1,14 @@
+/**
+ * Service responsible for applying various filters to a list of files.
+ */
 class FilterService {
+  /**
+   * Applies a series of filters (language, revision, deduplication) to a list of files.
+   * @param {Array<object>} allFiles The initial list of files to filter.
+   * @param {Array<string>} allTags All available tags across all files.
+   * @param {object} filters An object containing the filter criteria.
+   * @returns {Array<object>} The filtered list of files.
+   */
   applyFilters(allFiles, allTags, filters) {
     const [listAfterLang,] = this._applyLanguageFilter(allFiles, allTags, filters);
     const listAfterRev = this._applyRevisionFilter(listAfterLang, filters);
@@ -6,6 +16,14 @@ class FilterService {
     return finalList;
   }
 
+  /**
+   * Applies language-based filtering to a list of files.
+   * @param {Array<object>} fileList The list of files to filter.
+   * @param {Array<string>} allTags All available tags.
+   * @param {object} filters The filter criteria, including `lang_mode` and `lang_tags`.
+   * @returns {[Array<object>, Array<string>]} A tuple containing the filtered file list and relevant tags.
+   * @private
+   */
   _applyLanguageFilter(fileList, allTags, filters) {
     const mode = filters.lang_mode || 'all';
     if (mode === 'all') return [fileList, allTags];
@@ -32,6 +50,13 @@ class FilterService {
     return [fileList, allTags];
   }
 
+  /**
+   * Applies revision-based filtering to a list of files, typically keeping only the highest revision.
+   * @param {Array<object>} fileList The list of files to filter.
+   * @param {object} filters The filter criteria, including `rev_mode`.
+   * @returns {Array<object>} The filtered list of files.
+   * @private
+   */
   _applyRevisionFilter(fileList, filters) {
     const mode = filters.rev_mode || 'all';
     if (mode === 'all') return fileList;
@@ -62,6 +87,13 @@ class FilterService {
     return fileList;
   }
 
+  /**
+   * Applies deduplication filtering to a list of files, based on different modes.
+   * @param {Array<object>} fileList The list of files to filter.
+   * @param {object} filters The filter criteria, including `dedupe_mode`, `priority_list`, and `keep_fallbacks`.
+   * @returns {Array<object>} The deduplicated list of files.
+   * @private
+   */
   _applyDedupeFilter(fileList, filters) {
     const mode = filters.dedupe_mode || 'all';
     if (mode === 'all') return fileList;

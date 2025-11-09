@@ -4,7 +4,14 @@ import https from 'https';
 import { URL } from 'url';
 import axios from 'axios';
 
+/**
+ * Service responsible for handling the actual downloading of files.
+ */
 class DownloadService {
+  /**
+   * Creates an instance of DownloadService.
+   * @param {object} downloadConsole An instance of DownloadConsole for logging.
+   */
   constructor(downloadConsole) {
     this.downloadCancelled = false;
     this.httpAgent = new https.Agent({ keepAlive: true });
@@ -12,20 +19,44 @@ class DownloadService {
     this.downloadConsole = downloadConsole;
   }
 
+  /**
+   * Cancels any ongoing download operations.
+   */
   cancel() {
     this.downloadCancelled = true;
     this.abortController.abort();
   }
 
+  /**
+   * Checks if the current download operation has been cancelled.
+   * @returns {boolean} True if cancelled, false otherwise.
+   */
   isCancelled() {
     return this.downloadCancelled;
   }
 
+  /**
+   * Resets the download service's state, allowing for new download operations.
+   */
   reset() {
     this.downloadCancelled = false;
     this.abortController = new AbortController();
   }
 
+  /**
+   * Downloads a list of files.
+   * @param {object} win The Electron BrowserWindow instance for sending progress updates.
+   * @param {string} baseUrl The base URL for the files.
+   * @param {Array<object>} files An array of file objects to download.
+   * @param {string} targetDir The target directory for downloads.
+   * @param {number} totalSize The total size of all files to be downloaded (including already downloaded parts).
+   * @param {number} [initialDownloadedSize=0] The size of files already downloaded or skipped initially.
+   * @param {boolean} [createSubfolder=false] Whether to create subfolders for each download.
+   * @param {number} totalFilesOverall The total number of files initially considered for download.
+   * @param {number} initialSkippedFileCount The number of files initially skipped.
+   * @returns {Promise<{skippedFiles: Array<string>}>} A promise that resolves with an object containing any skipped files.
+   * @throws {Error} If the download is cancelled between files or mid-file.
+   */
   async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false, totalFilesOverall, initialSkippedFileCount) {
     const session = axios.create({
       httpsAgent: this.httpAgent,

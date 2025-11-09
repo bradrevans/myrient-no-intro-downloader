@@ -1,4 +1,10 @@
+/**
+ * Manages the application's state, providing methods to get and set state properties.
+ */
 class StateService {
+  /**
+   * Creates an instance of StateService and initializes the default state.
+   */
   constructor() {
     this.state = {
       currentView: 'archives',
@@ -27,10 +33,17 @@ class StateService {
     };
   }
 
+  /**
+   * Initializes the state service by fetching the Myrient base URL.
+   * @returns {Promise<void>}
+   */
   async init() {
     this.state.baseUrl = await window.electronAPI.getMyrientBaseUrl();
   }
 
+  /**
+   * Resets the state related to the wizard filtering process.
+   */
   resetWizardState() {
     this.state.selectedResults = [];
     this.state.selectedTags = [];
@@ -41,10 +54,20 @@ class StateService {
     this.state.keepFallbacks = true;
   }
 
+  /**
+   * Retrieves the value of a specified state property.
+   * @param {string} key The key of the state property to retrieve.
+   * @returns {*} The value of the state property.
+   */
   get(key) {
     return this.state[key];
   }
 
+  /**
+   * Sets the value of a specified state property.
+   * @param {string} key The key of the state property to set.
+   * @param {*} value The new value for the state property.
+   */
   set(key, value) {
     this.state[key] = value;
   }

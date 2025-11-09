@@ -4,24 +4,50 @@ import https from 'https';
 import { URL } from 'url';
 import axios from 'axios';
 
+/**
+ * Service responsible for gathering information about files to be downloaded.
+ * This includes checking file sizes, and determining if files have been previously downloaded or extracted.
+ */
 class DownloadInfoService {
+  /**
+   * Creates an instance of DownloadInfoService.
+   */
   constructor() {
     this.httpAgent = new https.Agent({ keepAlive: true });
     this.abortController = new AbortController();
   }
 
+  /**
+   * Cancels any ongoing download information retrieval processes.
+   */
   cancel() {
     this.abortController.abort();
   }
 
+  /**
+   * Checks if the download information retrieval process has been cancelled.
+   * @returns {boolean} True if cancelled, false otherwise.
+   */
   isCancelled() {
     return this.abortController.signal.aborted;
   }
 
+  /**
+   * Resets the AbortController, allowing for new operations to be started.
+   */
   reset() {
     this.abortController = new AbortController();
   }
 
+  /**
+   * Checks if a game has already been extracted to the target directory.
+   * @param {string} targetDir The base directory where files are extracted.
+   * @param {string} gameName The name of the game (usually derived from the filename).
+   * @param {string} filename The original filename (e.g., "game.zip").
+   * @param {boolean} createSubfolder Whether subfolders are created for each game.
+   * @returns {Promise<boolean>} True if the game appears to be already extracted, false otherwise.
+   * @private
+   */
   async _isAlreadyExtracted(targetDir, gameName, filename, createSubfolder) {
     if (createSubfolder) {
       const subfolderPath = path.join(targetDir, gameName);
@@ -47,6 +73,23 @@ class DownloadInfoService {
     return false;
   }
 
+  /**
+   * Gathers download information for a list of files, including total size,
+   * and identifies files that can be skipped due to prior download or extraction.
+   * @param {object} win The Electron BrowserWindow instance for sending progress updates.
+   * @param {string} baseUrl The base URL for the files.
+   * @param {Array<object>} files An array of file objects, each with at least `name_raw` and `href`.
+   * @param {string} targetDir The target directory for downloads.
+   * @param {boolean} [createSubfolder=false] Whether to create subfolders for each download.
+   * @returns {Promise<object>} An object containing:
+   *   - `filesToDownload`: Array of file objects that need to be downloaded.
+   *   - `totalSize`: Total size of all files (including skipped ones).
+   *   - `skippedSize`: Total size of skipped files.
+   *   - `skippedFiles`: Array of file objects that were skipped.
+   *   - `skippedBecauseExtractedCount`: Number of files skipped because they were already extracted.
+   *   - `skippedBecauseDownloadedCount`: Number of files skipped because they were already downloaded.
+   * @throws {Error} If the scan is cancelled.
+   */
   async getDownloadInfo(win, baseUrl, files, targetDir, createSubfolder = false) {
     let totalSize = 0;
     let skippedSize = 0;
