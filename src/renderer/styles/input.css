@@ -118,6 +118,11 @@ input[type='checkbox'] {
   @apply rounded border-neutral-600 bg-neutral-700 text-accent-600 focus:ring-accent-500 focus:ring-offset-neutral-800 focus:outline-none;
 }
 
+input[type='checkbox']:disabled,
+input[type='checkbox']:disabled + label {
+  @apply opacity-50 cursor-not-allowed;
+}
+
 #wizard-tags-list label {
   user-select: none;
   -webkit-user-select: none;
