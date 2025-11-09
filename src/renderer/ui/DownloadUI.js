@@ -45,6 +45,7 @@ export default class DownloadUI {
       overallProgressText: document.getElementById('overall-progress-text'),
       overallProgressTime: document.getElementById('overall-progress-time'),
       fileProgress: document.getElementById('file-progress'),
+      fileProgressContainer: document.getElementById('file-progress-container'),
       fileProgressLabel: document.querySelector('label[for="file-progress"]'),
       fileProgressName: document.getElementById('file-progress-name'),
       fileProgressSize: document.getElementById('file-progress-size'),
@@ -292,9 +293,7 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (!elements.fileProgress) return;
 
-      elements.fileProgress.classList.remove('hidden');
-      elements.fileProgressSize.classList.remove('hidden');
-      elements.fileProgressName.classList.remove('hidden');
+      elements.fileProgressContainer.classList.remove('hidden');
 
       const newFileNameText = `${data.name} (${data.currentFileIndex}/${data.totalFilesToDownload})`;
       if (elements.fileProgressName.textContent !== newFileNameText) {
@@ -317,11 +316,8 @@ export default class DownloadUI {
 
     window.electronAPI.onDownloadComplete((summary) => {
       const elements = this._getElements();
-      if (!elements.fileProgress) return;
-      elements.fileProgress.classList.add('hidden');
-      elements.fileProgressName.classList.add('hidden');
-      elements.fileProgressSize.classList.add('hidden');
-      elements.fileProgressLabel.classList.add('hidden');
+      if (!elements.fileProgressContainer) return;
+      elements.fileProgressContainer.classList.add('hidden');
     });
 
     window.electronAPI.onExtractionProgress(async data => {
