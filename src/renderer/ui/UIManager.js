@@ -219,24 +219,15 @@ class UIManager {
     document.getElementById('filter-dedupe-mode').value = stateService.get('dedupeMode');
     document.getElementById('filter-keep-fallbacks').checked = stateService.get('keepFallbacks');
 
-    document.getElementById('wizard-file-count').textContent = stateService.get('allFiles').length;
-    document.getElementById('wizard-tag-count').textContent = stateService.get('allTags').length;
+    const allTags = stateService.get('allTags');
+    const totalTagCount = Object.values(allTags).reduce((sum, tags) => sum + tags.length, 0);
 
-    const langTagList = document.getElementById('wizard-tags-list');
-    langTagList.innerHTML = '';
-    const currentSelectedTags = stateService.get('selectedTags');
-    const allTags = stateService.get('allTags').sort((a, b) => a.localeCompare(b));
-    allTags.forEach(tag => {
-      const el = document.createElement('label');
-      el.className = 'flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500';
-      el.dataset.name = tag;
-      el.tabIndex = 0;
-      el.innerHTML = `
-      <input type="checkbox" class="h-4 w-4" ${currentSelectedTags.includes(tag) ? 'checked' : ''}>
-      <span class="text-neutral-300">${tag}</span>
-    `;
-      langTagList.appendChild(el);
-    });
+    document.getElementById('wizard-file-count').textContent = stateService.get('allFiles').length;
+    document.getElementById('wizard-tag-count').textContent = totalTagCount;
+
+    this.populateTagCategory('region', allTags.Region || []);
+    this.populateTagCategory('language', allTags.Language || []);
+    this.populateTagCategory('other', allTags.Other || []);
 
     document.getElementById('priority-list').innerHTML = '';
     document.getElementById('priority-available').innerHTML = '';
@@ -251,67 +242,6 @@ class UIManager {
     });
 
     this.updatePriorityBuilderAvailableTags();
-
-    langTagList.addEventListener('change', (e) => {
-      if (e.target.type === 'checkbox') {
-        const updatedSelectedTags = Array.from(document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
-        stateService.set('selectedTags', updatedSelectedTags);
-        this.updatePriorityBuilderAvailableTags();
-        e.target.parentElement.focus();
-      }
-    });
-
-    document.getElementById('select-all-tags-btn').addEventListener('click', () => {
-      document.querySelectorAll('#wizard-tags-list label').forEach(label => {
-        if (!label.classList.contains('hidden')) {
-          label.querySelector('input[type=checkbox]').checked = true;
-        }
-      });
-      const updatedSelectedTags = Array.from(document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
-      stateService.set('selectedTags', updatedSelectedTags);
-      this.updatePriorityBuilderAvailableTags();
-    });
-
-    document.getElementById('deselect-all-tags-btn').addEventListener('click', () => {
-      document.querySelectorAll('#wizard-tags-list label').forEach(label => {
-        if (!label.classList.contains('hidden')) {
-          label.querySelector('input[type=checkbox]').checked = false;
-        }
-      });
-      stateService.set('selectedTags', []);
-      this.updatePriorityBuilderAvailableTags();
-    });
-
-    const priorityList = document.getElementById('priority-list');
-
-    function getVisibleAvailableItems() {
-      return Array.from(document.querySelectorAll('#priority-available .list-group-item'))
-        .filter(el => !el.classList.contains('hidden'))
-        .map(el => ({ el, text: el.textContent }));
-    }
-
-    document.getElementById('add-all-shortest').addEventListener('click', () => {
-      let visibleItems = getVisibleAvailableItems();
-      visibleItems.sort((a, b) => a.text.length - b.text.length);
-      visibleItems.forEach(item => priorityList.appendChild(item.el));
-      this.updatePriorityBuilderAvailableTags();
-      this.updatePriorityPlaceholder();
-      document.getElementById('search-priority-tags').focus();
-    });
-
-    document.getElementById('add-all-longest').addEventListener('click', () => {
-      let visibleItems = getVisibleAvailableItems();
-      visibleItems.sort((a, b) => b.text.length - a.text.length);
-      visibleItems.forEach(item => priorityList.appendChild(item.el));
-      this.updatePriorityBuilderAvailableTags();
-      this.updatePriorityPlaceholder();
-      document.getElementById('search-priority-tags').focus();
-    });
-
-    document.getElementById('reset-priorities-btn').addEventListener('click', () => {
-      this.resetPriorityList();
-      document.getElementById('search-priority-tags').focus();
-    });
 
     document.getElementById('filter-lang-mode').addEventListener('change', (e) => {
       stateService.set('langMode', e.target.value);
@@ -331,6 +261,59 @@ class UIManager {
 
     document.getElementById('filter-keep-fallbacks').addEventListener('change', (e) => {
       stateService.set('keepFallbacks', e.target.checked);
+    });
+  }
+
+  /**
+   * Populates a specific tag category list in the wizard view.
+   * @param {string} category The category of tags to populate (e.g., 'region', 'language', 'other').
+   * @param {Array<string>} tags An array of tag strings to display in the category.
+   */
+  populateTagCategory(category, tags) {
+    const tagList = document.getElementById(`wizard-tags-list-${category}`);
+    if (!tagList) return;
+
+    tagList.innerHTML = '';
+    const currentSelectedTags = stateService.get('selectedTags');
+    tags.sort((a, b) => a.localeCompare(b));
+
+    tags.forEach(tag => {
+      const el = document.createElement('label');
+      el.className = 'flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500';
+      el.dataset.name = tag;
+      el.tabIndex = 0;
+      el.innerHTML = `
+        <input type="checkbox" class="h-4 w-4" ${currentSelectedTags.includes(tag) ? 'checked' : ''}>
+        <span class="text-neutral-300">${tag}</span>
+      `;
+      tagList.appendChild(el);
+    });
+
+    tagList.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox') {
+        const updatedSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
+        stateService.set('selectedTags', updatedSelectedTags);
+        this.updatePriorityBuilderAvailableTags();
+        e.target.parentElement.focus();
+      }
+    });
+
+    document.getElementById(`select-all-tags-${category}-btn`).addEventListener('click', () => {
+      tagList.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
+        checkbox.checked = true;
+      });
+      const updatedSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
+      stateService.set('selectedTags', updatedSelectedTags);
+      this.updatePriorityBuilderAvailableTags();
+    });
+
+    document.getElementById(`deselect-all-tags-${category}-btn`).addEventListener('click', () => {
+      tagList.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      const updatedSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
+      stateService.set('selectedTags', updatedSelectedTags);
+      this.updatePriorityBuilderAvailableTags();
     });
   }
 
@@ -362,19 +345,20 @@ class UIManager {
   updatePriorityBuilderAvailableTags() {
     const langMode = document.getElementById('filter-lang-mode').value;
     let availableTags = [];
+    const allTags = stateService.get('allTags');
 
     if (langMode === 'include') {
-      document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked').forEach(cb => {
+      document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked').forEach(cb => {
         availableTags.push(cb.parentElement.dataset.name);
       });
     } else if (langMode === 'all') {
-      availableTags = stateService.get('allTags');
+      availableTags = Object.values(allTags).flat();
     } else {
       const excludeTags = new Set();
-      document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked').forEach(cb => {
+      document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked').forEach(cb => {
         excludeTags.add(cb.parentElement.dataset.name);
       });
-      availableTags = stateService.get('allTags').filter(tag => !excludeTags.has(tag));
+      availableTags = Object.values(allTags).flat().filter(tag => !excludeTags.has(tag));
     }
     const availableTagsSet = new Set(availableTags);
 
@@ -391,7 +375,7 @@ class UIManager {
     );
 
     if (priorityAvailable) {
-      const allSelectedTags = Array.from(document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
+      const allSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
       const allSelectedTagsArePrioritised = allSelectedTags.length > 0 && allSelectedTags.every(tag => validPriorityTagsSet.has(tag));
 
       if (langMode === 'include' && allSelectedTagsArePrioritised) {
@@ -533,11 +517,7 @@ class UIManager {
       document.getElementById('wizard-run-btn').addEventListener('click', async () => {
 
         const langMode = document.getElementById('filter-lang-mode').value;
-        const selectedTags = [];
-        document.querySelectorAll('#wizard-tags-list input[type=checkbox]:checked').forEach(cb => {
-          selectedTags.push(cb.parentElement.dataset.name);
-        });
-
+        const selectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
         const priorityList = Array.from(document.querySelectorAll('#priority-list .list-group-item')).map(el => el.textContent);
 
         const filters = {
@@ -655,19 +635,33 @@ class UIManager {
         noResultsText: 'No directories found matching your search.',
         noItemsText: 'No directories available.'
       },
-      'wizard': [{
-        searchId: 'search-tags',
-        listId: 'wizard-tags-list',
-        itemSelector: 'label',
-        noResultsText: 'No tags found matching your search.',
-        noItemsText: 'No tags available.'
-      }, {
-        searchId: 'search-priority-tags',
-        listId: 'priority-available',
-        itemSelector: '.list-group-item',
-        noResultsText: 'No tags found matching your search.',
-        noItemsText: 'No tags have been selected.'
-      }],
+      'wizard': [
+        {
+          searchId: 'search-tags-region',
+          listId: 'wizard-tags-list-region',
+          itemSelector: 'label',
+          noResultsText: 'No region tags found matching your search.'
+        },
+        {
+          searchId: 'search-tags-language',
+          listId: 'wizard-tags-list-language',
+          itemSelector: 'label',
+          noResultsText: 'No language tags found matching your search.'
+        },
+        {
+          searchId: 'search-tags-other',
+          listId: 'wizard-tags-list-other',
+          itemSelector: 'label',
+          noResultsText: 'No other tags found matching your search.'
+        },
+        {
+          searchId: 'search-priority-tags',
+          listId: 'priority-available',
+          itemSelector: '.list-group-item',
+          noResultsText: 'No tags found matching your search.',
+          noItemsText: 'No tags have been selected.'
+        }
+      ],
       'results': {
         searchId: 'search-results',
         listId: 'results-list',

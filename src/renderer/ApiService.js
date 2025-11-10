@@ -61,7 +61,7 @@ class ApiService {
       throw new Error(result.error);
     }
     stateService.set('allFiles', result.files);
-    stateService.set('allTags', result.tags.filter(tag => !/^(v|Rev)\s*[\d\.]+$/i.test(tag)));
+    stateService.set('allTags', result.tags);
   }
 
   /**
