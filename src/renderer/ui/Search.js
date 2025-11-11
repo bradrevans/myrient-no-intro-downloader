@@ -1,9 +1,6 @@
 /**
  * Manages search functionality and filtering of displayed items in a list.
  */
-/**
- * Manages search functionality and filtering of displayed items in a list.
- */
 export default class Search {
   /**
    * Creates an instance of Search.

@@ -211,10 +211,9 @@ class UIManager {
   }
 
   /**
-   * Sets up the wizard view, including populating filter options and event listeners.
+   * Sets up the wizard view by populating all filter sections and attaching event listeners.
    */
   setupWizard() {
-    document.getElementById('filter-lang-mode').value = stateService.get('langMode');
     document.getElementById('filter-revision-mode').value = stateService.get('revisionMode');
     document.getElementById('filter-dedupe-mode').value = stateService.get('dedupeMode');
     document.getElementById('filter-keep-fallbacks').checked = stateService.get('keepFallbacks');
@@ -225,9 +224,9 @@ class UIManager {
     document.getElementById('wizard-file-count').textContent = stateService.get('allFiles').length;
     document.getElementById('wizard-tag-count').textContent = totalTagCount;
 
-    this.populateTagCategory('region', allTags.Region || []);
-    this.populateTagCategory('language', allTags.Language || []);
-    this.populateTagCategory('other', allTags.Other || []);
+    this.populateTagCategory('region', allTags.Region || [], stateService.get('includeTags').region, stateService.get('excludeTags').region);
+    this.populateTagCategory('language', allTags.Language || [], stateService.get('includeTags').language, stateService.get('excludeTags').language);
+    this.populateTagCategory('other', allTags.Other || [], stateService.get('includeTags').other, stateService.get('excludeTags').other);
 
     document.getElementById('priority-list').innerHTML = '';
     document.getElementById('priority-available').innerHTML = '';
@@ -243,11 +242,6 @@ class UIManager {
 
     this.updatePriorityBuilderAvailableTags();
 
-    document.getElementById('filter-lang-mode').addEventListener('change', (e) => {
-      stateService.set('langMode', e.target.value);
-      document.getElementById('lang-tag-ui').classList.toggle('hidden', e.target.value === 'all');
-      this.updatePriorityBuilderAvailableTags();
-    });
     document.getElementById('filter-revision-mode').addEventListener('change', (e) => {
       stateService.set('revisionMode', e.target.value);
     });
@@ -256,7 +250,6 @@ class UIManager {
       document.getElementById('priority-builder-ui').classList.toggle('hidden', e.target.value !== 'priority');
     });
 
-    document.getElementById('filter-lang-mode').dispatchEvent(new Event('change'));
     document.getElementById('filter-dedupe-mode').dispatchEvent(new Event('change'));
 
     document.getElementById('filter-keep-fallbacks').addEventListener('change', (e) => {
@@ -265,54 +258,152 @@ class UIManager {
   }
 
   /**
-   * Populates a specific tag category list in the wizard view.
-   * @param {string} category The category of tags to populate (e.g., 'region', 'language', 'other').
-   * @param {Array<string>} tags An array of tag strings to display in the category.
+   * Populates the include/exclude lists for a specific tag category in the wizard.
+   * @param {string} category The tag category (e.g., 'region', 'language').
+   * @param {Array<string>} allCategoryTags All available tags for this category.
+   * @param {Array<string>} currentIncludeTags The tags currently set to be included.
+   * @param {Array<string>} currentExcludeTags The tags currently set to be excluded.
    */
-  populateTagCategory(category, tags) {
-    const tagList = document.getElementById(`wizard-tags-list-${category}`);
-    if (!tagList) return;
+  populateTagCategory(category, allCategoryTags, currentIncludeTags, currentExcludeTags) {
+    const includeListEl = document.getElementById(`wizard-tags-list-${category}-include`);
+    const excludeListEl = document.getElementById(`wizard-tags-list-${category}-exclude`);
 
-    tagList.innerHTML = '';
-    const currentSelectedTags = stateService.get('selectedTags');
-    tags.sort((a, b) => a.localeCompare(b));
+    if (!includeListEl || !excludeListEl) return;
 
-    tags.forEach(tag => {
+    includeListEl.innerHTML = '';
+    excludeListEl.innerHTML = '';
+
+    allCategoryTags.sort((a, b) => a.localeCompare(b));
+
+    const renderTagItem = (tag, type) => {
+      const isIncluded = currentIncludeTags.includes(tag);
+      const isExcluded = currentExcludeTags.includes(tag);
+
       const el = document.createElement('label');
-      el.className = 'flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500';
+      el.className = `flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-500 ${isIncluded || isExcluded ? 'hover:bg-neutral-700' : 'hover:bg-neutral-800'}`;
       el.dataset.name = tag;
       el.tabIndex = 0;
-      el.innerHTML = `
-        <input type="checkbox" class="h-4 w-4" ${currentSelectedTags.includes(tag) ? 'checked' : ''}>
-        <span class="text-neutral-300">${tag}</span>
-      `;
-      tagList.appendChild(el);
+
+      let checkboxHtml = `<input type="checkbox" class="h-4 w-4" data-tag-type="${type}"`;
+      if (type === 'include' && isIncluded) {
+        checkboxHtml += ' checked';
+      } else if (type === 'exclude' && isExcluded) {
+        checkboxHtml += ' checked';
+      }
+
+      if ((type === 'include' && isExcluded) || (type === 'exclude' && isIncluded)) {
+        checkboxHtml += ' disabled';
+        el.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+      checkboxHtml += '>';
+      el.innerHTML = `${checkboxHtml}<span class="text-neutral-300">${tag}</span>`;
+      return el;
+    };
+
+    allCategoryTags.forEach(tag => {
+      includeListEl.appendChild(renderTagItem(tag, 'include'));
+      excludeListEl.appendChild(renderTagItem(tag, 'exclude'));
     });
 
-    tagList.addEventListener('change', (e) => {
-      if (e.target.type === 'checkbox') {
-        const updatedSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
-        stateService.set('selectedTags', updatedSelectedTags);
-        this.updatePriorityBuilderAvailableTags();
-        e.target.parentElement.focus();
+    const updateStateAndUI = (targetCheckbox) => {
+      const tagName = targetCheckbox.parentElement.dataset.name;
+      const tagType = targetCheckbox.dataset.tagType;
+
+      const currentInclude = new Set(stateService.get('includeTags')[category]);
+      const currentExclude = new Set(stateService.get('excludeTags')[category]);
+
+      if (tagType === 'include') {
+        if (targetCheckbox.checked) {
+          currentInclude.add(tagName);
+          currentExclude.delete(tagName);
+        } else {
+          currentInclude.delete(tagName);
+        }
+      } else if (tagType === 'exclude') {
+        if (targetCheckbox.checked) {
+          currentExclude.add(tagName);
+          currentInclude.delete(tagName);
+        } else {
+          currentExclude.delete(tagName);
+        }
+      }
+
+      stateService.get('includeTags')[category] = Array.from(currentInclude);
+      stateService.get('excludeTags')[category] = Array.from(currentExclude);
+
+      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
+      this.updatePriorityBuilderAvailableTags();
+
+      const listEl = tagType === 'include' ? includeListEl : excludeListEl;
+      const newElementToFocus = listEl.querySelector(`[data-name="${tagName}"]`);
+      if (newElementToFocus) {
+        newElementToFocus.focus();
+      }
+    };
+
+    includeListEl.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox' && e.target.dataset.tagType === 'include') {
+        updateStateAndUI(e.target);
       }
     });
 
-    document.getElementById(`select-all-tags-${category}-btn`).addEventListener('click', () => {
-      tagList.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
+    excludeListEl.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox' && e.target.dataset.tagType === 'exclude') {
+        updateStateAndUI(e.target);
+      }
+    });
+
+    document.getElementById(`select-all-tags-${category}-include-btn`).addEventListener('click', () => {
+      const currentInclude = new Set(stateService.get('includeTags')[category]);
+      const currentExclude = new Set(stateService.get('excludeTags')[category]);
+
+      includeListEl.querySelectorAll('input[type=checkbox][data-tag-type="include"]:not(:disabled)').forEach(checkbox => {
         checkbox.checked = true;
+        currentInclude.add(checkbox.parentElement.dataset.name);
+        currentExclude.delete(checkbox.parentElement.dataset.name);
       });
-      const updatedSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
-      stateService.set('selectedTags', updatedSelectedTags);
+
+      stateService.get('includeTags')[category] = Array.from(currentInclude);
+      stateService.get('excludeTags')[category] = Array.from(currentExclude);
+      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
       this.updatePriorityBuilderAvailableTags();
     });
 
-    document.getElementById(`deselect-all-tags-${category}-btn`).addEventListener('click', () => {
-      tagList.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
+    document.getElementById(`deselect-all-tags-${category}-include-btn`).addEventListener('click', () => {
+      const currentInclude = new Set(stateService.get('includeTags')[category]);
+      includeListEl.querySelectorAll('input[type=checkbox][data-tag-type="include"]:not(:disabled)').forEach(checkbox => {
         checkbox.checked = false;
+        currentInclude.delete(checkbox.parentElement.dataset.name);
       });
-      const updatedSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
-      stateService.set('selectedTags', updatedSelectedTags);
+      stateService.get('includeTags')[category] = Array.from(currentInclude);
+      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
+      this.updatePriorityBuilderAvailableTags();
+    });
+
+    document.getElementById(`select-all-tags-${category}-exclude-btn`).addEventListener('click', () => {
+      const currentInclude = new Set(stateService.get('includeTags')[category]);
+      const currentExclude = new Set(stateService.get('excludeTags')[category]);
+
+      excludeListEl.querySelectorAll('input[type=checkbox][data-tag-type="exclude"]:not(:disabled)').forEach(checkbox => {
+        checkbox.checked = true;
+        currentExclude.add(checkbox.parentElement.dataset.name);
+        currentInclude.delete(checkbox.parentElement.dataset.name);
+      });
+
+      stateService.get('includeTags')[category] = Array.from(currentInclude);
+      stateService.get('excludeTags')[category] = Array.from(currentExclude);
+      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
+      this.updatePriorityBuilderAvailableTags();
+    });
+
+    document.getElementById(`deselect-all-tags-${category}-exclude-btn`).addEventListener('click', () => {
+      const currentExclude = new Set(stateService.get('excludeTags')[category]);
+      excludeListEl.querySelectorAll('input[type=checkbox][data-tag-type="exclude"]:not(:disabled)').forEach(checkbox => {
+        checkbox.checked = false;
+        currentExclude.delete(checkbox.parentElement.dataset.name);
+      });
+      stateService.get('excludeTags')[category] = Array.from(currentExclude);
+      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
       this.updatePriorityBuilderAvailableTags();
     });
   }
@@ -340,64 +431,38 @@ class UIManager {
   }
 
   /**
-   * Updates the list of available tags in the priority builder based on language filter mode and selected tags.
+   * Updates the list of available tags in the priority builder UI.
+   * Available tags are derived from all tags currently in any 'include' list.
+   * It also re-initializes the sortable functionality for the priority and available lists.
    */
   updatePriorityBuilderAvailableTags() {
-    const langMode = document.getElementById('filter-lang-mode').value;
-    let availableTags = [];
-    const allTags = stateService.get('allTags');
+    let availableTags = new Set();
+    const includeTags = stateService.get('includeTags');
 
-    if (langMode === 'include') {
-      document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked').forEach(cb => {
-        availableTags.push(cb.parentElement.dataset.name);
-      });
-    } else if (langMode === 'all') {
-      availableTags = Object.values(allTags).flat();
-    } else {
-      const excludeTags = new Set();
-      document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked').forEach(cb => {
-        excludeTags.add(cb.parentElement.dataset.name);
-      });
-      availableTags = Object.values(allTags).flat().filter(tag => !excludeTags.has(tag));
-    }
-    const availableTagsSet = new Set(availableTags);
+    Object.values(includeTags).forEach(tags => {
+      tags.forEach(tag => availableTags.add(tag));
+    });
+
+    availableTags = Array.from(availableTags);
+    availableTags.sort((a, b) => a.localeCompare(b));
 
     const priorityList = document.getElementById('priority-list');
     const priorityAvailable = document.getElementById('priority-available');
 
     const currentPriorityItems = Array.from(priorityList.children);
 
-    const validPriorityItems = currentPriorityItems.filter(item =>
-      availableTagsSet.has(item.textContent)
-    );
     const validPriorityTagsSet = new Set(
-      validPriorityItems.map(item => item.textContent)
+      currentPriorityItems.map(item => item.textContent)
     );
-
-    if (priorityAvailable) {
-      const allSelectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
-      const allSelectedTagsArePrioritised = allSelectedTags.length > 0 && allSelectedTags.every(tag => validPriorityTagsSet.has(tag));
-
-      if (langMode === 'include' && allSelectedTagsArePrioritised) {
-        priorityAvailable.dataset.noItemsText = 'All selected tags prioritised.';
-      }
-      else if (langMode === 'exclude' && availableTags.length === 0) {
-        priorityAvailable.dataset.noItemsText = 'All tags have been selected.';
-      }
-      else {
-        priorityAvailable.dataset.noItemsText = 'No tags have been selected.';
-      }
-    }
 
     const tagsForAvailableList = availableTags.filter(tag =>
       !validPriorityTagsSet.has(tag)
     );
-    tagsForAvailableList.sort((a, b) => a.localeCompare(b));
 
     priorityList.innerHTML = '';
     priorityAvailable.innerHTML = '';
 
-    validPriorityItems.forEach(item => priorityList.appendChild(item));
+    currentPriorityItems.forEach(item => priorityList.appendChild(item));
 
     tagsForAvailableList.forEach((tag, i) => {
       const el = document.createElement('div');
@@ -515,14 +580,17 @@ class UIManager {
   addEventListeners(viewId) {
     if (viewId === 'wizard') {
       document.getElementById('wizard-run-btn').addEventListener('click', async () => {
+        const includeTags = stateService.get('includeTags');
+        const excludeTags = stateService.get('excludeTags');
 
-        const langMode = document.getElementById('filter-lang-mode').value;
-        const selectedTags = Array.from(document.querySelectorAll('#lang-tag-ui input[type=checkbox]:checked')).map(cb => cb.parentElement.dataset.name);
+        const allIncludeTags = Object.values(includeTags).flat();
+        const allExcludeTags = Object.values(excludeTags).flat();
+
         const priorityList = Array.from(document.querySelectorAll('#priority-list .list-group-item')).map(el => el.textContent);
 
         const filters = {
-          lang_mode: langMode,
-          lang_tags: selectedTags,
+          include_tags: allIncludeTags,
+          exclude_tags: allExcludeTags,
           rev_mode: document.getElementById('filter-revision-mode').value,
           dedupe_mode: document.getElementById('filter-dedupe-mode').value,
           priority_list: priorityList,
@@ -551,6 +619,31 @@ class UIManager {
         } finally {
           this.hideLoading();
         }
+      });
+
+      document.getElementById('reset-priorities-btn').addEventListener('click', () => {
+        this.resetPriorityList();
+      });
+
+      const addAllPriorities = (sortFn) => {
+        const availableList = document.getElementById('priority-available');
+        const priorityList = document.getElementById('priority-list');
+        const itemsToMove = Array.from(availableList.querySelectorAll('.list-group-item:not(.hidden)'));
+        
+        itemsToMove.sort(sortFn);
+        itemsToMove.forEach(item => priorityList.appendChild(item));
+
+        const updatedPriorityList = Array.from(priorityList.children).map(el => el.textContent);
+        stateService.set('priorityList', updatedPriorityList);
+        this.updatePriorityBuilderAvailableTags();
+      };
+
+      document.getElementById('add-all-shortest').addEventListener('click', () => {
+        addAllPriorities((a, b) => a.textContent.length - b.textContent.length);
+      });
+  
+      document.getElementById('add-all-longest').addEventListener('click', () => {
+        addAllPriorities((a, b) => b.textContent.length - a.textContent.length);
       });
     } else if (viewId === 'results') {
       const createSubfolderCheckbox = document.getElementById('create-subfolder-checkbox');
@@ -638,28 +731,35 @@ class UIManager {
       'wizard': [
         {
           searchId: 'search-tags-region',
-          listId: 'wizard-tags-list-region',
+          includeListId: 'wizard-tags-list-region-include',
+          excludeListId: 'wizard-tags-list-region-exclude',
           itemSelector: 'label',
-          noResultsText: 'No region tags found matching your search.'
+          noResultsText: 'No region tags found matching your search.',
+          parentContainerId: 'tag-category-region-container'
         },
         {
           searchId: 'search-tags-language',
-          listId: 'wizard-tags-list-language',
+          includeListId: 'wizard-tags-list-language-include',
+          excludeListId: 'wizard-tags-list-language-exclude',
           itemSelector: 'label',
-          noResultsText: 'No language tags found matching your search.'
+          noResultsText: 'No language tags found matching your search.',
+          parentContainerId: 'tag-category-language-container'
         },
         {
           searchId: 'search-tags-other',
-          listId: 'wizard-tags-list-other',
+          includeListId: 'wizard-tags-list-other-include',
+          excludeListId: 'wizard-tags-list-other-exclude',
           itemSelector: 'label',
-          noResultsText: 'No other tags found matching your search.'
+          noResultsText: 'No other tags found matching your search.',
+          parentContainerId: 'tag-category-other-container'
         },
         {
           searchId: 'search-priority-tags',
           listId: 'priority-available',
           itemSelector: '.list-group-item',
           noResultsText: 'No tags found matching your search.',
-          noItemsText: 'No tags have been selected.'
+          noItemsText: 'No tags have been selected.',
+          parentContainerId: 'priority-available-container'
         }
       ],
       'results': {
@@ -676,31 +776,59 @@ class UIManager {
 
     let firstSearchInputFocused = false;
 
-    (Array.isArray(configs) ? configs : [configs]).forEach(config => {
-      new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+    if (viewId === 'wizard') {
+      const processedSearchIds = new Set();
+      configs.forEach(config => {
+        if (processedSearchIds.has(config.searchId)) return;
+        processedSearchIds.add(config.searchId);
 
-      const listContainer = document.getElementById(config.listId);
-      const searchInput = document.getElementById(config.searchId);
-      if (listContainer && searchInput) {
-        const keyboardNavigator = new KeyboardNavigator(listContainer, config.itemSelector, searchInput, this);
-        listContainer.addEventListener('keydown', keyboardNavigator.handleKeyDown.bind(keyboardNavigator));
-        if (!firstSearchInputFocused) {
-          searchInput.focus();
-          firstSearchInputFocused = true;
+        const searchInput = document.getElementById(config.searchId);
+        if (!searchInput) return;
+
+        if (config.includeListId) {
+          new Search(config.searchId, config.includeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+        }
+        if (config.excludeListId) {
+          new Search(config.searchId, config.excludeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+        }
+        if (config.listId && !config.includeListId) {
+          new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
         }
 
-        searchInput.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowDown' || e.key === 'Enter') {
-            e.preventDefault();
-            e.stopPropagation();
-            const visibleItems = Array.from(listContainer.querySelectorAll(`${config.itemSelector}:not(.hidden)`));
-            if (visibleItems.length > 0) {
-              visibleItems[0].focus();
-            }
+        const parentContainer = document.getElementById(config.parentContainerId);
+        if (parentContainer && searchInput) {
+          const listContainers = [];
+          if (config.includeListId) listContainers.push(document.getElementById(config.includeListId));
+          if (config.excludeListId) listContainers.push(document.getElementById(config.excludeListId));
+          if (config.listId && !config.includeListId) listContainers.push(document.getElementById(config.listId));
+
+          const keyboardNavigator = new KeyboardNavigator(listContainers.filter(el => el !== null), config.itemSelector, searchInput, this);
+          parentContainer.addEventListener('keydown', keyboardNavigator.handleKeyDown.bind(keyboardNavigator));
+          searchInput.addEventListener('keydown', keyboardNavigator.handleKeyDown.bind(keyboardNavigator));
+
+          if (!firstSearchInputFocused) {
+            searchInput.focus();
+            firstSearchInputFocused = true;
           }
-        });
-      }
-    });
+        }
+      });
+    } else {
+      (Array.isArray(configs) ? configs : [configs]).forEach(config => {
+        new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+
+        const listContainer = document.getElementById(config.listId);
+        const searchInput = document.getElementById(config.searchId);
+        if (listContainer && searchInput) {
+          const keyboardNavigator = new KeyboardNavigator(listContainer, config.itemSelector, searchInput, this);
+          listContainer.addEventListener('keydown', keyboardNavigator.handleKeyDown.bind(keyboardNavigator));
+          searchInput.addEventListener('keydown', keyboardNavigator.handleKeyDown.bind(keyboardNavigator));
+          if (!firstSearchInputFocused) {
+            searchInput.focus();
+            firstSearchInputFocused = true;
+          }
+        }
+      });
+    }
   }
 }
 

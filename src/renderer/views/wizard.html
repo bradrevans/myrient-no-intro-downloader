@@ -6,51 +6,87 @@
   </div>
 
   <div class="space-y-6">
-    <div>
-      <h3 class="text-lg font-semibold mb-2">Tag Filtering</h3>
-      <select id="filter-lang-mode" class="search-bar">
-        <option value="include">Keep files that match ANY selected tag (Recommended)</option>
-        <option value="exclude">Remove files that match ANY selected tag</option>
-        <option value="all">Keep ALL files</option>
-      </select>
-      <div id="lang-tag-ui" class="mt-4 space-y-6">
-        <div>
-          <h4 class="text-lg font-semibold mb-2">Region</h4>
-          <div class="search-container">
-            <input type="text" id="search-tags-region" class="search-bar" placeholder="Search Region tags...">
-            <span id="search-tags-region-clear" class="search-clear-btn">&times;</span>
+    <div id="tag-filtering-ui" class="space-y-6">
+      <div id="tag-category-region-container">
+        <h3 class="text-lg font-semibold mb-2">Region Filtering</h3>
+        <div class="search-container mb-2">
+          <input type="text" id="search-tags-region" class="search-bar" placeholder="Search Region tags...">
+          <span id="search-tags-region-clear" class="search-clear-btn">&times;</span>
+        </div>
+        <div class="flex gap-4">
+          <!-- Include List -->
+          <div class="w-1/2">
+            <h4 class="text-md font-semibold mb-2">Include</h4>
+            <div id="wizard-tags-list-region-include" class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
+            <div class="flex gap-2 mt-2">
+              <button id="select-all-tags-region-include-btn" class="btn btn-secondary">Select All</button>
+              <button id="deselect-all-tags-region-include-btn" class="btn btn-secondary">Deselect All</button>
+            </div>
           </div>
-          <div id="wizard-tags-list-region"
-            class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
-          <div class="flex gap-2 mt-2">
-            <button id="select-all-tags-region-btn" class="btn btn-secondary">Select All</button>
-            <button id="deselect-all-tags-region-btn" class="btn btn-secondary">Deselect All</button>
+          <!-- Exclude List -->
+          <div class="w-1/2">
+            <h4 class="text-md font-semibold mb-2">Exclude</h4>
+            <div id="wizard-tags-list-region-exclude" class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
+            <div class="flex gap-2 mt-2">
+              <button id="select-all-tags-region-exclude-btn" class="btn btn-secondary">Select All</button>
+              <button id="deselect-all-tags-region-exclude-btn" class="btn btn-secondary">Deselect All</button>
+            </div>
           </div>
         </div>
-        <div>
-          <h4 class="text-lg font-semibold mb-2">Language</h4>
-          <div class="search-container">
-            <input type="text" id="search-tags-language" class="search-bar" placeholder="Search Language tags...">
-            <span id="search-tags-language-clear" class="search-clear-btn">&times;</span>
+      </div>
+
+      <div id="tag-category-language-container">
+        <h3 class="text-lg font-semibold mb-2">Language Filtering</h3>
+        <div class="search-container mb-2">
+          <input type="text" id="search-tags-language" class="search-bar" placeholder="Search Language tags...">
+          <span id="search-tags-language-clear" class="search-clear-btn">&times;</span>
+        </div>
+        <div class="flex gap-4">
+          <!-- Include List -->
+          <div class="w-1/2">
+            <h4 class="text-md font-semibold mb-2">Include</h4>
+            <div id="wizard-tags-list-language-include" class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
+            <div class="flex gap-2 mt-2">
+              <button id="select-all-tags-language-include-btn" class="btn btn-secondary">Select All</button>
+              <button id="deselect-all-tags-language-include-btn" class="btn btn-secondary">Deselect All</button>
+            </div>
           </div>
-          <div id="wizard-tags-list-language"
-            class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
-          <div class="flex gap-2 mt-2">
-            <button id="select-all-tags-language-btn" class="btn btn-secondary">Select All</button>
-            <button id="deselect-all-tags-language-btn" class="btn btn-secondary">Deselect All</button>
+          <!-- Exclude List -->
+          <div class="w-1/2">
+            <h4 class="text-md font-semibold mb-2">Exclude</h4>
+            <div id="wizard-tags-list-language-exclude" class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
+            <div class="flex gap-2 mt-2">
+              <button id="select-all-tags-language-exclude-btn" class="btn btn-secondary">Select All</button>
+              <button id="deselect-all-tags-language-exclude-btn" class="btn btn-secondary">Deselect All</button>
+            </div>
           </div>
         </div>
-        <div>
-          <h4 class="text-lg font-semibold mb-2">Other</h4>
-          <div class="search-container">
-            <input type="text" id="search-tags-other" class="search-bar" placeholder="Search Other tags...">
-            <span id="search-tags-other-clear" class="search-clear-btn">&times;</span>
+      </div>
+
+      <div id="tag-category-other-container">
+        <h3 class="text-lg font-semibold mb-2">Other Filtering</h3>
+        <div class="search-container mb-2">
+          <input type="text" id="search-tags-other" class="search-bar" placeholder="Search Other tags...">
+          <span id="search-tags-other-clear" class="search-clear-btn">&times;</span>
+        </div>
+        <div class="flex gap-4">
+          <!-- Include List -->
+          <div class="w-1/2">
+            <h4 class="text-md font-semibold mb-2">Include</h4>
+            <div id="wizard-tags-list-other-include" class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
+            <div class="flex gap-2 mt-2">
+              <button id="select-all-tags-other-include-btn" class="btn btn-secondary">Select All</button>
+              <button id="deselect-all-tags-other-include-btn" class="btn btn-secondary">Deselect All</button>
+            </div>
           </div>
-          <div id="wizard-tags-list-other"
-            class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
-          <div class="flex gap-2 mt-2">
-            <button id="select-all-tags-other-btn" class="btn btn-secondary">Select All</button>
-            <button id="deselect-all-tags-other-btn" class="btn btn-secondary">Deselect All</button>
+          <!-- Exclude List -->
+          <div class="w-1/2">
+            <h4 class="text-md font-semibold mb-2">Exclude</h4>
+            <div id="wizard-tags-list-other-exclude" class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
+            <div class="flex gap-2 mt-2">
+              <button id="select-all-tags-other-exclude-btn" class="btn btn-secondary">Select All</button>
+              <button id="deselect-all-tags-other-exclude-btn" class="btn btn-secondary">Deselect All</button>
+            </div>
           </div>
         </div>
       </div>
@@ -86,7 +122,7 @@
             </div>
           </div>
 
-          <div class="w-1/2 h-full flex flex-col">
+          <div class="w-1/2 h-full flex flex-col" id="priority-available-container">
             <h5 class="text-center font-bold">Available (Drag to add)</h5>
             <div class="search-container my-1">
               <input type="text" id="search-priority-tags" class="search-bar" placeholder="Search available tags...">

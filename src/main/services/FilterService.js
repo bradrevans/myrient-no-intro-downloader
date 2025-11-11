@@ -3,51 +3,40 @@
  */
 class FilterService {
   /**
-   * Applies a series of filters (language, revision, deduplication) to a list of files.
+   * Applies a series of filters (tag, revision, deduplication) to a list of files.
    * @param {Array<object>} allFiles The initial list of files to filter.
    * @param {Array<string>} allTags All available tags across all files.
    * @param {object} filters An object containing the filter criteria.
    * @returns {Array<object>} The filtered list of files.
    */
   applyFilters(allFiles, allTags, filters) {
-    const [listAfterLang,] = this._applyLanguageFilter(allFiles, allTags, filters);
-    const listAfterRev = this._applyRevisionFilter(listAfterLang, filters);
+    const listAfterTags = this._applyTagFilter(allFiles, filters.include_tags, filters.exclude_tags);
+    const listAfterRev = this._applyRevisionFilter(listAfterTags, filters);
     const finalList = this._applyDedupeFilter(listAfterRev, filters);
     return finalList;
   }
 
   /**
-   * Applies language-based filtering to a list of files.
+   * Applies include/exclude tag filtering to a list of files.
    * @param {Array<object>} fileList The list of files to filter.
-   * @param {Array<string>} allTags All available tags.
-   * @param {object} filters The filter criteria, including `lang_mode` and `lang_tags`.
-   * @returns {[Array<object>, Array<string>]} A tuple containing the filtered file list and relevant tags.
+   * @param {Array<string>} includeTags Tags that must be present (if any are specified).
+   * @param {Array<string>} excludeTags Tags that must not be present.
+   * @returns {Array<object>} The filtered file list.
    * @private
    */
-  _applyLanguageFilter(fileList, allTags, filters) {
-    const mode = filters.lang_mode || 'all';
-    if (mode === 'all') return [fileList, allTags];
+  _applyTagFilter(fileList, includeTags, excludeTags) {
+    const includeTagsSet = new Set(includeTags || []);
+    const excludeTagsSet = new Set(excludeTags || []);
 
-    if (mode === 'include') {
-      const includeTags = new Set(filters.lang_tags || []);
-      if (includeTags.size === 0) return [fileList, allTags];
-
-      const filteredList = fileList.filter(file =>
-        file.tags.some(tag => includeTags.has(tag))
-      );
-      return [filteredList, Array.from(includeTags)];
+    if (includeTagsSet.size === 0 && excludeTagsSet.size === 0) {
+      return fileList;
     }
 
-    if (mode === 'exclude') {
-      const excludeTags = new Set(filters.lang_tags || []);
-      if (excludeTags.size === 0) return [fileList, allTags];
-
-      const filteredList = fileList.filter(file =>
-        !file.tags.some(tag => excludeTags.has(tag))
-      );
-      return [filteredList, allTags];
-    }
-    return [fileList, allTags];
+    return fileList.filter(file => {
+      const fileHasIncludeTag = includeTagsSet.size === 0 || file.tags.some(tag => includeTagsSet.has(tag));
+      const fileHasNoExcludeTag = excludeTagsSet.size === 0 || !file.tags.some(tag => excludeTagsSet.has(tag));
+      return fileHasIncludeTag && fileHasNoExcludeTag;
+    });
   }
 
   /**

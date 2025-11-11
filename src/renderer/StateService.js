@@ -21,9 +21,17 @@ class StateService {
       isDownloading: false,
       downloadStartTime: 0,
       totalBytesDownloadedThisSession: 0,
-      selectedTags: [],
+      includeTags: {
+        region: [],
+        language: [],
+        other: [],
+      },
+      excludeTags: {
+        region: [],
+        language: [],
+        other: [],
+      },
       priorityList: [],
-      langMode: 'include',
       revisionMode: 'highest',
       dedupeMode: 'priority',
       keepFallbacks: true,
@@ -46,9 +54,17 @@ class StateService {
    */
   resetWizardState() {
     this.state.selectedResults = [];
-    this.state.selectedTags = [];
+    this.state.includeTags = {
+      region: [],
+      language: [],
+      other: [],
+    };
+    this.state.excludeTags = {
+      region: [],
+      language: [],
+      other: [],
+    };
     this.state.priorityList = [];
-    this.state.langMode = 'include';
     this.state.revisionMode = 'highest';
     this.state.dedupeMode = 'priority';
     this.state.keepFallbacks = true;
