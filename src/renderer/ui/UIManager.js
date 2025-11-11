@@ -280,7 +280,7 @@ class UIManager {
       const isExcluded = currentExcludeTags.includes(tag);
 
       const el = document.createElement('label');
-      el.className = `flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-500 ${isIncluded || isExcluded ? 'hover:bg-neutral-700' : 'hover:bg-neutral-800'}`;
+      el.className = 'flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none';
       el.dataset.name = tag;
       el.tabIndex = 0;
 
