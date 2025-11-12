@@ -212,6 +212,17 @@ class UIManager {
   }
 
   /**
+   * Refreshes the placeholders for all search instances in the current view.
+   */
+  refreshSearchPlaceholders() {
+    for (const key in this.searchInstances) {
+      if (Object.hasOwnProperty.call(this.searchInstances, key)) {
+        this.searchInstances[key].handleSearch();
+      }
+    }
+  }
+
+  /**
    * Sets up the wizard view by populating all filter sections and attaching event listeners.
    */
   setupWizard() {
@@ -273,6 +284,8 @@ class UIManager {
     });
 
     document.getElementById('priority-builder-ui').classList.toggle('hidden', currentDedupeMode !== 'priority');
+
+    this.refreshSearchPlaceholders();
   }
 
   /**
@@ -765,6 +778,7 @@ class UIManager {
           excludeListId: 'wizard-tags-list-region-exclude',
           itemSelector: 'label',
           noResultsText: 'No region tags found matching your search.',
+          noItemsText: 'No region tags available.',
           parentContainerId: 'tag-category-region-container'
         },
         {
@@ -773,6 +787,7 @@ class UIManager {
           excludeListId: 'wizard-tags-list-language-exclude',
           itemSelector: 'label',
           noResultsText: 'No language tags found matching your search.',
+          noItemsText: 'No language tags available.',
           parentContainerId: 'tag-category-language-container'
         },
         {
@@ -781,6 +796,7 @@ class UIManager {
           excludeListId: 'wizard-tags-list-other-exclude',
           itemSelector: 'label',
           noResultsText: 'No other tags found matching your search.',
+          noItemsText: 'No other tags available.',
           parentContainerId: 'tag-category-other-container'
         },
         {
