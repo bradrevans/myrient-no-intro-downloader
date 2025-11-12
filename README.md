@@ -17,34 +17,66 @@ Please consider donating to support my work and Myrient's service.
 
 ## What the Application Does
 
-![Archive Selection](screenshots/select-archive.png)
-
-The Myrient Downloader provides a seamless **four-step process** for creating curated game collections:
+The Myrient Downloader provides a seamless process for creating curated game collections:
 1.  **Browse and Select:** Allows users to easily browse and search the entire Myrient catalog of archives (e.g., No-Intro, MAME) and drill down into specific systems or categories.
-
-![Directory Selection](screenshots/select-directory.png)
-
-2.  **Filter and Curate:** Presents a powerful wizard to filter thousands of files down to a specific list based on custom rules:
+2.  **Optionally Filter and Curate:** Presents a powerful wizard to filter thousands of files down to a specific list based on custom rules:
     * **Exclude/Include Tags:** Filter files by region or language tag (e.g., keep only `(USA)`).
     * **Revision Control:** Automatically select only the single highest revision of every game title.
+    * **Multi-Disc/Cart:** Automatically download all discs or cartridges for a given title.
     * **Priority De-duplication:** Allows the user to build a priority list of tags to select the *best* version when multiple unique copies of a game exist.
-
-![Tag Selection](screenshots/filtering-wizard-tags.png)
-
-![Tag Prioritisation](screenshots/filtering-wizard-prioritisation.png)
-
+    * **Skip The Filtering:** Don't need to filter? Go ahead and skip it! Archives that don't support tags will skip the filtering automatically.
 3.  **Download:** Executes the download of the final, filtered list of files.
-4.  **Manage Progress:** Displays a live overall size-based progress bar with an **accurate time remaining estimate**. It handles file skipping for existing archives and provides a safe cancellation feature that prompts the user to delete any incomplete file.
-    * **Smart Resuming:** The application **scans for existing local files** and automatically resumes the overall progress bar from the point it left off. Files that are fully downloaded are skipped, ensuring efficient use of bandwidth.
+    * **Include/Exclude Individual Titles:** Toggle download for titles on and off individually.
+    * **Directory Management:** Automatically create sub directories for every title. If you target a directory with a conflicting folder structure you will be warned before continuing.
+    * **Extract Archives:** Automatically extract files and delete the original archives. It will even do this for things you previously downloaded.
+4.  **Manage Progress:** Displays a live overall size-based progress bar with an **accurate time remaining estimate**. It handles file skipping for existing archives and provides a safe cancellation will delete incomplete files.
+    * **Smart Resuming:** The application **scans for existing local files** and automatically resumes the download from the point it left off. Files that are fully downloaded are skipped, ensuring efficient use of bandwidth. This also works for extraction.
+5. **Quality of Life:** A variety of features and visual queues help you to use the application.
+   * **Tooltips:** Helpful informative tooltips are scattered across the UI to help explain how things work.
+   * **Update Notification:** Get notified when a new version is available for download.
+   * **Settings Menu:** A settings menu lets you check for updates and adjust application zoom levels for better support across a variety of displays.
+   * **Keyboard Navigation:** Using your arrow keys and enter you can navigate many of the UI elements quickly and efficiently.
 
-![alt text](screenshots/download-preview.png)
-![Donwloading](screenshots/downloading.png)
+*And much, much more...*
+  
+***
+
+## Screenshots
+![Archive Selection](screenshots/select-archive.png)
+*Select your archive.*
+
+![Directory Selection](screenshots/select-directory.png)
+*Select your directory.*
+
+![Filtering Wizard (1/2)](screenshots/filtering-wizard-1.png)
+*Include/exclude tags.*
+
+![Filtering Wizard (2/2)](screenshots/filtering-wizard-2.png)
+*Set your filtering preferences and prioritise your tags.*
+
+![Results Page](screenshots/final-result.png)
+*Select your titles.*
+
+![Download Options & Progesss Bar](screenshots/download-extract.png)
+*Configure your download options and monitor progress.*
+
+![Folder Structure Mismatch](screenshots/structure-mismatch.png)
+*Warnings when target directories differ from your desired folder structure.*
+
+![Skip the Filtering)](screenshots/skip-wizard.png)
+*Optionally, skip filtering all together if you're after something specific.*
+
+![Update Notification](screenshots/update-notification.png)
+*Get notified when a new version is available.*
+
+![Settings Menu](screenshots/settings-menu.png)
+*Check for updates or adjust zoom levels.*
 
 ***
 
 ## Requirements & Installation (Source Code)
 
-**This section is for developers or users who want to run the application from the source code (instead of downloading a pre-compiled executable), or build their own executable (sorry I only have a Windows machine).**
+**This section is for developers or users who want to run the application from the source code (instead of downloading a pre-compiled executable), or build their own executable.**
 
 1.  **Clone/Download:** Get all the files from this repository.
 
