@@ -13,7 +13,7 @@
     "build:css": "tailwindcss -i ./src/renderer/styles/input.css -o ./src/renderer/styles/style.css --minify"
   },
   "keywords": [],
-  "author": "",
+  "author": "Brad Evans",
   "license": "ISC",
   "dependencies": {
     "adm-zip": "^0.5.16",
