@@ -88,8 +88,7 @@ class FilterService {
     if (mode === 'all') return fileList;
 
     if (mode === 'priority') {
-      const priorityList = filters.priority_list || [];
-      const keepFallbacks = filters.keep_fallbacks;
+      const { priority_list: priorityList = [] } = filters;
 
       const maxScore = priorityList.length;
       const priorityMap = new Map(priorityList.map((tag, i) => [tag, maxScore - i]));
@@ -104,6 +103,8 @@ class FilterService {
 
       const finalList = [];
       for (const [baseName, gameVersions] of groupedGames.entries()) {
+        if (gameVersions.length === 0) continue;
+
         let bestFile = null;
         let bestScore = -1;
 
@@ -119,13 +120,29 @@ class FilterService {
           }
         }
 
-        if (bestScore > 0) {
-          finalList.push(bestFile);
-        } else if (keepFallbacks && bestFile) {
+        if (!bestFile) {
+          bestFile = gameVersions[0];
+        }
+
+        const hasDiscTag = (file) => file.tags.some(t => /^(Disc|Cart|Side) /.test(t));
+
+        const allFilesWithBestScore = gameVersions.filter(f => {
+          let currentScore = 0;
+          for (const tag of f.tags) {
+            currentScore += (priorityMap.get(tag) || 0);
+          }
+          return currentScore === bestScore;
+        });
+
+        const discFilesWithBestScore = allFilesWithBestScore.filter(hasDiscTag);
+
+        if (discFilesWithBestScore.length > 0) {
+          finalList.push(...discFilesWithBestScore);
+        } else {
           finalList.push(bestFile);
         }
       }
-      return finalList;
+      return [...new Set(finalList)];
     }
     return fileList;
   }

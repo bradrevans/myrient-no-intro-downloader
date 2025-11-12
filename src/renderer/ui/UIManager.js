@@ -231,8 +231,6 @@ class UIManager {
       });
     });
 
-    document.getElementById('filter-keep-fallbacks').checked = stateService.get('keepFallbacks');
-
     const allTags = stateService.get('allTags');
     const totalTagCount = Object.values(allTags).reduce((sum, tags) => sum + tags.length, 0);
 
@@ -257,10 +255,6 @@ class UIManager {
 
     this.updatePriorityBuilderAvailableTags();
 
-    document.getElementById('filter-revision-mode').addEventListener('change', (e) => {
-      stateService.set('revisionMode', e.target.checked ? 'highest' : 'all');
-    });
-
     const dedupeToggle = document.getElementById('filter-dedupe-mode');
     const dedupeOptions = dedupeToggle.querySelectorAll('.toggle-option');
     const currentDedupeMode = stateService.get('dedupeMode');
@@ -279,10 +273,6 @@ class UIManager {
     });
 
     document.getElementById('priority-builder-ui').classList.toggle('hidden', currentDedupeMode !== 'priority');
-
-    document.getElementById('filter-keep-fallbacks').addEventListener('change', (e) => {
-      stateService.set('keepFallbacks', e.target.checked);
-    });
   }
 
   /**
@@ -634,7 +624,6 @@ class UIManager {
           rev_mode: document.querySelector('#filter-revision-mode .toggle-option.active').dataset.value,
           dedupe_mode: document.querySelector('#filter-dedupe-mode .toggle-option.active').dataset.value,
           priority_list: priorityList,
-          keep_fallbacks: document.getElementById('filter-keep-fallbacks').checked,
         };
 
         try {

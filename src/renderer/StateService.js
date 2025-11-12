@@ -34,7 +34,6 @@ class StateService {
       priorityList: [],
       revisionMode: 'highest',
       dedupeMode: 'priority',
-      keepFallbacks: true,
       createSubfolder: false,
       extractAndDelete: false,
       extractPreviouslyDownloaded: false,
@@ -67,7 +66,6 @@ class StateService {
     this.state.priorityList = [];
     this.state.revisionMode = 'highest';
     this.state.dedupeMode = 'priority';
-    this.state.keepFallbacks = true;
   }
 
   /**
