@@ -91,11 +91,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         );
 
-        if (userWantsToFilter) {
+        if (userWantsToFilter === true) {
           uiManager.showView('wizard');
           uiManager.setupWizard();
           stateService.set('wizardSkipped', false);
-        } else {
+        } else if (userWantsToFilter === false) {
           const defaultFilters = {
             include_tags: [],
             exclude_tags: [],

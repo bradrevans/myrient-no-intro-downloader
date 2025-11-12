@@ -158,7 +158,7 @@ class UIManager {
 
       const handleOverlayClick = (event) => {
         if (event.target === modal) {
-          handleCancel();
+          cleanup(null);
         }
       };
 
