@@ -174,7 +174,14 @@ class UIManager {
       modalContent.classList.add('open');
     }
 
+    setTimeout(() => {
+      continueBtn.focus();
+    }, 50);
+
     return new Promise(resolve => {
+      const modalButtons = [cancelBtn, continueBtn].filter(btn => !btn.classList.contains('hidden'));
+      const modalKeyboardNavigator = new KeyboardNavigator([], '', null, this, modalButtons);
+
       const cleanup = (result) => {
         modal.classList.remove('open');
         if (modalContent) {
@@ -186,6 +193,7 @@ class UIManager {
         continueBtn.removeEventListener('click', handleContinue);
         cancelBtn.removeEventListener('click', handleCancel);
         modal.removeEventListener('click', handleOverlayClick);
+        modal.removeEventListener('keydown', modalKeyboardNavigator.handleModalKeyDown.bind(modalKeyboardNavigator));
         resolve(result);
       };
 
@@ -201,6 +209,7 @@ class UIManager {
       continueBtn.addEventListener('click', handleContinue);
       cancelBtn.addEventListener('click', handleCancel);
       modal.addEventListener('click', handleOverlayClick);
+      modal.addEventListener('keydown', modalKeyboardNavigator.handleModalKeyDown.bind(modalKeyboardNavigator));
     });
   }
 

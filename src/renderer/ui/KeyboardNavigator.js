@@ -11,11 +11,12 @@ class KeyboardNavigator {
    * @param {HTMLElement} searchInput The search input element, used for focus management.
    * @param {object} uiManager The UIManager instance for interacting with UI-related actions.
    */
-  constructor(listContainers, itemSelector, searchInput, uiManager) {
+  constructor(listContainers, itemSelector, searchInput, uiManager, navigableElements = []) {
     this.listContainers = Array.isArray(listContainers) ? listContainers : [listContainers];
     this.itemSelector = itemSelector;
     this.searchInput = searchInput;
     this.uiManager = uiManager;
+    this.navigableElements = navigableElements; // New property for direct elements
   }
 
   /**
@@ -40,6 +41,29 @@ class KeyboardNavigator {
       }
     }
     return null;
+  }
+
+  /**
+   * Handles keyboard events for navigation within a modal, specifically for left/right arrow keys.
+   * @param {KeyboardEvent} e The keyboard event.
+   */
+  handleModalKeyDown(e) {
+    if (this.navigableElements.length < 2) return; // Need at least two elements to navigate between
+
+    const activeElement = document.activeElement;
+    const currentIndex = this.navigableElements.indexOf(activeElement);
+
+    if (currentIndex === -1) return;
+
+    if (e.key === KEYS.ARROW_LEFT) {
+      e.preventDefault();
+      const nextIndex = (currentIndex - 1 + this.navigableElements.length) % this.navigableElements.length;
+      this.navigableElements[nextIndex].focus();
+    } else if (e.key === KEYS.ARROW_RIGHT) {
+      e.preventDefault();
+      const nextIndex = (currentIndex + 1) % this.navigableElements.length;
+      this.navigableElements[nextIndex].focus();
+    }
   }
 
   /**
