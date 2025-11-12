@@ -179,3 +179,15 @@ input[type="number"] {
   transform: scale(1);
   opacity: 1;
 }
+
+.toggle-option {
+  @apply transition-colors duration-200;
+}
+
+.toggle-option.active {
+  @apply bg-accent-600;
+}
+
+.toggle-option:not(.active):hover {
+  @apply bg-neutral-700;
+}

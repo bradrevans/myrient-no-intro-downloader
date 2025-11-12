@@ -214,8 +214,22 @@ class UIManager {
    * Sets up the wizard view by populating all filter sections and attaching event listeners.
    */
   setupWizard() {
-    document.getElementById('filter-revision-mode').checked = stateService.get('revisionMode') === 'highest';
-    document.getElementById('filter-dedupe-mode').value = stateService.get('dedupeMode');
+    const revisionToggle = document.getElementById('filter-revision-mode');
+    const revisionOptions = revisionToggle.querySelectorAll('.toggle-option');
+    const currentRevisionMode = stateService.get('revisionMode');
+
+    revisionOptions.forEach(option => {
+      if (option.dataset.value === currentRevisionMode) {
+        option.classList.add('active');
+      }
+      option.addEventListener('click', () => {
+        revisionOptions.forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+        const newMode = option.dataset.value;
+        stateService.set('revisionMode', newMode);
+      });
+    });
+
     document.getElementById('filter-keep-fallbacks').checked = stateService.get('keepFallbacks');
 
     const allTags = stateService.get('allTags');
@@ -245,12 +259,25 @@ class UIManager {
     document.getElementById('filter-revision-mode').addEventListener('change', (e) => {
       stateService.set('revisionMode', e.target.checked ? 'highest' : 'all');
     });
-    document.getElementById('filter-dedupe-mode').addEventListener('change', (e) => {
-      stateService.set('dedupeMode', e.target.value);
-      document.getElementById('priority-builder-ui').classList.toggle('hidden', e.target.value !== 'priority');
+
+    const dedupeToggle = document.getElementById('filter-dedupe-mode');
+    const dedupeOptions = dedupeToggle.querySelectorAll('.toggle-option');
+    const currentDedupeMode = stateService.get('dedupeMode');
+
+    dedupeOptions.forEach(option => {
+      if (option.dataset.value === currentDedupeMode) {
+        option.classList.add('active');
+      }
+      option.addEventListener('click', () => {
+        dedupeOptions.forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+        const newMode = option.dataset.value;
+        stateService.set('dedupeMode', newMode);
+        document.getElementById('priority-builder-ui').classList.toggle('hidden', newMode !== 'priority');
+      });
     });
 
-    document.getElementById('filter-dedupe-mode').dispatchEvent(new Event('change'));
+    document.getElementById('priority-builder-ui').classList.toggle('hidden', currentDedupeMode !== 'priority');
 
     document.getElementById('filter-keep-fallbacks').addEventListener('change', (e) => {
       stateService.set('keepFallbacks', e.target.checked);
@@ -591,8 +618,8 @@ class UIManager {
         const filters = {
           include_tags: allIncludeTags,
           exclude_tags: allExcludeTags,
-          rev_mode: document.getElementById('filter-revision-mode').checked ? 'highest' : 'all',
-          dedupe_mode: document.getElementById('filter-dedupe-mode').value,
+          rev_mode: document.querySelector('#filter-revision-mode .toggle-option.active').dataset.value,
+          dedupe_mode: document.querySelector('#filter-dedupe-mode .toggle-option.active').dataset.value,
           priority_list: priorityList,
           keep_fallbacks: document.getElementById('filter-keep-fallbacks').checked,
         };
