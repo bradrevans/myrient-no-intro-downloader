@@ -7,6 +7,8 @@ Download the latest release here:
 
 [![Latest Release](https://img.shields.io/github/v/release/bradrevans/myrient-downloader?style=flat-square&color=22c55e&label=latest)](https://github.com/bradrevans/myrient-downloader/releases)
 
+*You will need to clone the repository and build the application yourself using the instructions in this README if you want to run the application on a Mac.*
+
 Please consider donating to support my work and Myrient's service.
 
 <a href="https://ko-fi.com/bradrevans"><img alt="Static Badge" src="https://img.shields.io/badge/Donate-To%20Support%20Me-orange?style=flat-square"></a>
