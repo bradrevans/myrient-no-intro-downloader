@@ -49,7 +49,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     stateService.resetWizardState();
     uiManager.showLoading('Scanning files...');
     try {
-      await apiService.scrapeAndParseFiles();
+      const { hasSubdirectories } = await apiService.scrapeAndParseFiles();
+
+      if (hasSubdirectories) {
+        const defaultFilters = {
+          include_tags: [],
+          exclude_tags: [],
+          rev_mode: 'all',
+          dedupe_mode: 'all',
+          priority_list: [],
+        };
+        await apiService.runFilter(defaultFilters);
+        uiManager.showView('results');
+        downloadUI.populateResults(hasSubdirectories);
+        stateService.set('wizardSkipped', true);
+        return;
+      }
+
       const allTags = stateService.get('allTags');
       const hasNoTags = Object.keys(allTags).length === 0 || Object.values(allTags).every(arr => arr.length === 0);
 
@@ -63,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         await apiService.runFilter(defaultFilters);
         uiManager.showView('results');
-        downloadUI.populateResults();
+        downloadUI.populateResults(hasSubdirectories);
         stateService.set('wizardSkipped', true);
       } else {
         const userWantsToFilter = await uiManager.showConfirmationModal(
@@ -89,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           };
           await apiService.runFilter(defaultFilters);
           uiManager.showView('results');
-          downloadUI.populateResults();
+          downloadUI.populateResults(hasSubdirectories);
           stateService.set('wizardSkipped', true);
         }
       }

@@ -47,7 +47,7 @@ class DownloadService {
    * Downloads a list of files.
    * @param {object} win The Electron BrowserWindow instance for sending progress updates.
    * @param {string} baseUrl The base URL for the files.
-   * @param {Array<object>} files An array of file objects to download.
+   * @param {Array<object>} files An array of file objects to download, potentially including a `relativePath` property for directory structure.
    * @param {string} targetDir The target directory for downloads.
    * @param {number} totalSize The total size of all files to be downloaded (including already downloaded parts).
    * @param {number} [initialDownloadedSize=0] The size of files already downloaded or skipped initially.
@@ -67,6 +67,7 @@ class DownloadService {
     });
 
     let totalDownloaded = initialDownloadedSize;
+    let totalBytesFailed = 0;
     let currentFileError = null;
     const skippedFiles = [];
     let lastDownloadProgressUpdateTime = 0;
@@ -79,12 +80,13 @@ class DownloadService {
 
       if (fileInfo.skip) continue;
 
-      const filename = fileInfo.name_raw;
+      const filename = fileInfo.name;
       let finalTargetDir = targetDir;
 
       if (createSubfolder) {
         const gameName = path.parse(filename).name;
         finalTargetDir = path.join(targetDir, gameName);
+
         if (!fs.existsSync(finalTargetDir)) {
           try {
             fs.mkdirSync(finalTargetDir, { recursive: true });
@@ -95,7 +97,7 @@ class DownloadService {
       }
 
       const targetPath = path.join(finalTargetDir, filename);
-      const fileUrl = new URL(fileInfo.href, baseUrl).href;
+      const fileUrl = fileInfo.href;
       const fileSize = fileInfo.size || 0;
       let fileDownloaded = fileInfo.downloadedBytes || 0;
 
@@ -153,7 +155,7 @@ class DownloadService {
             });
             win.webContents.send('download-overall-progress', {
               current: totalDownloaded,
-              total: totalSize,
+              total: totalSize - totalBytesFailed,
               skippedSize: initialDownloadedSize
             });
           }
@@ -181,7 +183,16 @@ class DownloadService {
         }
 
         this.downloadConsole.logError(`Failed to download ${filename}. ${e.message}`);
-        skippedFiles.push(`${filename} (Download failed)`);
+        skippedFiles.push(filename);
+
+        totalDownloaded -= fileDownloaded;
+        totalBytesFailed += fileSize;
+
+        win.webContents.send('download-overall-progress', {
+          current: totalDownloaded,
+          total: totalSize - totalBytesFailed, // Adjust total by subtracting failed file sizes
+          skippedSize: initialDownloadedSize
+        });
 
         try {
           if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);

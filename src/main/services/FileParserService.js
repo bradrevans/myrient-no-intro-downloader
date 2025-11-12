@@ -129,24 +129,37 @@ class FileParserService {
   }
 
   /**
-   * Parses a list of file objects to extract information for each and aggregates all unique tags.
-   * @param {Array<object>} files An array of file objects, each with a `name` and `href` property.
-   * @returns {{files: Array<object>, tags: object}} An object containing an array of parsed file objects and an object of all unique tags found, categorized.
+   * Parses a list of file and directory objects to extract information for each and aggregates all unique tags from files.
+   * @param {Array<object>} items An array of file and directory objects, each with a `name`, `href`, and `type` property.
+   * @returns {{files: Array<object>, tags: object}} An object containing an array of parsed file/directory objects and an object of all unique tags found (from files), categorized.
    */
-  parseFiles(files) {
-    const allFiles = [];
+  parseFiles(items) {
+    const allParsedItems = [];
     const allTags = {};
 
-    for (const file of files) {
-      const parsed = this.parseFilename(file.name);
-      parsed.href = file.href;
-      allFiles.push(parsed);
-      for (const category in parsed.categorizedTags) {
-        if (!allTags[category]) {
-          allTags[category] = new Set();
-        }
-        for (const tag of parsed.categorizedTags[category]) {
-          allTags[category].add(tag);
+    for (const item of items) {
+      if (item.type === 'directory') {
+        allParsedItems.push({
+          name_raw: item.name,
+          base_name: item.name,
+          tags: [],
+          categorizedTags: {},
+          revision: 0,
+          href: item.href,
+          type: 'directory'
+        });
+      } else {
+        const parsed = this.parseFilename(item.name);
+        parsed.href = item.href;
+        parsed.type = 'file';
+        allParsedItems.push(parsed);
+        for (const category in parsed.categorizedTags) {
+          if (!allTags[category]) {
+            allTags[category] = new Set();
+          }
+          for (const tag of parsed.categorizedTags[category]) {
+            allTags[category].add(tag);
+          }
         }
       }
     }
@@ -156,7 +169,7 @@ class FileParserService {
       allTagsAsArrays[category] = Array.from(allTags[category]);
     }
 
-    return { files: allFiles, tags: allTagsAsArrays };
+    return { files: allParsedItems, tags: allTagsAsArrays };
   }
 }
 

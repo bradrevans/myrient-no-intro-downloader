@@ -26,6 +26,9 @@ class MyrientService {
    * @throws {Error} If the page fails to fetch.
    */
   async getPage(url) {
+    if (typeof url !== 'string' || !url) {
+      throw new Error(`Invalid URL provided to getPage: ${url}`);
+    }
     try {
       const response = await this.scrapeClient.get(url);
       return response.data;
@@ -83,16 +86,56 @@ class MyrientService {
   }
 
   /**
-   * Scrapes a given URL for file links and parses their information.
-   * @param {string} url The URL of the page containing file links.
-   * @returns {Promise<{files: Array<object>, tags: Array<string>}>} A promise that resolves with an object containing parsed file information and unique tags.
+   * Recursively scrapes a given URL for file and directory links and collects all raw file link objects.
+   * @param {string} url The URL of the page containing file and directory links.
+   * @param {string} baseUrl The initial URL from which the scraping started, used to construct full relative paths.
+   * @returns {Promise<Array<object>>} A promise that resolves with an array of raw file link objects.
+   * @private
    */
-  async scrapeAndParseFiles(url) {
+  async _scrapeRawFileLinks(url, baseUrl) {
+    if (typeof url !== 'string' || !url) {
+      throw new Error(`Invalid URL provided to _scrapeRawFileLinks: ${url}`);
+    }
+    if (typeof baseUrl !== 'string' || !baseUrl) {
+      throw new Error(`Invalid baseUrl provided to _scrapeRawFileLinks: ${baseUrl}`);
+    }
+    let allRawFileLinks = [];
     const html = await this.getPage(url);
     const links = this.parseLinks(html);
-    const files = links.filter(link => !link.isDir);
 
-    return this.fileParser.parseFiles(files);
+    const currentLevelFiles = [];
+    const subdirectories = [];
+
+    links.forEach(link => {
+      if (link.isDir) {
+        subdirectories.push(link);
+      } else {
+        const absoluteFileUrl = new URL(link.href, url).toString();
+        const relativeHref = absoluteFileUrl.replace(baseUrl, '');
+        currentLevelFiles.push({ ...link, href: relativeHref, type: 'file' });
+      }
+    });
+
+    allRawFileLinks = [...currentLevelFiles];
+
+    for (const dir of subdirectories) {
+      const subdirectoryUrl = new URL(dir.href, url).toString();
+      const subDirRawFileLinks = await this._scrapeRawFileLinks(subdirectoryUrl, baseUrl);
+      allRawFileLinks = [...allRawFileLinks, ...subDirRawFileLinks];
+    }
+
+    return allRawFileLinks;
+  }
+
+  /**
+   * Scrapes a given URL for file and directory links, recursively collects all files, and parses their information.
+   * @param {string} url The URL of the page containing file and directory links.
+   * @returns {Promise<{files: Array<object>, tags: object}>} A promise that resolves with an object containing parsed file information and unique tags (from files).
+   */
+  async scrapeAndParseFiles(url) {
+    const allRawFileLinks = await this._scrapeRawFileLinks(url, url);
+    const { files: parsedItems, tags: parsedTags } = this.fileParser.parseFiles(allRawFileLinks);
+    return { files: parsedItems, tags: parsedTags };
   }
 }
 

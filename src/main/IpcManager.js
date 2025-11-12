@@ -254,7 +254,7 @@ class IpcManager {
        * Initiates a download process.
        * @param {object} event The IPC event object.
        * @param {string} baseUrl The base URL for the files to download.
-       * @param {Array<object>} files An array of file objects to download.
+       * @param {Array<object>} files An array of file and/or directory objects to download.
        * @param {string} targetDir The target directory for the download.
        * @param {boolean} createSubfolder Whether to create subfolders for the download.
        * @param {boolean} extractAndDelete Whether to extract archives and delete them after download.

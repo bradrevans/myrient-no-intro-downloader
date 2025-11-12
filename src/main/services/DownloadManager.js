@@ -75,7 +75,7 @@ class DownloadManager {
       filesToDownload = scanResult.filesToDownload;
       totalSize = scanResult.totalSize;
       skippedSize = scanResult.skippedSize;
-      allSkippedFiles.push(...scanResult.skippedFiles);
+      allSkippedFiles.push(...scanResult.skippedFiles.map(f => f.name));
 
       if (filesToDownload.length === 0) {
         if (scanResult.skippedBecauseExtractedCount === files.length) {
@@ -105,7 +105,7 @@ class DownloadManager {
           initialSkippedFileCount
         );
         allSkippedFiles.push(...downloadResult.skippedFiles);
-        downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.some(s => s.name === f.name));
+        downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.includes(f.name));
       }
 
     } catch (e) {
@@ -134,10 +134,10 @@ class DownloadManager {
     let filesForExtraction = [...downloadedFiles];
     if (extractPreviouslyDownloaded && scanResult && scanResult.skippedFiles) {
       const previouslyDownloadedArchives = scanResult.skippedFiles.filter(file => {
-        const gameName = path.parse(file.name_raw).name;
+        const gameName = path.parse(file.name).name;
         const subfolderPath = createSubfolder ? path.join(targetDir, gameName) : targetDir;
-        const filePath = path.join(subfolderPath, file.name_raw);
-        return fs.existsSync(filePath);
+        const filePath = path.join(subfolderPath, file.name);
+        return fs.existsSync(filePath) && !allSkippedFiles.includes(file.name);
       });
       filesForExtraction.push(...previouslyDownloadedArchives);
     }
@@ -167,7 +167,7 @@ class DownloadManager {
   async extractFiles(downloadedFiles, targetDir, createSubfolder) {
     const extractionStartTime = performance.now();
     this.win.webContents.send('extraction-started');
-    const archiveFiles = downloadedFiles.filter(f => f.name_raw.toLowerCase().endsWith('.zip'));
+    const archiveFiles = downloadedFiles.filter(f => f.name.toLowerCase().endsWith('.zip'));
     if (archiveFiles.length === 0) {
       this.downloadConsole.logNoArchivesToExtract();
       return;
@@ -177,11 +177,31 @@ class DownloadManager {
 
     let totalUncompressedSizeOfAllArchives = 0;
     let overallExtractedBytes = 0;
+    let overallExtractedEntryCount = 0;
     let lastExtractionProgressUpdateTime = 0;
 
+    let totalEntriesOverall = 0;
     for (const file of archiveFiles) {
-      const subfolder = createSubfolder ? file.name_raw.replace(/\.[^/.]+$/, "") : '';
-      const filePath = path.join(targetDir, subfolder, file.name_raw);
+      const filePath = createSubfolder ? path.join(targetDir, path.parse(file.name).name, file.name) : path.join(targetDir, file.name);
+      let zipfile;
+      try {
+        zipfile = await open(filePath);
+        let entry = await zipfile.readEntry();
+        while (entry) {
+          totalEntriesOverall++;
+          entry = await zipfile.readEntry();
+        }
+      } catch (e) {
+        this.downloadConsole.logError(`Error counting entries for ${file.name}: ${e.message}`);
+      } finally {
+        if (zipfile) {
+          await zipfile.close();
+        }
+      }
+    }
+
+    for (const file of archiveFiles) {
+      const filePath = createSubfolder ? path.join(targetDir, path.parse(file.name).name, file.name) : path.join(targetDir, file.name);
       let zipfile;
       try {
         zipfile = await open(filePath);
@@ -193,7 +213,7 @@ class DownloadManager {
           entry = await zipfile.readEntry();
         }
       } catch (e) {
-        this.downloadConsole.logError(`Error calculating size for ${file.name_raw}: ${e.message}`);
+        this.downloadConsole.logError(`Error calculating size for ${file.name}: ${e.message}`);
       } finally {
         if (zipfile) {
           await zipfile.close();
@@ -206,9 +226,9 @@ class DownloadManager {
 
     for (let i = 0; i < archiveFiles.length; i++) {
       const file = archiveFiles[i];
-      const subfolder = createSubfolder ? file.name_raw.replace(/\.[^/.]+$/, "") : '';
-      const filePath = path.join(targetDir, subfolder, file.name_raw);
-      const extractPath = path.join(targetDir, subfolder);
+      const archiveBaseName = path.parse(file.name).name;
+      const extractPath = createSubfolder ? path.join(targetDir, archiveBaseName) : targetDir;
+      const filePath = createSubfolder ? path.join(targetDir, path.parse(file.name).name, file.name) : path.join(targetDir, file.name);
 
       let zipfile;
       const extractedFiles = [];
@@ -216,13 +236,15 @@ class DownloadManager {
         this.win.webContents.send('extraction-progress', {
           current: i,
           total: archiveFiles.length,
-          filename: file.name_raw,
+          filename: file.name,
           fileProgress: 0,
           fileTotal: 0,
           currentEntry: 0,
           totalEntries: 0,
           overallExtractedBytes: overallExtractedBytes,
           totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
+          overallExtractedEntryCount: overallExtractedEntryCount,
+          totalEntriesOverall: totalEntriesOverall,
           eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
         });
 
@@ -245,19 +267,25 @@ class DownloadManager {
             break;
           }
           extractedEntryCount++;
+          overallExtractedEntryCount++;
           const currentEntryFileName = entry.fileName || entry.filename;
           if (!currentEntryFileName || typeof currentEntryFileName !== 'string') {
             entry = await zipfile.readEntry();
             continue;
           }
 
-          const entryPath = path.join(extractPath, currentEntryFileName);
-          if (/\/$/.test(currentEntryFileName) && entry.uncompressedSize === 0) {
+          let finalEntryFileName = currentEntryFileName;
+          if (createSubfolder && finalEntryFileName.startsWith(archiveBaseName + '/')) {
+            finalEntryFileName = finalEntryFileName.substring(archiveBaseName.length + 1);
+          }
+
+          const entryPath = path.join(extractPath, finalEntryFileName);
+          if (/\/$/.test(finalEntryFileName) && entry.uncompressedSize === 0) {
             await fs.promises.mkdir(entryPath, { recursive: true });
             entry = await zipfile.readEntry();
             continue;
           }
-          if (/\/$/.test(currentEntryFileName)) {
+          if (/\/$/.test(finalEntryFileName)) {
             await fs.promises.mkdir(entryPath, { recursive: true });
           } else {
             await fs.promises.mkdir(path.dirname(entryPath), { recursive: true });
@@ -269,13 +297,15 @@ class DownloadManager {
             this.win.webContents.send('extraction-progress', {
               current: i,
               total: archiveFiles.length,
-              filename: file.name_raw,
+              filename: file.name,
               fileProgress: 0,
               fileTotal: totalBytes,
               currentEntry: extractedEntryCount,
               totalEntries: totalEntries,
               overallExtractedBytes: overallExtractedBytes,
               totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
+              overallExtractedEntryCount: overallExtractedEntryCount,
+              totalEntriesOverall: totalEntriesOverall,
               formattedOverallExtractedBytes: formatBytes(overallExtractedBytes),
               formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
               eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
@@ -291,13 +321,15 @@ class DownloadManager {
                   this.win.webContents.send('extraction-progress', {
                     current: i,
                     total: archiveFiles.length,
-                    filename: file.name_raw,
+                    filename: file.name,
                     fileProgress: bytesRead,
                     fileTotal: totalBytes,
                     currentEntry: extractedEntryCount,
                     totalEntries: totalEntries,
                     overallExtractedBytes: overallExtractedBytes,
                     totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
+                    overallExtractedEntryCount: overallExtractedEntryCount,
+                    totalEntriesOverall: totalEntriesOverall,
                     formattedOverallExtractedBytes: formatBytes(overallExtractedBytes),
                     formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
                     eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
@@ -315,13 +347,15 @@ class DownloadManager {
                   this.win.webContents.send('extraction-progress', {
                     current: i,
                     total: archiveFiles.length,
-                    filename: file.name_raw,
+                    filename: file.name,
                     fileProgress: totalBytes,
                     fileTotal: totalBytes,
                     currentEntry: extractedEntryCount,
                     totalEntries: totalEntries,
                     overallExtractedBytes: overallExtractedBytes,
                     totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
+                    overallExtractedEntryCount: overallExtractedEntryCount,
+                    totalEntriesOverall: totalEntriesOverall,
                     formattedOverallExtractedBytes: formatBytes(overallExtractedBytes),
                     formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
                     eta: calculateEta(overallExtractedBytes, totalUncompressedSizeOfAllArchives, extractionStartTime)
@@ -349,7 +383,7 @@ class DownloadManager {
           await fs.promises.unlink(filePath);
         }
       } catch (e) {
-        this.downloadConsole.logExtractionError(file.name_raw, e.message);
+        this.downloadConsole.logExtractionError(file.name, e.message);
       } finally {
         if (zipfile) {
           await zipfile.close();
@@ -381,6 +415,8 @@ class DownloadManager {
       totalEntries: 0,
       overallExtractedBytes: this.isCancelled ? overallExtractedBytes : totalUncompressedSizeOfAllArchives,
       totalUncompressedSizeOfAllArchives: totalUncompressedSizeOfAllArchives,
+      overallExtractedEntryCount: this.isCancelled ? overallExtractedEntryCount : totalEntriesOverall,
+      totalEntriesOverall: totalEntriesOverall,
       formattedOverallExtractedBytes: formatBytes(this.isCancelled ? overallExtractedBytes : totalUncompressedSizeOfAllArchives),
       formattedTotalUncompressedSizeOfAllArchives: formatBytes(totalUncompressedSizeOfAllArchives),
       eta: '--'

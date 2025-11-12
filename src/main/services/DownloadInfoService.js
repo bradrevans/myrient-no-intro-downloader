@@ -3,6 +3,7 @@ import path from 'path';
 import https from 'https';
 import { URL } from 'url';
 import axios from 'axios';
+import MyrientService from './MyrientService.js';
 
 /**
  * Service responsible for gathering information about files to be downloaded.
@@ -15,6 +16,7 @@ class DownloadInfoService {
   constructor() {
     this.httpAgent = new https.Agent({ keepAlive: true });
     this.abortController = new AbortController();
+    this.myrientService = new MyrientService();
   }
 
   /**
@@ -40,6 +42,31 @@ class DownloadInfoService {
   }
 
   /**
+   * Recursively fetches all file links within a given directory URL and its subdirectories.
+   * @param {string} directoryUrl The URL of the directory to scan.
+   * @param {string} [currentRelativePath=''] The current relative path from the initial selected directory.
+   * @returns {Promise<Array<object>>} A flattened array of file objects found within the directory and its subdirectories.
+   * @private
+   */
+  async _recursivelyGetFilesInDirectory(directoryUrl, currentRelativePath = '') {
+    let allFiles = [];
+    const html = await this.myrientService.getPage(directoryUrl);
+    const links = this.myrientService.parseLinks(html);
+
+    for (const link of links) {
+      if (this.isCancelled()) throw new Error("CANCELLED_SCAN");
+
+      const fullUrl = new URL(link.href, directoryUrl).href;
+      if (link.isDir) {
+        allFiles = allFiles.concat(await this._recursivelyGetFilesInDirectory(fullUrl, path.join(currentRelativePath, link.name)));
+      } else {
+        allFiles.push({ name: link.name, href: fullUrl, type: 'file', relativePath: path.join(currentRelativePath, link.name) });
+      }
+    }
+    return allFiles;
+  }
+
+  /**
    * Checks if a game has already been extracted to the target directory.
    * @param {string} targetDir The base directory where files are extracted.
    * @param {string} gameName The name of the game (usually derived from the filename).
@@ -48,7 +75,8 @@ class DownloadInfoService {
    * @returns {Promise<boolean>} True if the game appears to be already extracted, false otherwise.
    * @private
    */
-  async _isAlreadyExtracted(targetDir, gameName, filename, createSubfolder) {
+  async _isAlreadyExtracted(targetDir, filename, createSubfolder) {
+    const gameName = path.parse(filename).name;
     if (createSubfolder) {
       const subfolderPath = path.join(targetDir, gameName);
       try {
@@ -74,11 +102,11 @@ class DownloadInfoService {
   }
 
   /**
-   * Gathers download information for a list of files, including total size,
+   * Gathers download information for a list of files and/or directories, including total size,
    * and identifies files that can be skipped due to prior download or extraction.
    * @param {object} win The Electron BrowserWindow instance for sending progress updates.
-   * @param {string} baseUrl The base URL for the files.
-   * @param {Array<object>} files An array of file objects, each with at least `name_raw` and `href`.
+   * @param {string} baseUrl The base URL for the items.
+   * @param {Array<object>} items An array of file and/or directory objects, each with at least `name_raw`, `href`, and `type`.
    * @param {string} targetDir The target directory for downloads.
    * @param {boolean} [createSubfolder=false] Whether to create subfolders for each download.
    * @returns {Promise<object>} An object containing:
@@ -90,13 +118,24 @@ class DownloadInfoService {
    *   - `skippedBecauseDownloadedCount`: Number of files skipped because they were already downloaded.
    * @throws {Error} If the scan is cancelled.
    */
-  async getDownloadInfo(win, baseUrl, files, targetDir, createSubfolder = false) {
+  async getDownloadInfo(win, baseUrl, items, targetDir, createSubfolder = false) {
     let totalSize = 0;
     let skippedSize = 0;
     const filesToDownload = [];
     const skippedFiles = [];
     let skippedBecauseExtractedCount = 0;
     let skippedBecauseDownloadedCount = 0;
+
+    const allFilesToProcess = [];
+    for (const item of items) {
+      if (item.type === 'directory') {
+        const directoryUrl = new URL(item.href, baseUrl).href;
+        const filesInDir = await this._recursivelyGetFilesInDirectory(directoryUrl, item.name_raw);
+        allFilesToProcess.push(...filesInDir);
+      } else {
+        allFilesToProcess.push({ name: item.name_raw, href: new URL(item.href, baseUrl).href, type: 'file', relativePath: item.name_raw });
+      }
+    }
 
     const session = axios.create({
       httpsAgent: this.httpAgent,
@@ -107,15 +146,14 @@ class DownloadInfoService {
       signal: this.abortController.signal
     });
 
-    for (let i = 0; i < files.length; i++) {
+    for (let i = 0; i < allFilesToProcess.length; i++) {
       if (this.isCancelled()) throw new Error("CANCELLED_SCAN");
 
-      const fileInfo = files[i];
-      const filename = fileInfo.name_raw;
-      const gameName = path.parse(filename).name;
-      const fileUrl = new URL(fileInfo.href, baseUrl).href;
+      const fileInfo = allFilesToProcess[i];
+      const filename = fileInfo.name;
+      const fileUrl = fileInfo.href;
 
-      if (await this._isAlreadyExtracted(targetDir, gameName, filename, createSubfolder)) {
+      if (await this._isAlreadyExtracted(targetDir, filename, createSubfolder)) {
         fileInfo.skip = true;
         skippedBecauseExtractedCount++;
         try {
@@ -127,13 +165,13 @@ class DownloadInfoService {
         } catch (e) {
         }
         skippedFiles.push(fileInfo);
-        win.webContents.send('download-scan-progress', { current: i + 1, total: files.length });
+        win.webContents.send('download-scan-progress', { current: i + 1, total: allFilesToProcess.length });
         continue;
       }
 
       let finalTargetDir = targetDir;
       if (createSubfolder) {
-        finalTargetDir = path.join(targetDir, gameName);
+        finalTargetDir = path.join(targetDir, path.parse(filename).name);
       }
       const targetPath = path.join(finalTargetDir, filename);
 
@@ -168,7 +206,7 @@ class DownloadInfoService {
         skippedFiles.push(`${filename} (Scan failed)`);
         fileInfo.skip = true;
       }
-      win.webContents.send('download-scan-progress', { current: i + 1, total: files.length });
+      win.webContents.send('download-scan-progress', { current: i + 1, total: allFilesToProcess.length });
     }
 
     return { filesToDownload, totalSize, skippedSize, skippedFiles, skippedBecauseExtractedCount, skippedBecauseDownloadedCount };

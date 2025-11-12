@@ -51,7 +51,7 @@ class ApiService {
   /**
    * Scrapes and parses files from the currently selected directory.
    * Updates the state service with the `allFiles` and `allTags`.
-   * @returns {Promise<void>}
+   * @returns {Promise<{files: Array<object>, tags: object, hasSubdirectories: boolean}>}
    * @throws {Error} If there is an error scraping or parsing files.
    */
   async scrapeAndParseFiles() {
@@ -62,6 +62,7 @@ class ApiService {
     }
     stateService.set('allFiles', result.files);
     stateService.set('allTags', result.tags);
+    return { files: result.files, tags: result.tags, hasSubdirectories: result.hasSubdirectories };
   }
 
   /**

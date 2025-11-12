@@ -21,11 +21,17 @@ export default class DownloadUI {
     if (window.electronAPI && window.electronAPI.onExtractionStarted) {
       window.electronAPI.onExtractionStarted(() => {
         this._isExtracting = true;
+        const elements = this._getElements();
+        elements.overallExtractionProgressBar.classList.remove('hidden');
+        elements.extractionProgressBar.classList.remove('hidden');
       });
     }
     if (window.electronAPI && window.electronAPI.onExtractionEnded) {
       window.electronAPI.onExtractionEnded(() => {
         this._isExtracting = false;
+        const elements = this._getElements();
+        elements.overallExtractionProgressBar.classList.add('hidden');
+        elements.extractionProgressBar.classList.add('hidden');
       });
     }
   }
@@ -78,6 +84,8 @@ export default class DownloadUI {
       selectAllResultsBtn: document.getElementById('select-all-results-btn'),
       deselectAllResultsBtn: document.getElementById('deselect-all-results-btn'),
       resultsSelectedCount: document.getElementById('results-selected-count'),
+      createSubfolderCheckbox: document.getElementById('create-subfolder-checkbox'),
+      createSubfolderLabel: document.querySelector('label[for="create-subfolder-checkbox"]'),
     };
   }
 
@@ -169,9 +177,10 @@ export default class DownloadUI {
   /**
    * Populates the results list in the UI with the final filtered file list.
    * Sets up event listeners for checkbox changes and resets download-related UI elements.
+   * @param {boolean} hasSubdirectories Indicates if the selected directory contains subdirectories.
    * @returns {Promise<void>}
    */
-  async populateResults() {
+  async populateResults(hasSubdirectories = false) {
     const elements = this._getElements();
     if (!elements.resultsFileCount) return;
 
@@ -181,17 +190,22 @@ export default class DownloadUI {
 
     elements.resultsList.innerHTML = '';
 
-    finalFileList.forEach(file => {
+    finalFileList.forEach(item => {
       const el = document.createElement('label');
       el.className = 'flex items-center p-2 bg-neutral-900 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none';
-      el.dataset.name = file.name_raw;
+      el.dataset.name = item.name_raw;
       el.tabIndex = 0;
+
       el.innerHTML = `
         <input type="checkbox" class="h-4 w-4" checked>
-        <span class="text-neutral-300 truncate">${file.name_raw}</span>
+        <span class="text-neutral-300 truncate">${item.name_raw}</span>
       `;
       elements.resultsList.appendChild(el);
     });
+
+    elements.createSubfolderCheckbox.checked = false;
+    elements.createSubfolderCheckbox.disabled = false;
+    this.stateService.set('createSubfolder', false);
 
     this._updateSelectionState();
     this.updateScanButtonText();
@@ -353,6 +367,13 @@ export default class DownloadUI {
       }
     });
 
+    document.addEventListener('change', (e) => {
+      const elements = this._getElements();
+      if (e.target.id === 'create-subfolder-checkbox' && !e.target.disabled) {
+        this.stateService.set('createSubfolder', e.target.checked);
+      }
+    });
+
     window.electronAPI.onDownloadScanProgress(data => {
       const elements = this._getElements();
       if (!elements.scanProgress) return;
@@ -425,7 +446,6 @@ export default class DownloadUI {
 
       const overallExtractionProgressBar = document.getElementById('overall-extraction-progress-bar');
       if (data.totalUncompressedSizeOfAllArchives > 0) {
-        overallExtractionProgressBar.classList.remove('hidden');
         const overallPercent = data.totalUncompressedSizeOfAllArchives > 0 ? (data.overallExtractedBytes / data.totalUncompressedSizeOfAllArchives) * 100 : 0;
         elements.overallExtractionProgress.style.width = `${overallPercent}%`;
         const overallPercentFixed = overallPercent.toFixed(1);
@@ -435,20 +455,15 @@ export default class DownloadUI {
         } else {
           elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
         }
-      } else {
-        overallExtractionProgressBar.classList.add('hidden');
       }
 
       const extractionProgressBar = document.getElementById('extraction-progress-bar');
       if (data.fileTotal > 0) {
-        extractionProgressBar.classList.remove('hidden');
         const filePercent = data.fileTotal > 0 ? (data.fileProgress / data.fileTotal) * 100 : 0;
         elements.extractionProgress.style.width = `${filePercent}%`;
         const filePercentFixed = filePercent.toFixed(0);
-        elements.extractionProgressName.textContent = `${data.filename} (${data.currentEntry}/${data.totalEntries})`;
+        elements.extractionProgressName.textContent = `${data.filename} (${data.overallExtractedEntryCount}/${data.totalEntriesOverall})`;
         elements.extractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.fileProgress)} / ${await window.electronAPI.formatBytes(data.fileTotal)} (${filePercentFixed}%)`;
-      } else {
-        extractionProgressBar.classList.add('hidden');
       }
     });
   }
