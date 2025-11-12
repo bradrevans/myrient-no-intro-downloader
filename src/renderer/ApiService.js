@@ -72,11 +72,21 @@ class ApiService {
    * @throws {Error} If there is an error during filtering.
    */
   async runFilter(filters) {
-    const result = await window.electronAPI.filterFiles(stateService.get('allFiles'), stateService.get('allTags'), filters);
-    if (result.error) {
-      throw new Error(result.error);
+    const isDefaultFilter = filters.include_tags.length === 0 &&
+                            filters.exclude_tags.length === 0 &&
+                            filters.rev_mode === 'all' &&
+                            filters.dedupe_mode === 'all' &&
+                            filters.priority_list.length === 0;
+
+    if (isDefaultFilter) {
+      stateService.set('finalFileList', stateService.get('allFiles'));
+    } else {
+      const result = await window.electronAPI.filterFiles(stateService.get('allFiles'), stateService.get('allTags'), filters);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      stateService.set('finalFileList', result.data);
     }
-    stateService.set('finalFileList', result.data);
   }
 
   /**

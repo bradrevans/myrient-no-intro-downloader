@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const defaultFilters = {
           include_tags: [],
           exclude_tags: [],
-          rev_mode: stateService.get('revisionMode'),
-          dedupe_mode: stateService.get('dedupeMode'),
+          rev_mode: 'all',
+          dedupe_mode: 'all',
           priority_list: [],
         };
         await apiService.runFilter(defaultFilters);
@@ -66,9 +66,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         downloadUI.populateResults();
         stateService.set('wizardSkipped', true);
       } else {
-        uiManager.showView('wizard');
-        uiManager.setupWizard();
-        stateService.set('wizardSkipped', false);
+        const userWantsToFilter = await uiManager.showConfirmationModal(
+          'This directory contains filterable tags. Would you like to use the filtering wizard?',
+          {
+            title: 'Filter Results?',
+            confirmText: 'Enter Wizard',
+            cancelText: 'Show All'
+          }
+        );
+
+        if (userWantsToFilter) {
+          uiManager.showView('wizard');
+          uiManager.setupWizard();
+          stateService.set('wizardSkipped', false);
+        } else {
+          const defaultFilters = {
+            include_tags: [],
+            exclude_tags: [],
+            rev_mode: 'all',
+            dedupe_mode: 'all',
+            priority_list: [],
+          };
+          await apiService.runFilter(defaultFilters);
+          uiManager.showView('results');
+          downloadUI.populateResults();
+          stateService.set('wizardSkipped', true);
+        }
       }
     } catch (e) {
       alert(`Error: ${e.message}`);
