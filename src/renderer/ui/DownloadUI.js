@@ -207,6 +207,28 @@ export default class DownloadUI {
     elements.createSubfolderCheckbox.disabled = false;
     this.stateService.set('createSubfolder', false);
 
+    const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
+    if (extractArchivesCheckbox) {
+      extractArchivesCheckbox.checked = false;
+    }
+
+    const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
+    if (extractPreviouslyDownloadedCheckbox) {
+      extractPreviouslyDownloadedCheckbox.checked = false;
+      const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
+      if (extractArchivesCheckbox) {
+        extractPreviouslyDownloadedCheckbox.disabled = !extractArchivesCheckbox.checked;
+        const parentLabel = extractPreviouslyDownloadedCheckbox.closest('label');
+        if (parentLabel) {
+          if (!extractArchivesCheckbox.checked) {
+            parentLabel.classList.add('disabled-option');
+          } else {
+            parentLabel.classList.remove('disabled-option');
+          }
+        }
+      }
+    }
+
     this._updateSelectionState();
     this.updateScanButtonText();
     this.updateScanButtonState();
@@ -371,6 +393,23 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (e.target.id === 'create-subfolder-checkbox' && !e.target.disabled) {
         this.stateService.set('createSubfolder', e.target.checked);
+      }
+      if (e.target.id === 'extract-archives-checkbox') {
+        const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
+        if (extractPreviouslyDownloadedCheckbox) {
+          extractPreviouslyDownloadedCheckbox.disabled = !e.target.checked;
+          const parentLabel = extractPreviouslyDownloadedCheckbox.closest('label');
+          if (parentLabel) {
+            if (!e.target.checked) {
+              parentLabel.classList.add('disabled-option');
+            } else {
+              parentLabel.classList.remove('disabled-option');
+            }
+          }
+          if (!e.target.checked) {
+            extractPreviouslyDownloadedCheckbox.checked = false;
+          }
+        }
       }
     });
 

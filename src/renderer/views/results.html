@@ -25,20 +25,25 @@
       <span id="download-dir-text" class="text-gray-500 ml-4">No directory selected.</span>
     </div>
 
-    <div class="flex items-center space-x-2">
-      <input type="checkbox" id="create-subfolder-checkbox" class="h-4 w-4">
-      <label for="create-subfolder-checkbox" class="text-neutral-300 select-none">Create subfolder for each game</label>
-    </div>
+    <div id="download-options" class="space-y-2">
+      <h3 class="text-lg font-semibold mb-2">Download Options</h3>
+      <label for="create-subfolder-checkbox"
+        class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none">
+        <input type="checkbox" id="create-subfolder-checkbox">
+        <span class="text-neutral-300 truncate">Create subfolder for each game</span>
+      </label>
 
-    <div class="flex items-center space-x-2">
-      <input type="checkbox" id="extract-archives-checkbox" class="h-4 w-4">
-      <label for="extract-archives-checkbox" class="text-neutral-300 select-none">Extract then delete archives</label>
-    </div>
+      <label for="extract-archives-checkbox"
+        class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none">
+        <input type="checkbox" id="extract-archives-checkbox">
+        <span class="text-neutral-300 truncate">Extract then delete archives</span>
+      </label>
 
-    <div class="flex items-center space-x-2 ml-6">
-      <input type="checkbox" id="extract-previously-downloaded-checkbox" class="h-4 w-4" disabled>
-      <label for="extract-previously-downloaded-checkbox" class="text-neutral-300 select-none">Extract previously
-        downloaded archives</label>
+      <label for="extract-previously-downloaded-checkbox"
+        class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none ml-6">
+        <input type="checkbox" id="extract-previously-downloaded-checkbox" disabled>
+        <span class="text-neutral-300 truncate">Extract previously downloaded archives</span>
+      </label>
     </div>
 
     <button id="download-scan-btn" class="btn btn-success w-full" disabled>Scan & Download</button>

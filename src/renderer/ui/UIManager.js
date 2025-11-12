@@ -324,6 +324,7 @@ class UIManager {
       if ((type === 'include' && isExcluded) || (type === 'exclude' && isIncluded)) {
         checkboxHtml += ' disabled';
         el.classList.add('opacity-50', 'cursor-not-allowed');
+        el.style.pointerEvents = 'none';
       }
       checkboxHtml += '>';
       el.innerHTML = `${checkboxHtml}<span class="text-neutral-300">${tag}</span>`;
@@ -380,9 +381,11 @@ class UIManager {
         if (isChecked) {
           opposingCheckbox.disabled = true;
           opposingLabel.classList.add('opacity-50', 'cursor-not-allowed');
+          opposingLabel.style.pointerEvents = 'none';
         } else {
           opposingCheckbox.disabled = false;
           opposingLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+          opposingLabel.style.pointerEvents = '';
         }
       }
       this.updatePriorityBuilderAvailableTags();

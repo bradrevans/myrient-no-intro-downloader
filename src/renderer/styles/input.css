@@ -191,3 +191,8 @@ input[type="number"] {
 .toggle-option:not(.active):hover {
   @apply bg-neutral-700;
 }
+
+.disabled-option {
+  @apply opacity-50 cursor-not-allowed;
+  pointer-events: none;
+}
