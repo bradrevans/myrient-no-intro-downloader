@@ -179,7 +179,7 @@ class KeyboardNavigator {
         }
       } else if (item.tagName === 'LABEL') {
         const checkbox = item.querySelector('input[type="checkbox"]');
-        if (checkbox) {
+        if (checkbox && !checkbox.disabled) {
           checkbox.checked = !checkbox.checked;
           checkbox.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { tagName: item.dataset.name } }));
         }

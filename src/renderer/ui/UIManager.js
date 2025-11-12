@@ -18,6 +18,7 @@ class UIManager {
     this.currentView = null;
     this.loadArchivesCallback = loadArchivesCallback;
     this.downloadUI = null;
+    this.searchInstances = {};
   }
 
   /**
@@ -299,7 +300,6 @@ class UIManager {
 
     includeListEl.innerHTML = '';
     excludeListEl.innerHTML = '';
-
     allCategoryTags.sort((a, b) => a.localeCompare(b));
 
     const renderTagItem = (tag, type) => {
@@ -332,107 +332,120 @@ class UIManager {
       excludeListEl.appendChild(renderTagItem(tag, 'exclude'));
     });
 
-    const updateStateAndUI = (targetCheckbox) => {
+    const handleTagClick = (e) => {
+      if (e.target.type !== 'checkbox') return;
+
+      const targetCheckbox = e.target;
       const tagName = targetCheckbox.parentElement.dataset.name;
       const tagType = targetCheckbox.dataset.tagType;
+      const isChecked = targetCheckbox.checked;
 
-      const currentInclude = new Set(stateService.get('includeTags')[category]);
-      const currentExclude = new Set(stateService.get('excludeTags')[category]);
+      const includeTags = new Set(stateService.get('includeTags')[category]);
+      const excludeTags = new Set(stateService.get('excludeTags')[category]);
+
+      const opposingType = tagType === 'include' ? 'exclude' : 'include';
+      const opposingListEl = document.getElementById(`wizard-tags-list-${category}-${opposingType}`);
+      const opposingLabel = opposingListEl.querySelector(`[data-name="${tagName}"]`);
+      const opposingCheckbox = opposingLabel?.querySelector('input');
 
       if (tagType === 'include') {
-        if (targetCheckbox.checked) {
-          currentInclude.add(tagName);
-          currentExclude.delete(tagName);
+        if (isChecked) {
+          includeTags.add(tagName);
+          if (excludeTags.has(tagName)) {
+            excludeTags.delete(tagName);
+            if (opposingCheckbox) opposingCheckbox.checked = false;
+          }
         } else {
-          currentInclude.delete(tagName);
+          includeTags.delete(tagName);
         }
-      } else if (tagType === 'exclude') {
-        if (targetCheckbox.checked) {
-          currentExclude.add(tagName);
-          currentInclude.delete(tagName);
+      } else {
+        if (isChecked) {
+          excludeTags.add(tagName);
+          if (includeTags.has(tagName)) {
+            includeTags.delete(tagName);
+            if (opposingCheckbox) opposingCheckbox.checked = false;
+          }
         } else {
-          currentExclude.delete(tagName);
+          excludeTags.delete(tagName);
         }
       }
 
-      stateService.get('includeTags')[category] = Array.from(currentInclude);
-      stateService.get('excludeTags')[category] = Array.from(currentExclude);
+      stateService.get('includeTags')[category] = Array.from(includeTags);
+      stateService.get('excludeTags')[category] = Array.from(excludeTags);
 
-      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
+      if (opposingLabel && opposingCheckbox) {
+        if (isChecked) {
+          opposingCheckbox.disabled = true;
+          opposingLabel.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+          opposingCheckbox.disabled = false;
+          opposingLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      }
       this.updatePriorityBuilderAvailableTags();
-
-      const listEl = tagType === 'include' ? includeListEl : excludeListEl;
-      const newElementToFocus = listEl.querySelector(`[data-name="${tagName}"]`);
-      if (newElementToFocus) {
-        newElementToFocus.focus();
-      }
     };
 
-    includeListEl.addEventListener('change', (e) => {
-      if (e.target.type === 'checkbox' && e.target.dataset.tagType === 'include') {
-        updateStateAndUI(e.target);
-      }
-    });
+    includeListEl.addEventListener('change', handleTagClick);
+    excludeListEl.addEventListener('change', handleTagClick);
 
-    excludeListEl.addEventListener('change', (e) => {
-      if (e.target.type === 'checkbox' && e.target.dataset.tagType === 'exclude') {
-        updateStateAndUI(e.target);
-      }
-    });
+    const massUpdateTags = (type, shouldSelect) => {
+      const listEl = document.getElementById(`wizard-tags-list-${category}-${type}`);
+      const opposingType = type === 'include' ? 'exclude' : 'include';
+      const opposingListEl = document.getElementById(`wizard-tags-list-${category}-${opposingType}`);
 
-    document.getElementById(`select-all-tags-${category}-include-btn`).addEventListener('click', () => {
-      const currentInclude = new Set(stateService.get('includeTags')[category]);
-      const currentExclude = new Set(stateService.get('excludeTags')[category]);
+      const includeTags = new Set(stateService.get('includeTags')[category]);
+      const excludeTags = new Set(stateService.get('excludeTags')[category]);
 
-      includeListEl.querySelectorAll('input[type=checkbox][data-tag-type="include"]:not(:disabled)').forEach(checkbox => {
-        checkbox.checked = true;
-        currentInclude.add(checkbox.parentElement.dataset.name);
-        currentExclude.delete(checkbox.parentElement.dataset.name);
+      listEl.querySelectorAll('label:not(.hidden) input[type=checkbox]:not(:disabled)').forEach(checkbox => {
+        if (checkbox.checked === shouldSelect) return;
+        checkbox.checked = shouldSelect;
+
+        const tagName = checkbox.parentElement.dataset.name;
+        const opposingLabel = opposingListEl.querySelector(`[data-name="${tagName}"]`);
+        const opposingCheckbox = opposingLabel?.querySelector('input');
+
+        if (type === 'include') {
+          if (shouldSelect) {
+            includeTags.add(tagName);
+            if (excludeTags.has(tagName)) {
+              excludeTags.delete(tagName);
+              if (opposingCheckbox) opposingCheckbox.checked = false;
+            }
+          } else {
+            includeTags.delete(tagName);
+          }
+        } else {
+          if (shouldSelect) {
+            excludeTags.add(tagName);
+            if (includeTags.has(tagName)) {
+              includeTags.delete(tagName);
+              if (opposingCheckbox) opposingCheckbox.checked = false;
+            }
+          } else {
+            excludeTags.delete(tagName);
+          }
+        }
+
+        if (opposingLabel && opposingCheckbox) {
+          if (shouldSelect) {
+            opposingCheckbox.disabled = true;
+            opposingLabel.classList.add('opacity-50', 'cursor-not-allowed');
+          } else {
+            opposingCheckbox.disabled = false;
+            opposingLabel.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+        }
       });
 
-      stateService.get('includeTags')[category] = Array.from(currentInclude);
-      stateService.get('excludeTags')[category] = Array.from(currentExclude);
-      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
+      stateService.get('includeTags')[category] = Array.from(includeTags);
+      stateService.get('excludeTags')[category] = Array.from(excludeTags);
       this.updatePriorityBuilderAvailableTags();
-    });
+    };
 
-    document.getElementById(`deselect-all-tags-${category}-include-btn`).addEventListener('click', () => {
-      const currentInclude = new Set(stateService.get('includeTags')[category]);
-      includeListEl.querySelectorAll('input[type=checkbox][data-tag-type="include"]:not(:disabled)').forEach(checkbox => {
-        checkbox.checked = false;
-        currentInclude.delete(checkbox.parentElement.dataset.name);
-      });
-      stateService.get('includeTags')[category] = Array.from(currentInclude);
-      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
-      this.updatePriorityBuilderAvailableTags();
-    });
-
-    document.getElementById(`select-all-tags-${category}-exclude-btn`).addEventListener('click', () => {
-      const currentInclude = new Set(stateService.get('includeTags')[category]);
-      const currentExclude = new Set(stateService.get('excludeTags')[category]);
-
-      excludeListEl.querySelectorAll('input[type=checkbox][data-tag-type="exclude"]:not(:disabled)').forEach(checkbox => {
-        checkbox.checked = true;
-        currentExclude.add(checkbox.parentElement.dataset.name);
-        currentInclude.delete(checkbox.parentElement.dataset.name);
-      });
-
-      stateService.get('includeTags')[category] = Array.from(currentInclude);
-      stateService.get('excludeTags')[category] = Array.from(currentExclude);
-      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
-      this.updatePriorityBuilderAvailableTags();
-    });
-
-    document.getElementById(`deselect-all-tags-${category}-exclude-btn`).addEventListener('click', () => {
-      const currentExclude = new Set(stateService.get('excludeTags')[category]);
-      excludeListEl.querySelectorAll('input[type=checkbox][data-tag-type="exclude"]:not(:disabled)').forEach(checkbox => {
-        checkbox.checked = false;
-        currentExclude.delete(checkbox.parentElement.dataset.name);
-      });
-      stateService.get('excludeTags')[category] = Array.from(currentExclude);
-      this.populateTagCategory(category, allCategoryTags, stateService.get('includeTags')[category], stateService.get('excludeTags')[category]);
-      this.updatePriorityBuilderAvailableTags();
-    });
+    document.getElementById(`select-all-tags-${category}-include-btn`).addEventListener('click', () => massUpdateTags('include', true));
+    document.getElementById(`deselect-all-tags-${category}-include-btn`).addEventListener('click', () => massUpdateTags('include', false));
+    document.getElementById(`select-all-tags-${category}-exclude-btn`).addEventListener('click', () => massUpdateTags('exclude', true));
+    document.getElementById(`deselect-all-tags-${category}-exclude-btn`).addEventListener('click', () => massUpdateTags('exclude', false));
   }
 
   /**
@@ -656,7 +669,7 @@ class UIManager {
         const availableList = document.getElementById('priority-available');
         const priorityList = document.getElementById('priority-list');
         const itemsToMove = Array.from(availableList.querySelectorAll('.list-group-item:not(.hidden)'));
-        
+
         itemsToMove.sort(sortFn);
         itemsToMove.forEach(item => priorityList.appendChild(item));
 
@@ -668,7 +681,7 @@ class UIManager {
       document.getElementById('add-all-shortest').addEventListener('click', () => {
         addAllPriorities((a, b) => a.textContent.length - b.textContent.length);
       });
-  
+
       document.getElementById('add-all-longest').addEventListener('click', () => {
         addAllPriorities((a, b) => b.textContent.length - a.textContent.length);
       });
@@ -740,6 +753,7 @@ class UIManager {
    * @param {string} viewId The ID of the current view.
    */
   setupSearchEventListeners(viewId) {
+    this.searchInstances = {};
     const searchConfigs = {
       'archives': {
         searchId: 'search-archives',
@@ -813,13 +827,13 @@ class UIManager {
         if (!searchInput) return;
 
         if (config.includeListId) {
-          new Search(config.searchId, config.includeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          this.searchInstances[config.includeListId] = new Search(config.searchId, config.includeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
         }
         if (config.excludeListId) {
-          new Search(config.searchId, config.excludeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          this.searchInstances[config.excludeListId] = new Search(config.searchId, config.excludeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
         }
         if (config.listId && !config.includeListId) {
-          new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          this.searchInstances[config.listId] = new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
         }
 
         const parentContainer = document.getElementById(config.parentContainerId);
@@ -841,7 +855,7 @@ class UIManager {
       });
     } else {
       (Array.isArray(configs) ? configs : [configs]).forEach(config => {
-        new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+        this.searchInstances[config.listId] = new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
 
         const listContainer = document.getElementById(config.listId);
         const searchInput = document.getElementById(config.searchId);
