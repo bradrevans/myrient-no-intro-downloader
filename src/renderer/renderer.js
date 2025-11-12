@@ -50,8 +50,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     uiManager.showLoading('Scanning files...');
     try {
       await apiService.scrapeAndParseFiles();
-      uiManager.showView('wizard');
-      uiManager.setupWizard();
+      const allTags = stateService.get('allTags');
+      const hasNoTags = Object.keys(allTags).length === 0 || Object.values(allTags).every(arr => arr.length === 0);
+
+      if (hasNoTags) {
+        const defaultFilters = {
+          include_tags: [],
+          exclude_tags: [],
+          rev_mode: stateService.get('revisionMode'),
+          dedupe_mode: stateService.get('dedupeMode'),
+          priority_list: [],
+        };
+        await apiService.runFilter(defaultFilters);
+        uiManager.showView('results');
+        downloadUI.populateResults();
+        stateService.set('wizardSkipped', true);
+      } else {
+        uiManager.showView('wizard');
+        uiManager.setupWizard();
+        stateService.set('wizardSkipped', false);
+      }
     } catch (e) {
       alert(`Error: ${e.message}`);
       uiManager.showView('directories');
@@ -82,8 +100,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('header-back-btn').addEventListener('click', () => {
     if (stateService.get('isDownloading')) return;
     if (stateService.get('currentView') === 'results') {
-      uiManager.showView('wizard');
-      uiManager.setupWizard();
+      if (stateService.get('wizardSkipped')) {
+        stateService.set('directory', { name: '', href: '' });
+        stateService.resetWizardState();
+        loadDirectories();
+      } else {
+        uiManager.showView('wizard');
+        uiManager.setupWizard();
+      }
     } else if (stateService.get('currentView') === 'wizard') {
       stateService.set('directory', { name: '', href: '' });
       stateService.resetWizardState();

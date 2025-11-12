@@ -37,6 +37,7 @@ class StateService {
       createSubfolder: false,
       extractAndDelete: false,
       extractPreviouslyDownloaded: false,
+      wizardSkipped: false,
     };
   }
 
