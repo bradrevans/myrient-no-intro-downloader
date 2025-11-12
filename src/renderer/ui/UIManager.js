@@ -214,7 +214,7 @@ class UIManager {
    * Sets up the wizard view by populating all filter sections and attaching event listeners.
    */
   setupWizard() {
-    document.getElementById('filter-revision-mode').value = stateService.get('revisionMode');
+    document.getElementById('filter-revision-mode').checked = stateService.get('revisionMode') === 'highest';
     document.getElementById('filter-dedupe-mode').value = stateService.get('dedupeMode');
     document.getElementById('filter-keep-fallbacks').checked = stateService.get('keepFallbacks');
 
@@ -243,7 +243,7 @@ class UIManager {
     this.updatePriorityBuilderAvailableTags();
 
     document.getElementById('filter-revision-mode').addEventListener('change', (e) => {
-      stateService.set('revisionMode', e.target.value);
+      stateService.set('revisionMode', e.target.checked ? 'highest' : 'all');
     });
     document.getElementById('filter-dedupe-mode').addEventListener('change', (e) => {
       stateService.set('dedupeMode', e.target.value);
@@ -591,7 +591,7 @@ class UIManager {
         const filters = {
           include_tags: allIncludeTags,
           exclude_tags: allExcludeTags,
-          rev_mode: document.getElementById('filter-revision-mode').value,
+          rev_mode: document.getElementById('filter-revision-mode').checked ? 'highest' : 'all',
           dedupe_mode: document.getElementById('filter-dedupe-mode').value,
           priority_list: priorityList,
           keep_fallbacks: document.getElementById('filter-keep-fallbacks').checked,

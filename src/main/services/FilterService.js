@@ -87,18 +87,6 @@ class FilterService {
     const mode = filters.dedupe_mode || 'all';
     if (mode === 'all') return fileList;
 
-    if (mode === 'simple') {
-      const seenBaseNames = new Set();
-      const deduplicatedList = [];
-      for (const fileInfo of fileList) {
-        if (!seenBaseNames.has(fileInfo.base_name)) {
-          deduplicatedList.push(fileInfo);
-          seenBaseNames.add(fileInfo.base_name);
-        }
-      }
-      return deduplicatedList;
-    }
-
     if (mode === 'priority') {
       const priorityList = filters.priority_list || [];
       const keepFallbacks = filters.keep_fallbacks;

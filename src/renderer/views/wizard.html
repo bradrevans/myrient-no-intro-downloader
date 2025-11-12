@@ -94,10 +94,10 @@
 
     <div>
       <h3 class="text-lg font-semibold mb-2">Revision Filtering</h3>
-      <select id="filter-revision-mode" class="search-bar">
-        <option value="highest">Keep only the HIGHEST revision of each game (Recommended)</option>
-        <option value="all">Keep ALL files (Keep all revisions)</option>
-      </select>
+      <div class="flex items-center">
+        <input type="checkbox" id="filter-revision-mode" class="h-4 w-4" checked>
+        <label for="filter-revision-mode" class="ml-2 select-none">Only keep highest revision of each title</label>
+      </div>
     </div>
 
     <div>

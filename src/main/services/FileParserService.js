@@ -21,15 +21,7 @@ class FileParserService {
       tags.add(match[1].trim());
     }
 
-    let revision = 0.0;
-    const revMatch = nameNoExt.match(/\((?:v|Rev)\s*([\d\.]+)\)/i);
-    if (revMatch && revMatch[1]) {
-      try {
-        revision = parseFloat(revMatch[1]);
-      } catch (e) {
-        revision = 0.0;
-      }
-    }
+    const revision = this._parseRevision(nameNoExt);
 
     const categorizedTags = {};
     for (const tag of tags) {
@@ -47,6 +39,65 @@ class FileParserService {
       categorizedTags: categorizedTags,
       revision: revision,
     };
+  }
+
+  /**
+   * Parses the revision from a filename.
+   * The revision is parsed in a specific order of priority:
+   * 1. Numbered releases (e.g., v1.2.3, Rev 2)
+   * 2. Numbered Beta releases (e.g., Beta 2)
+   * 3. Simple Beta releases (e.g., Beta)
+   * 4. Numbered Alpha releases (e.g., Alpha 1)
+   * 5. Simple Alpha releases (e.g., Alpha)
+   * 6. Prototypes with a date (e.g., Proto 2022-12-25)
+   * 7. Prototypes without a date (e.g., Proto)
+   * @param {string} nameNoExt The filename without the extension.
+   * @returns {number} The parsed revision number. Higher numbers indicate higher revisions. Pre-release versions are negative.
+   * @private
+   */
+  _parseRevision(nameNoExt) {
+    const lowerCaseName = nameNoExt.toLowerCase();
+
+    const versionMatch = lowerCaseName.match(/(?:\(v|ver|version|rev|revision)\.?\s*([\d\.]+)\)/);
+    if (versionMatch && versionMatch[1]) {
+      const parts = versionMatch[1].split('.').map(p => parseInt(p, 10) || 0);
+      let num = 0;
+      if (parts.length > 0) num += parts[0];
+      if (parts.length > 1) num += parts[1] / 1000;
+      if (parts.length > 2) num += parts[2] / 1000000;
+      return num;
+    }
+
+    const betaNumMatch = lowerCaseName.match(/(?:\(beta)\s*(\d+)\)/);
+    if (betaNumMatch && betaNumMatch[1]) {
+      const num = parseInt(betaNumMatch[1], 10);
+      return -1 + num / 100;
+    }
+
+    if (lowerCaseName.includes('(beta)')) {
+      return -2;
+    }
+
+    const alphaNumMatch = lowerCaseName.match(/(?:\(alpha)\s*(\d+)\)/);
+    if (alphaNumMatch && alphaNumMatch[1]) {
+      const num = parseInt(alphaNumMatch[1], 10);
+      return -3 + num / 100;
+    }
+
+    if (lowerCaseName.includes('(alpha)')) {
+      return -4;
+    }
+
+    if (lowerCaseName.includes('(proto)')) {
+      const dateMatch = lowerCaseName.match(/(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch && dateMatch[1]) {
+        const dateAsNum = parseInt(dateMatch[1].replace(/-/g, ''), 10);
+        return -5 + dateAsNum / 100000000;
+      }
+      return -6;
+    }
+
+    return 0.0;
   }
 
   /**
