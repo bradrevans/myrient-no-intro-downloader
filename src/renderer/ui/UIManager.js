@@ -2,6 +2,8 @@ import stateService from '../StateService.js';
 import apiService from '../ApiService.js';
 import Search from './Search.js';
 import KeyboardNavigator from './KeyboardNavigator.js';
+import InfoIcon from './InfoIcon.js';
+import tooltipContent from '../tooltipContent.js';
 
 /**
  * Manages the overall user interface, including view switching, loading states, modals, and event listeners.
@@ -76,6 +78,40 @@ class UIManager {
       this.updateBreadcrumbs();
       this.addEventListeners(viewId);
       this.setupSearchEventListeners(viewId);
+    }
+  }
+
+  /**
+   * Adds an info icon next to a target element.
+   * @param {string} targetElementId The ID of the element next to which the icon should be placed.
+   * @param {string} tooltipKey The key for the tooltip text in tooltipContent.js.
+   * @param {'after'|'append'|'prepend'} [placement='after'] Where to place the icon relative to the target element.
+   */
+  addInfoIconToElement(targetElementId, tooltipKey, placement = 'after') {
+    const targetElement = document.getElementById(targetElementId);
+    if (!targetElement) {
+      console.warn(`Target element with ID '${targetElementId}' not found for info icon.`);
+      return;
+    }
+    const text = tooltipContent[tooltipKey];
+    if (!text) {
+      console.warn(`Tooltip content for key '${tooltipKey}' not found.`);
+      return;
+    }
+
+    const infoIcon = new InfoIcon(text);
+
+    const isHeading = /^H[1-6]$/i.test(targetElement.tagName);
+
+    if (isHeading) {
+      targetElement.classList.add('inline-flex', 'items-center');
+      targetElement.appendChild(infoIcon.element);
+    } else if (placement === 'after') {
+      targetElement.parentNode.insertBefore(infoIcon.element, targetElement.nextSibling);
+    } else if (placement === 'append') {
+      targetElement.appendChild(infoIcon.element);
+    } else if (placement === 'prepend') {
+      targetElement.prepend(infoIcon.element);
     }
   }
 
@@ -242,6 +278,18 @@ class UIManager {
       });
     });
 
+    this.addInfoIconToElement('filter-revision-mode-label', 'revisionMode'); // Add info icon
+    this.addInfoIconToElement('region-filtering-label', 'regionFiltering');
+    this.addInfoIconToElement('language-filtering-label', 'languageFiltering');
+    this.addInfoIconToElement('other-filtering-label', 'otherFiltering');
+    this.addInfoIconToElement('region-include-label', 'includeTags');
+    this.addInfoIconToElement('region-exclude-label', 'excludeTags');
+    this.addInfoIconToElement('language-include-label', 'includeTags');
+    this.addInfoIconToElement('language-exclude-label', 'excludeTags');
+    this.addInfoIconToElement('other-include-label', 'includeTags');
+    this.addInfoIconToElement('other-exclude-label', 'excludeTags');
+
+
     const allTags = stateService.get('allTags');
     const totalTagCount = Object.values(allTags).reduce((sum, tags) => sum + tags.length, 0);
 
@@ -282,6 +330,11 @@ class UIManager {
         document.getElementById('priority-builder-ui').classList.toggle('hidden', newMode !== 'priority');
       });
     });
+
+    this.addInfoIconToElement('filter-dedupe-mode-label', 'dedupeMode'); // Add info icon
+    this.addInfoIconToElement('priority-list-label', 'priorityList'); // Add info icon
+    this.addInfoIconToElement('priority-available-label', 'availableTags'); // Add info icon
+
 
     document.getElementById('priority-builder-ui').classList.toggle('hidden', currentDedupeMode !== 'priority');
 
@@ -402,7 +455,7 @@ class UIManager {
       const includeTags = new Set(stateService.get('includeTags')[category]);
       const excludeTags = new Set(stateService.get('excludeTags')[category]);
 
-      listEl.querySelectorAll('label:not(.hidden) input[type=checkbox]:not(:disabled)').forEach(checkbox => {
+      listEl.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
         if (checkbox.checked === shouldSelect) return;
         checkbox.checked = shouldSelect;
 
@@ -431,15 +484,19 @@ class UIManager {
             excludeTags.delete(tagName);
           }
         }
+      });
 
-        if (opposingLabel && opposingCheckbox) {
-          if (shouldSelect) {
-            opposingCheckbox.disabled = true;
-            opposingLabel.classList.add('opacity-50', 'cursor-not-allowed');
-          } else {
-            opposingCheckbox.disabled = false;
-            opposingLabel.classList.remove('opacity-50', 'cursor-not-allowed');
-          }
+      opposingListEl.querySelectorAll('label').forEach(label => {
+        const tagName = label.dataset.name;
+        const checkbox = label.querySelector('input');
+        if ((type === 'include' && includeTags.has(tagName)) || (type === 'exclude' && excludeTags.has(tagName))) {
+          checkbox.disabled = true;
+          label.classList.add('opacity-50', 'cursor-not-allowed');
+          label.style.pointerEvents = 'none';
+        } else {
+          checkbox.disabled = false;
+          label.classList.remove('opacity-50', 'cursor-not-allowed');
+          label.style.pointerEvents = '';
         }
       });
 
@@ -698,6 +755,7 @@ class UIManager {
           stateService.set('createSubfolder', e.target.checked);
         });
       }
+      this.addInfoIconToElement('create-subfolder-label', 'createSubfolder'); // Add info icon
 
       const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
       const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
@@ -719,11 +777,20 @@ class UIManager {
             this.downloadUI.updateScanButtonText();
           }
         });
+        this.addInfoIconToElement('extract-archives-label', 'extractArchives'); // Add info icon
 
         extractPreviouslyDownloadedCheckbox.addEventListener('change', (e) => {
           stateService.set('extractPreviouslyDownloaded', e.target.checked);
         });
+        this.addInfoIconToElement('extract-previously-downloaded-label', 'extractPreviouslyDownloaded'); // Add info icon
       }
+
+      this.addInfoIconToElement('download-options-label', 'downloadOptions');
+
+      this.addInfoIconToElement('overall-download-progress-label', 'overallDownloadProgress');
+      this.addInfoIconToElement('file-download-progress-label', 'fileDownloadProgress');
+      this.addInfoIconToElement('overall-extraction-progress-label', 'overallExtractionProgress');
+      this.addInfoIconToElement('file-extraction-progress-label', 'fileExtractionProgress');
 
       document.getElementById('download-dir-btn').addEventListener('click', async () => {
         const dir = await apiService.getDownloadDirectory();

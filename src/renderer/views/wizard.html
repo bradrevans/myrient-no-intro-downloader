@@ -8,15 +8,14 @@
   <div class="space-y-6">
     <div id="tag-filtering-ui" class="space-y-6">
       <div id="tag-category-region-container">
-        <h3 class="text-lg font-semibold mb-2">Region Filtering</h3>
+        <h3 id="region-filtering-label" class="text-lg font-semibold mb-2">Region Filtering</h3>
         <div class="search-container mb-3">
           <input type="text" id="search-tags-region" class="search-bar" placeholder="Search Region tags...">
           <span id="search-tags-region-clear" class="search-clear-btn">&times;</span>
         </div>
         <div class="flex gap-4">
-          <!-- Include List -->
           <div class="w-1/2">
-            <h4 class="text-md font-semibold mb-2">Include</h4>
+            <h4 id="region-include-label" class="text-md font-semibold mb-2">Include</h4>
             <div id="wizard-tags-list-region-include"
               class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
             <div class="flex gap-2 mt-2">
@@ -25,9 +24,8 @@
                 (Displayed)</button>
             </div>
           </div>
-          <!-- Exclude List -->
           <div class="w-1/2">
-            <h4 class="text-md font-semibold mb-2">Exclude</h4>
+            <h4 id="region-exclude-label" class="text-md font-semibold mb-2">Exclude</h4>
             <div id="wizard-tags-list-region-exclude"
               class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
             <div class="flex gap-2 mt-2">
@@ -40,15 +38,14 @@
       </div>
 
       <div id="tag-category-language-container">
-        <h3 class="text-lg font-semibold mb-2">Language Filtering</h3>
+        <h3 id="language-filtering-label" class="text-lg font-semibold mb-2">Language Filtering</h3>
         <div class="search-container mb-3">
           <input type="text" id="search-tags-language" class="search-bar" placeholder="Search Language tags...">
           <span id="search-tags-language-clear" class="search-clear-btn">&times;</span>
         </div>
         <div class="flex gap-4">
-          <!-- Include List -->
           <div class="w-1/2">
-            <h4 class="text-md font-semibold mb-2">Include</h4>
+            <h4 id="language-include-label" class="text-md font-semibold mb-2">Include</h4>
             <div id="wizard-tags-list-language-include"
               class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
             <div class="flex gap-2 mt-2">
@@ -58,9 +55,8 @@
                 (Displayed)</button>
             </div>
           </div>
-          <!-- Exclude List -->
           <div class="w-1/2">
-            <h4 class="text-md font-semibold mb-2">Exclude</h4>
+            <h4 id="language-exclude-label" class="text-md font-semibold mb-2">Exclude</h4>
             <div id="wizard-tags-list-language-exclude"
               class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
             <div class="flex gap-2 mt-2">
@@ -74,15 +70,14 @@
       </div>
 
       <div id="tag-category-other-container">
-        <h3 class="text-lg font-semibold mb-2">Other Filtering</h3>
+        <h3 id="other-filtering-label" class="text-lg font-semibold mb-2">Other Filtering</h3>
         <div class="search-container mb-3">
           <input type="text" id="search-tags-other" class="search-bar" placeholder="Search Other tags...">
           <span id="search-tags-other-clear" class="search-clear-btn">&times;</span>
         </div>
         <div class="flex gap-4">
-          <!-- Include List -->
           <div class="w-1/2">
-            <h4 class="text-md font-semibold mb-2">Include</h4>
+            <h4 id="other-include-label" class="text-md font-semibold mb-2">Include</h4>
             <div id="wizard-tags-list-other-include"
               class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
             <div class="flex gap-2 mt-2">
@@ -91,9 +86,8 @@
                 (Displayed)</button>
             </div>
           </div>
-          <!-- Exclude List -->
           <div class="w-1/2">
-            <h4 class="text-md font-semibold mb-2">Exclude</h4>
+            <h4 id="other-exclude-label" class="text-md font-semibold mb-2">Exclude</h4>
             <div id="wizard-tags-list-other-exclude"
               class="h-48 overflow-y-auto bg-neutral-800 border border-neutral-700 rounded-lg p-2 mt-2 space-y-2"></div>
             <div class="flex gap-2 mt-2">
@@ -107,7 +101,7 @@
     </div>
 
     <div>
-      <h3 class="text-lg font-semibold mb-2">Revision Filtering</h3>
+      <h3 id="filter-revision-mode-label" class="text-lg font-semibold mb-2">Revision Filtering</h3>
       <div id="filter-revision-mode" class="flex rounded-lg bg-neutral-800 p-1">
         <button data-value="highest"
           class="toggle-option flex-1 px-4 py-2 text-sm font-medium text-white rounded-md border border-transparent hover:border-accent-500">Keep
@@ -119,7 +113,7 @@
     </div>
 
     <div>
-      <h3 class="text-lg font-semibold mb-2">De-duplication</h3>
+      <h3 id="filter-dedupe-mode-label" class="text-lg font-semibold mb-2">De-duplication</h3>
       <div id="filter-dedupe-mode" class="flex rounded-lg bg-neutral-800 p-1">
         <button data-value="priority"
           class="toggle-option flex-1 px-4 py-2 text-sm font-medium text-white rounded-md border border-transparent hover:border-accent-500">Keep
@@ -134,7 +128,7 @@
         <div class="flex gap-4 mt-2 h-[500px]">
 
           <div class="w-1/2 h-full flex flex-col">
-            <h5 class="text-center font-bold mb-1">Priority (Drag to re-order)</h5>
+            <h5 id="priority-list-label" class="text-center font-bold mb-1">Priority (Drag to re-order)</h5>
             <div class="flex justify-start mb-2">
               <button id="reset-priorities-btn" class="btn btn-secondary btn-sm w-full">Reset Priorities</button>
             </div>
@@ -144,7 +138,7 @@
           </div>
 
           <div class="w-1/2 h-full flex flex-col" id="priority-available-container">
-            <h5 class="text-center font-bold">Available (Drag to add)</h5>
+            <h5 id="priority-available-label" class="text-center font-bold">Available (Drag to add)</h5>
             <div class="search-container my-1">
               <input type="text" id="search-priority-tags" class="search-bar" placeholder="Search available tags...">
               <span id="search-priority-tags-clear" class="search-clear-btn">&times;</span>

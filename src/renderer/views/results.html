@@ -26,23 +26,24 @@
     </div>
 
     <div id="download-options" class="space-y-2">
-      <h3 class="text-lg font-semibold mb-2">Download Options</h3>
+      <h3 id="download-options-label" class="text-lg font-semibold mb-2">Download Options</h3>
       <label for="create-subfolder-checkbox"
         class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none">
         <input type="checkbox" id="create-subfolder-checkbox">
-        <span class="text-neutral-300 truncate">Create subfolder for each game</span>
+        <span id="create-subfolder-label" class="text-neutral-300 truncate">Create subfolder for each game</span>
       </label>
 
       <label for="extract-archives-checkbox"
         class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none">
         <input type="checkbox" id="extract-archives-checkbox">
-        <span class="text-neutral-300 truncate">Extract then delete archives</span>
+        <span id="extract-archives-label" class="text-neutral-300 truncate">Extract then delete archives</span>
       </label>
 
       <label for="extract-previously-downloaded-checkbox"
         class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 cursor-pointer border border-transparent hover:border-accent-500 hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-accent-500 select-none ml-6">
         <input type="checkbox" id="extract-previously-downloaded-checkbox" disabled>
-        <span class="text-neutral-300 truncate">Extract previously downloaded archives</span>
+        <span id="extract-previously-downloaded-label" class="text-neutral-300 truncate">Extract previously downloaded
+          archives</span>
       </label>
     </div>
 
@@ -52,7 +53,7 @@
 
     <div id="scan-progress-bar" class="hidden w-full">
       <label for="scan-progress" class="text-sm font-semibold">Scanning file sizes...</label>
-      <div class="progress-track">
+      <div class="progress-track mt-1">
         <div id="scan-progress" class="progress-fill"></div>
       </div>
       <div class="text-right"><span id="scan-progress-text" class="text-sm text-gray-100">0 / 0
@@ -61,8 +62,9 @@
 
     <div id="download-progress-bars" class="hidden w-full space-y-4">
       <div>
-        <label for="overall-progress" class="text-sm font-semibold">Overall Download Progress</label>
-        <div class="progress-track">
+        <label id="overall-download-progress-label" for="overall-progress" class="text-sm font-semibold">Overall
+          Download Progress</label>
+        <div class="progress-track mt-1">
           <div id="overall-progress" class="progress-fill"></div>
         </div>
         <div class="flex justify-between text-sm text-gray-100">
@@ -72,8 +74,9 @@
         </div>
       </div>
       <div id="file-progress-container" class="hidden">
-        <label for="file-progress" class="text-sm font-semibold">Download Progress</label>
-        <div class="progress-track">
+        <label id="file-download-progress-label" for="file-progress" class="text-sm font-semibold">Download
+          Progress</label>
+        <div class="progress-track mt-1">
           <div id="file-progress" class="progress-fill"></div>
         </div>
         <div class="flex justify-between text-sm text-gray-100">
@@ -82,8 +85,9 @@
         </div>
       </div>
       <div id="overall-extraction-progress-bar" class="hidden w-full">
-        <label for="overall-extraction-progress" class="text-sm font-semibold">Overall Extraction Progress</label>
-        <div class="progress-track">
+        <label id="overall-extraction-progress-label" for="overall-extraction-progress"
+          class="text-sm font-semibold">Overall Extraction Progress</label>
+        <div class="progress-track mt-1">
           <div id="overall-extraction-progress" class="progress-fill"></div>
         </div>
         <div class="flex justify-between text-sm text-gray-100">
@@ -93,8 +97,9 @@
         </div>
       </div>
       <div id="extraction-progress-bar" class="hidden w-full">
-        <label for="extraction-progress" class="text-sm font-semibold">Extraction Progress</label>
-        <div class="progress-track">
+        <label id="file-extraction-progress-label" for="extraction-progress" class="text-sm font-semibold">Extraction
+          Progress</label>
+        <div class="progress-track mt-1">
           <div id="extraction-progress" class="progress-fill"></div>
         </div>
         <div class="flex justify-between text-sm text-gray-100">
