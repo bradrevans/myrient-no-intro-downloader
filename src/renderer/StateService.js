@@ -38,6 +38,7 @@ class StateService {
       extractAndDelete: false,
       extractPreviouslyDownloaded: false,
       wizardSkipped: false,
+      maxConcurrentDownloads: 3,
     };
   }
 

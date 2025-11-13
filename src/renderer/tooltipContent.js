@@ -8,13 +8,15 @@ const tooltipContent = {
   otherFiltering: "Filter ROMs based on miscellaneous tags (e.g., Beta, Demo, Unlicensed). Select tags to include or exclude specific categories.",
   includeTags: "Tags selected here will be INCLUDED in your filtered results. Only ROMs containing at least one of these tags will be shown.",
   excludeTags: "Tags selected here will be EXCLUDED from your filtered results. ROMs containing any of these tags will be removed from the results.",
+  downloadOptions: "Options that control how your files are downloaded and processed, such as creating subfolders and extracting archives.",
   createSubfolder: "If checked, downloaded files will be organized into a subfolder named after the archive (e.g., 'Title (Region)') within your chosen download directory.",
   extractArchives: "If checked, downloaded compressed archives will be automatically extracted to their contents, and the original archive file will be deleted after successful extraction.",
   extractPreviouslyDownloaded: "If checked, any existing compressed archives in your download directory that were previously downloaded will also be extracted and deleted.",
   overallDownloadProgress: "Shows the combined progress for all files being downloaded.",
-  fileDownloadProgress: "Shows the progress for the currently downloading file.",
+  fileDownloadProgress: "Shows the progress for the currently downloading files.",
   overallExtractionProgress: "Shows the combined progress for all archives being extracted.",
-  fileExtractionProgress: "Shows the progress for the currently extracting archive."
+  fileExtractionProgress: "Shows the progress for the currently extracting archive.",
+  parallelDownloads: "The number of files to download at the same time. A higher number may increase download speed but also uses more bandwidth and system resources."
 };
 
 export default tooltipContent;

@@ -16,7 +16,7 @@ class KeyboardNavigator {
     this.itemSelector = itemSelector;
     this.searchInput = searchInput;
     this.uiManager = uiManager;
-    this.navigableElements = navigableElements; // New property for direct elements
+    this.navigableElements = navigableElements;
   }
 
   /**
@@ -48,7 +48,7 @@ class KeyboardNavigator {
    * @param {KeyboardEvent} e The keyboard event.
    */
   handleModalKeyDown(e) {
-    if (this.navigableElements.length < 2) return; // Need at least two elements to navigate between
+    if (this.navigableElements.length < 2) return;
 
     const activeElement = document.activeElement;
     const currentIndex = this.navigableElements.indexOf(activeElement);

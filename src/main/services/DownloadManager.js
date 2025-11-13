@@ -49,9 +49,10 @@ class DownloadManager {
    * @param {boolean} createSubfolder Whether to create subfolders for the download.
    * @param {boolean} extractAndDelete Whether to extract archives and delete them after download.
    * @param {boolean} extractPreviouslyDownloaded Whether to extract previously downloaded archives.
+   * @param {number} maxConcurrentDownloads The maximum number of concurrent downloads (default: 3).
    * @returns {Promise<{success: boolean}>} A promise that resolves with a success status.
    */
-  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) {
+  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads = 3) {
     this.reset();
 
     const downloadStartTime = performance.now();
@@ -102,7 +103,8 @@ class DownloadManager {
           skippedSize,
           createSubfolder,
           totalFilesOverall,
-          initialSkippedFileCount
+          initialSkippedFileCount,
+          maxConcurrentDownloads
         );
         allSkippedFiles.push(...downloadResult.skippedFiles);
         downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.includes(f.name));

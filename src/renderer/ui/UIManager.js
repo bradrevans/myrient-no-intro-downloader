@@ -287,7 +287,7 @@ class UIManager {
       });
     });
 
-    this.addInfoIconToElement('filter-revision-mode-label', 'revisionMode'); // Add info icon
+    this.addInfoIconToElement('filter-revision-mode-label', 'revisionMode');
     this.addInfoIconToElement('region-filtering-label', 'regionFiltering');
     this.addInfoIconToElement('language-filtering-label', 'languageFiltering');
     this.addInfoIconToElement('other-filtering-label', 'otherFiltering');
@@ -340,9 +340,9 @@ class UIManager {
       });
     });
 
-    this.addInfoIconToElement('filter-dedupe-mode-label', 'dedupeMode'); // Add info icon
-    this.addInfoIconToElement('priority-list-label', 'priorityList'); // Add info icon
-    this.addInfoIconToElement('priority-available-label', 'availableTags'); // Add info icon
+    this.addInfoIconToElement('filter-dedupe-mode-label', 'dedupeMode');
+    this.addInfoIconToElement('priority-list-label', 'priorityList');
+    this.addInfoIconToElement('priority-available-label', 'availableTags');
 
 
     document.getElementById('priority-builder-ui').classList.toggle('hidden', currentDedupeMode !== 'priority');
@@ -764,7 +764,7 @@ class UIManager {
           stateService.set('createSubfolder', e.target.checked);
         });
       }
-      this.addInfoIconToElement('create-subfolder-label', 'createSubfolder'); // Add info icon
+      this.addInfoIconToElement('create-subfolder-label', 'createSubfolder');
 
       const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
       const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
@@ -786,12 +786,12 @@ class UIManager {
             this.downloadUI.updateScanButtonText();
           }
         });
-        this.addInfoIconToElement('extract-archives-label', 'extractArchives'); // Add info icon
+        this.addInfoIconToElement('extract-archives-label', 'extractArchives');
 
         extractPreviouslyDownloadedCheckbox.addEventListener('change', (e) => {
           stateService.set('extractPreviouslyDownloaded', e.target.checked);
         });
-        this.addInfoIconToElement('extract-previously-downloaded-label', 'extractPreviouslyDownloaded'); // Add info icon
+        this.addInfoIconToElement('extract-previously-downloaded-label', 'extractPreviouslyDownloaded');
       }
 
       this.addInfoIconToElement('download-options-label', 'downloadOptions');
