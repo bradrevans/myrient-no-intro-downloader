@@ -16,6 +16,7 @@
   "author": "Brad Evans",
   "license": "ISC",
   "dependencies": {
+    "@kldzj/stream-throttle": "^1.1.1",
     "adm-zip": "^0.5.16",
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",

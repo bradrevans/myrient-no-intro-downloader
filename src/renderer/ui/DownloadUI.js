@@ -86,6 +86,9 @@ export default class DownloadUI {
       resultsSelectedCount: document.getElementById('results-selected-count'),
       createSubfolderCheckbox: document.getElementById('create-subfolder-checkbox'),
       createSubfolderLabel: document.querySelector('label[for="create-subfolder-checkbox"]'),
+      throttleDownloadCheckbox: document.getElementById('throttle-download-checkbox'),
+      throttleSpeedInput: document.getElementById('throttle-speed-input'),
+      throttleUnitSelect: document.getElementById('throttle-unit-select'),
     };
   }
 
@@ -210,8 +213,36 @@ export default class DownloadUI {
     const maxConcurrentDownloadsInput = document.getElementById('max-concurrent-downloads');
     if (maxConcurrentDownloadsInput) {
       maxConcurrentDownloadsInput.value = this.stateService.get('maxConcurrentDownloads') || 3;
-      const infoIcon = new InfoIcon(tooltipContent.parallelDownloads);
-      maxConcurrentDownloadsInput.parentNode.insertBefore(infoIcon.element, maxConcurrentDownloadsInput.nextSibling);
+      if (!maxConcurrentDownloadsInput.parentNode.querySelector('.info-icon')) {
+        const infoIcon = new InfoIcon(tooltipContent.parallelDownloads);
+        maxConcurrentDownloadsInput.parentNode.insertBefore(infoIcon.element, maxConcurrentDownloadsInput.nextSibling);
+      }
+    }
+
+    const throttleDownloadCheckbox = document.getElementById('throttle-download-checkbox');
+    const throttleSpeedInput = document.getElementById('throttle-speed-input');
+    const throttleUnitSelect = document.getElementById('throttle-unit-select');
+
+    if (throttleDownloadCheckbox && throttleSpeedInput && throttleUnitSelect) {
+      const isThrottlingEnabled = this.stateService.get('isThrottlingEnabled') || false;
+      const throttleSpeed = this.stateService.get('throttleSpeed') || 100;
+      const throttleUnit = this.stateService.get('throttleUnit') || 'KB/s';
+
+      throttleDownloadCheckbox.checked = isThrottlingEnabled;
+      throttleSpeedInput.disabled = !isThrottlingEnabled;
+      throttleUnitSelect.disabled = !isThrottlingEnabled;
+
+      throttleSpeedInput.value = throttleSpeed;
+      throttleUnitSelect.value = throttleUnit;
+
+      this.stateService.set('isThrottlingEnabled', isThrottlingEnabled);
+      this.stateService.set('throttleSpeed', throttleSpeed);
+      this.stateService.set('throttleUnit', throttleUnit);
+
+      if (!throttleSpeedInput.parentNode.querySelector('.info-icon')) {
+        const infoIcon = new InfoIcon(tooltipContent.throttleSpeed);
+        throttleSpeedInput.parentNode.appendChild(infoIcon.element);
+      }
     }
 
     const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
@@ -342,7 +373,10 @@ export default class DownloadUI {
     elements.extractionProgressBar.classList.add('hidden');
     elements.overallExtractionProgressBar.classList.add('hidden');
 
-    this.apiService.startDownload(this.stateService.get('selectedResults'));
+    const isThrottlingEnabled = this.stateService.get('isThrottlingEnabled');
+    const throttleSpeed = this.stateService.get('throttleSpeed');
+    const throttleUnit = this.stateService.get('throttleUnit');
+    this.apiService.startDownload(this.stateService.get('selectedResults'), isThrottlingEnabled, throttleSpeed, throttleUnit);
   }
 
   /**
@@ -402,6 +436,26 @@ export default class DownloadUI {
     });
 
     document.addEventListener('change', (e) => {
+      const { throttleDownloadCheckbox, throttleSpeedInput, throttleUnitSelect } = this._getElements();
+      if (e.target.id === 'throttle-download-checkbox') {
+        const isThrottlingEnabled = e.target.checked;
+        throttleSpeedInput.disabled = !isThrottlingEnabled;
+        throttleUnitSelect.disabled = !isThrottlingEnabled;
+        this.stateService.set('isThrottlingEnabled', isThrottlingEnabled);
+        if (isThrottlingEnabled) {
+          this.stateService.set('throttleSpeed', parseInt(throttleSpeedInput.value, 10));
+          this.stateService.set('throttleUnit', throttleUnitSelect.value);
+        }
+      }
+
+      if (e.target.id === 'throttle-speed-input') {
+        this.stateService.set('throttleSpeed', parseInt(e.target.value, 10));
+      }
+
+      if (e.target.id === 'throttle-unit-select') {
+        this.stateService.set('throttleUnit', e.target.value);
+      }
+
       const elements = this._getElements();
       if (e.target.id === 'create-subfolder-checkbox' && !e.target.disabled) {
         this.stateService.set('createSubfolder', e.target.checked);

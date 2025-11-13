@@ -133,13 +133,13 @@ class ApiService {
    * Initiates the download process for the selected files.
    * @param {Array<object>} files An array of file objects to download.
    */
-  startDownload(files) {
+  startDownload(files, isThrottlingEnabled, throttleSpeed, throttleUnit) {
     const baseUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
     const createSubfolder = stateService.get('createSubfolder');
     const extractAndDelete = stateService.get('extractAndDelete');
     const extractPreviouslyDownloaded = stateService.get('extractPreviouslyDownloaded');
     const maxConcurrentDownloads = stateService.get('maxConcurrentDownloads') || 3;
-    window.electronAPI.startDownload(baseUrl, files, stateService.get('downloadDirectory'), createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads);
+    window.electronAPI.startDownload(baseUrl, files, stateService.get('downloadDirectory'), createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads, isThrottlingEnabled, throttleSpeed, throttleUnit);
   }
 
   /**

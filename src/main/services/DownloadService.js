@@ -3,6 +3,7 @@ import path from 'path';
 import https from 'https';
 import { URL } from 'url';
 import axios from 'axios';
+import { Throttle } from '@kldzj/stream-throttle';
 
 /**
  * Service responsible for handling the actual downloading of files.
@@ -55,10 +56,12 @@ class DownloadService {
    * @param {number} totalFilesOverall The total number of files initially considered for download.
    * @param {number} initialSkippedFileCount The number of files initially skipped.
    * @param {number} [maxConcurrentDownloads=3] The maximum number of concurrent downloads.
+   * @param {boolean} isThrottlingEnabled Whether to enable download throttling.
+   * @param {number} throttleSpeed The download speed limit in MB/s.
    * @returns {Promise<{skippedFiles: Array<string>}>} A promise that resolves with an object containing any skipped files.
    * @throws {Error} If the download is cancelled between files or mid-file.
    */
-  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false, totalFilesOverall, initialSkippedFileCount, maxConcurrentDownloads = 3) {
+  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false, totalFilesOverall, initialSkippedFileCount, maxConcurrentDownloads = 3, isThrottlingEnabled = false, throttleSpeed = 10, throttleUnit = 'MB/s') {
     const session = axios.create({
       httpsAgent: this.httpAgent,
       timeout: 15000,
@@ -144,48 +147,82 @@ class DownloadService {
           totalFilesToDownload: totalFilesOverall
         });
 
-        response.data.on('data', (chunk) => {
-          if (this.isCancelled()) {
-            response.request.abort();
-            writer.close();
-            const err = new Error("CANCELLED_MID_FILE");
-            err.partialFile = { path: targetPath, name: filename };
-            reject(err);
-            return;
+        let stream = response.data;
+        if (isThrottlingEnabled) {
+          let bytesPerSecond = throttleSpeed * 1024;
+          if (throttleUnit === 'MB/s') {
+            bytesPerSecond = throttleSpeed * 1024 * 1024;
           }
-          fileDownloaded += chunk.length;
-          state.totalDownloaded += chunk.length;
-
-          const now = performance.now();
-          if (now - state.lastDownloadProgressUpdateTime > 100 || fileDownloaded === fileSize) {
-            state.lastDownloadProgressUpdateTime = now;
-            win.webContents.send('download-file-progress', {
-              name: filename,
-              fileIndex: fileIndex,
-              current: fileDownloaded,
-              total: fileSize,
-              currentFileIndex: initialSkippedFileCount + fileIndex + 1,
-              totalFilesToDownload: totalFilesOverall
-            });
-            win.webContents.send('download-overall-progress', {
-              current: state.totalDownloaded,
-              total: totalSize - state.totalBytesFailed,
-              skippedSize: initialDownloadedSize
-            });
-          }
-        });
-
-        response.data.pipe(writer);
+          const throttle = new Throttle({ rate: bytesPerSecond });
+          stream = response.data.pipe(throttle);
+        }
 
         await new Promise((resolve, reject) => {
+          const cleanupAndReject = (errMessage) => {
+            writer.close(() => {
+              if (fs.existsSync(targetPath)) {
+                this.downloadConsole.log(`Cleaning up partial file: ${filename}`);
+                fs.unlink(targetPath, (unlinkErr) => {
+                  if (unlinkErr) {
+                    console.error(`Failed to delete partial file: ${targetPath}`, unlinkErr);
+                  }
+                  const err = new Error(errMessage);
+                  err.partialFile = { path: targetPath, name: filename };
+                  reject(err);
+                });
+              } else {
+                const err = new Error(errMessage);
+                err.partialFile = { path: targetPath, name: filename };
+                reject(err);
+              }
+            });
+          };
+
+          stream.on('data', (chunk) => {
+            if (this.isCancelled()) {
+              response.request.abort();
+              cleanupAndReject("CANCELLED_MID_FILE");
+              return;
+            }
+            fileDownloaded += chunk.length;
+            state.totalDownloaded += chunk.length;
+            writer.write(chunk);
+
+            const now = performance.now();
+            if (now - state.lastDownloadProgressUpdateTime > 100 || fileDownloaded === fileSize) {
+              state.lastDownloadProgressUpdateTime = now;
+              win.webContents.send('download-file-progress', {
+                name: filename,
+                fileIndex: fileIndex,
+                current: fileDownloaded,
+                total: fileSize,
+                currentFileIndex: initialSkippedFileCount + fileIndex + 1,
+                totalFilesToDownload: totalFilesOverall
+              });
+              win.webContents.send('download-overall-progress', {
+                current: state.totalDownloaded,
+                total: totalSize - state.totalBytesFailed,
+                skippedSize: initialDownloadedSize
+              });
+            }
+          });
+
+          stream.on('end', () => {
+            writer.end();
+          });
+
           writer.on('finish', () => {
             resolve();
           });
           writer.on('error', (err) => {
             reject(err);
           });
-          response.data.on('error', (err) => {
-            reject(err);
+          stream.on('error', (err) => {
+            if (this.isCancelled()) {
+              cleanupAndReject("CANCELLED_MID_FILE");
+            } else {
+              reject(err);
+            }
           });
         });
 
@@ -197,9 +234,7 @@ class DownloadService {
 
       } catch (e) {
         if (e.name === 'AbortError' || e.message.startsWith("CANCELLED_")) {
-          const err = new Error("CANCELLED_MID_FILE");
-          err.partialFile = { path: targetPath, name: filename };
-          throw err;
+          throw e;
         }
 
         this.downloadConsole.logError(`Failed to download ${filename}. ${e.message}`);

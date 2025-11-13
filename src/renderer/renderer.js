@@ -307,14 +307,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 window.electronAPI.onDownloadComplete(async (summary) => {
-  if (summary.wasCancelled && summary.partialFile) {
-    const userWantsDelete = confirm(`Download cancelled. Do you want to delete the incomplete file?\n\nFile: ${summary.partialFile.name}`);
-    if (userWantsDelete) {
-      await apiService.deleteFile(summary.partialFile.path);
-      downloadUI.log(`Deleted partial file: ${summary.partialFile.name}`);
-    }
-  }
-
   stateService.set('isDownloading', false);
   document.getElementById('download-scan-btn').disabled = false;
   document.getElementById('download-dir-btn').disabled = false;

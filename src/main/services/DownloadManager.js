@@ -52,7 +52,7 @@ class DownloadManager {
    * @param {number} maxConcurrentDownloads The maximum number of concurrent downloads (default: 3).
    * @returns {Promise<{success: boolean}>} A promise that resolves with a success status.
    */
-  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads = 3) {
+  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads = 3, isThrottlingEnabled, throttleSpeed, throttleUnit) {
     this.reset();
 
     const downloadStartTime = performance.now();
@@ -104,7 +104,10 @@ class DownloadManager {
           createSubfolder,
           totalFilesOverall,
           initialSkippedFileCount,
-          maxConcurrentDownloads
+          maxConcurrentDownloads,
+          isThrottlingEnabled,
+          throttleSpeed,
+          throttleUnit
         );
         allSkippedFiles.push(...downloadResult.skippedFiles);
         downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.includes(f.name));

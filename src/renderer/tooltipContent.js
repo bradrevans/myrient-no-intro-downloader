@@ -16,7 +16,8 @@ const tooltipContent = {
   fileDownloadProgress: "Shows the progress for the currently downloading files.",
   overallExtractionProgress: "Shows the combined progress for all archives being extracted.",
   fileExtractionProgress: "Shows the progress for the currently extracting archive.",
-  parallelDownloads: "The number of files to download at the same time. A higher number may increase download speed but also uses more bandwidth and system resources."
+  parallelDownloads: "The number of files to download at the same time. A higher number may increase download speed but also uses more bandwidth and system resources.",
+  throttleSpeed: "Limit the download speed to the specified value. This is useful for managing bandwidth usage. You can set the speed in Kilobytes per second (KB/s) or Megabytes per second (MB/s). The specified speed will apply to each individual file being downloaded.",
 };
 
 export default tooltipContent;
