@@ -31,7 +31,7 @@ The Myrient Downloader provides a seamless process for creating curated game col
     * **Include/Exclude Individual Titles:** Toggle download for titles on and off individually.
     * **Directory Management:** Automatically create sub directories for every title. If you target a directory with a conflicting folder structure you will be warned before continuing.
     * **Extract Archives:** Automatically extract files and delete the original archives. It will even do this for things you previously downloaded.
-    * **Parralel File Downloads:** Choose to download between 1 and 10 files simultanously.
+    * **Parralel File Downloads:** Choose to download between 1 and 10 files simultaneously.
     * **Control Download Speed:** Throttle download speeds to download in the background without saturating your bandwidth.
 4.  **Manage Progress:** Displays a live overall size-based progress bar with an **accurate time remaining estimate**. It handles file skipping for existing archives and provides a safe cancellation will delete incomplete files.
     * **Smart Resuming:** The application **scans for existing local files** and automatically resumes the download from the point it left off. Files that are fully downloaded are skipped, ensuring efficient use of bandwidth. This also works for extraction.
