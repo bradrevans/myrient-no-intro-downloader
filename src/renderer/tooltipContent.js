@@ -13,9 +13,10 @@ const tooltipContent = {
   extractArchives: "If checked, downloaded compressed archives will be automatically extracted to their contents, and the original archive file will be deleted after successful extraction.",
   extractPreviouslyDownloaded: "If checked, any existing compressed archives in your download directory that were previously downloaded will also be extracted and deleted.",
   overallDownloadProgress: "Shows the combined progress for all files being downloaded.",
-  fileDownloadProgress: "Shows the progress for the currently downloading file.",
+  fileDownloadProgress: "Shows the progress for the currently downloading files.",
   overallExtractionProgress: "Shows the combined progress for all archives being extracted.",
-  fileExtractionProgress: "Shows the progress for the currently extracting archive."
+  fileExtractionProgress: "Shows the progress for the currently extracting archive.",
+  parallelDownloads: "The number of files to download at the same time. A higher number may increase download speed but also uses more bandwidth and system resources."
 };
 
 export default tooltipContent;

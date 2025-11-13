@@ -71,14 +71,23 @@ body {
   @apply sticky z-10 pt-6 pb-4 bg-primary -mx-8 px-8 top-0;
 }
 
-.progress-track {
-  @apply w-full bg-neutral-700 rounded-full h-3.5 mb-1 overflow-hidden;
+progress {
+  @apply w-full h-3.5 rounded-full overflow-hidden;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.progress-fill {
-  @apply bg-success-500 h-3.5 rounded-full;
-  width: 0%;
+progress::-webkit-progress-bar {
+  @apply bg-neutral-700;
+}
+
+progress::-webkit-progress-value {
+  @apply bg-success-500;
   transition: width 0.35s ease-out;
+}
+
+progress::-moz-progress-bar {
+  @apply bg-success-500;
 }
 
 .list-group-item {

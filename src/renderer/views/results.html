@@ -49,8 +49,7 @@
       <div class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 border border-transparent">
         <label for="max-concurrent-downloads" class="text-neutral-300 flex-shrink-0">Parallel downloads:</label>
         <input type="number" id="max-concurrent-downloads" min="1" max="10" value="3"
-               class="w-20 px-2 py-1 bg-neutral-700 text-neutral-300 border border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-accent-500">
-        <span class="text-neutral-400 text-sm">(1-10 files)</span>
+          class="w-12 py-0 pl-1 pr-0 h-[24px] bg-neutral-700 text-neutral-300 border border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-accent-500">
       </div>
     </div>
 
@@ -60,9 +59,7 @@
 
     <div id="scan-progress-bar" class="hidden w-full">
       <label for="scan-progress" class="text-sm font-semibold">Scanning file sizes...</label>
-      <div class="progress-track mt-1">
-        <div id="scan-progress" class="progress-fill"></div>
-      </div>
+      <progress id="scan-progress" max="100" value="0" class="mt-1"></progress>
       <div class="text-right"><span id="scan-progress-text" class="text-sm text-gray-100">0 / 0
           files</span></div>
     </div>
@@ -71,9 +68,7 @@
       <div>
         <label id="overall-download-progress-label" for="overall-progress" class="text-sm font-semibold">Overall
           Download Progress</label>
-        <div class="progress-track mt-1">
-          <div id="overall-progress" class="progress-fill"></div>
-        </div>
+        <progress id="overall-progress" max="100" value="0" class="mt-1"></progress>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="overall-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
             --</span>
@@ -81,17 +76,15 @@
         </div>
       </div>
       <div id="file-progress-container" class="hidden">
-        <label id="file-download-progress-label" class="text-sm font-semibold mb-2">Active Downloads</label>
-        <div id="active-downloads-list" class="space-y-2">
+        <label id="file-download-progress-label" class="text-sm font-semibold">Active Downloads</label>
+        <div id="active-downloads-list" class="space-y-2 mt-1">
           <!-- Dynamic progress bars will be inserted here -->
         </div>
       </div>
       <div id="overall-extraction-progress-bar" class="hidden w-full">
         <label id="overall-extraction-progress-label" for="overall-extraction-progress"
           class="text-sm font-semibold">Overall Extraction Progress</label>
-        <div class="progress-track mt-1">
-          <div id="overall-extraction-progress" class="progress-fill"></div>
-        </div>
+        <progress id="overall-extraction-progress" max="100" value="0" class="mt-1"></progress>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="overall-extraction-progress-time" class="flex-shrink-0 mr-2">Estimated Time Remaining:
             --</span>
@@ -101,9 +94,7 @@
       <div id="extraction-progress-bar" class="hidden w-full">
         <label id="file-extraction-progress-label" for="extraction-progress" class="text-sm font-semibold">Extraction
           Progress</label>
-        <div class="progress-track mt-1">
-          <div id="extraction-progress" class="progress-fill"></div>
-        </div>
+        <progress id="extraction-progress" max="100" value="0" class="mt-1"></progress>
         <div class="flex justify-between text-sm text-gray-100">
           <span id="extraction-progress-name" class="truncate"></span>
           <span id="extraction-progress-text" class="flex-shrink-0 ml-2"></span>

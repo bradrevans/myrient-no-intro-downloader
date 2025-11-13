@@ -1,4 +1,6 @@
 import { formatTime } from '../utils.js';
+import InfoIcon from './InfoIcon.js';
+import tooltipContent from '../tooltipContent.js';
 
 /**
  * Manages the user interface elements and interactions related to the download process.
@@ -208,6 +210,8 @@ export default class DownloadUI {
     const maxConcurrentDownloadsInput = document.getElementById('max-concurrent-downloads');
     if (maxConcurrentDownloadsInput) {
       maxConcurrentDownloadsInput.value = this.stateService.get('maxConcurrentDownloads') || 3;
+      const infoIcon = new InfoIcon(tooltipContent.parallelDownloads);
+      maxConcurrentDownloadsInput.parentNode.insertBefore(infoIcon.element, maxConcurrentDownloadsInput.nextSibling);
     }
 
     const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
@@ -316,8 +320,8 @@ export default class DownloadUI {
     elements.downloadCancelBtn.classList.remove('hidden');
     elements.downloadRestartBtn.classList.add('hidden');
 
-    elements.scanProgress.style.width = '0%';
-    elements.overallProgress.style.width = '0%';
+    elements.scanProgress.value = 0;
+    elements.overallProgress.value = 0;
     elements.overallProgressTime.textContent = "Estimated Time Remaining: --";
     elements.overallProgressText.textContent = "0.00 MB / 0.00 MB";
 
@@ -326,8 +330,8 @@ export default class DownloadUI {
       elements.activeDownloadsList.innerHTML = '';
     }
 
-    elements.extractionProgress.style.width = '0%';
-    elements.overallExtractionProgress.style.width = '0%';
+    elements.extractionProgress.value = 0;
+    elements.overallExtractionProgress.value = 0;
     elements.overallExtractionProgressText.textContent = "";
     elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
     elements.extractionProgressName.textContent = "";
@@ -432,7 +436,7 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (!elements.scanProgress) return;
       const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
-      elements.scanProgress.style.width = `${percent}%`;
+      elements.scanProgress.value = percent;
       const percentFixed = percent.toFixed(0);
       elements.scanProgressText.textContent = `${percentFixed}% (${data.current} / ${data.total} files)`;
     });
@@ -441,7 +445,7 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (!elements.overallProgress) return;
       const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
-      elements.overallProgress.style.width = `${percent}%`;
+      elements.overallProgress.value = percent;
       const percentFixed = percent.toFixed(1);
       elements.overallProgressText.textContent =
         `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percentFixed}%)`;
@@ -498,7 +502,7 @@ export default class DownloadUI {
       const overallExtractionProgressBar = document.getElementById('overall-extraction-progress-bar');
       if (data.totalUncompressedSizeOfAllArchives > 0) {
         const overallPercent = data.totalUncompressedSizeOfAllArchives > 0 ? (data.overallExtractedBytes / data.totalUncompressedSizeOfAllArchives) * 100 : 0;
-        elements.overallExtractionProgress.style.width = `${overallPercent}%`;
+        elements.overallExtractionProgress.value = overallPercent;
         const overallPercentFixed = overallPercent.toFixed(1);
         elements.overallExtractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.overallExtractedBytes)} / ${await window.electronAPI.formatBytes(data.totalUncompressedSizeOfAllArchives)} (${overallPercentFixed}%)`;
         if (data.eta !== undefined) {
@@ -511,7 +515,7 @@ export default class DownloadUI {
       const extractionProgressBar = document.getElementById('extraction-progress-bar');
       if (data.fileTotal > 0) {
         const filePercent = data.fileTotal > 0 ? (data.fileProgress / data.fileTotal) * 100 : 0;
-        elements.extractionProgress.style.width = `${filePercent}%`;
+        elements.extractionProgress.value = filePercent;
         const filePercentFixed = filePercent.toFixed(0);
         elements.extractionProgressName.textContent = `${data.filename} (${data.overallExtractedEntryCount}/${data.totalEntriesOverall})`;
         elements.extractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.fileProgress)} / ${await window.electronAPI.formatBytes(data.fileTotal)} (${filePercentFixed}%)`;
@@ -533,7 +537,7 @@ export default class DownloadUI {
 
     // Create the progress bar element
     const progressBarContainer = document.createElement('div');
-    progressBarContainer.className = 'bg-neutral-800 rounded-md p-2';
+    progressBarContainer.className = 'bg-neutral-800 rounded-md p-3';
     progressBarContainer.dataset.fileIndex = data.fileIndex;
 
     progressBarContainer.innerHTML = `
@@ -541,9 +545,7 @@ export default class DownloadUI {
         <span class="truncate file-name">${data.name}</span>
         <span class="flex-shrink-0 ml-2 file-size">0 B / ${this._formatBytesSync(data.size)}</span>
       </div>
-      <div class="progress-track">
-        <div class="progress-fill file-progress-bar" style="width: 0%"></div>
-      </div>
+      <progress class="file-progress-bar" max="100" value="0"></progress>
     `;
 
     elements.activeDownloadsList.appendChild(progressBarContainer);
@@ -568,7 +570,7 @@ export default class DownloadUI {
 
     if (progressBar && sizeSpan) {
       const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
-      progressBar.style.width = `${percent}%`;
+      progressBar.value = percent;
       const percentFixed = percent.toFixed(0);
       sizeSpan.textContent = `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percentFixed}%)`;
     }
