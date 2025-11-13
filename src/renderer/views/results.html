@@ -45,6 +45,13 @@
         <span id="extract-previously-downloaded-label" class="text-neutral-300 truncate">Extract previously downloaded
           archives</span>
       </label>
+
+      <div class="flex items-center p-2 bg-neutral-800 rounded-md space-x-2 border border-transparent">
+        <label for="max-concurrent-downloads" class="text-neutral-300 flex-shrink-0">Parallel downloads:</label>
+        <input type="number" id="max-concurrent-downloads" min="1" max="10" value="3"
+               class="w-20 px-2 py-1 bg-neutral-700 text-neutral-300 border border-neutral-600 rounded focus:outline-none focus:ring-2 focus:ring-accent-500">
+        <span class="text-neutral-400 text-sm">(1-10 files)</span>
+      </div>
     </div>
 
     <button id="download-scan-btn" class="btn btn-success w-full" disabled>Scan & Download</button>
@@ -74,14 +81,9 @@
         </div>
       </div>
       <div id="file-progress-container" class="hidden">
-        <label id="file-download-progress-label" for="file-progress" class="text-sm font-semibold">Download
-          Progress</label>
-        <div class="progress-track mt-1">
-          <div id="file-progress" class="progress-fill"></div>
-        </div>
-        <div class="flex justify-between text-sm text-gray-100">
-          <span id="file-progress-name" class="truncate"></span>
-          <span id="file-progress-size" class="flex-shrink-0 ml-2"></span>
+        <label id="file-download-progress-label" class="text-sm font-semibold mb-2">Active Downloads</label>
+        <div id="active-downloads-list" class="space-y-2">
+          <!-- Dynamic progress bars will be inserted here -->
         </div>
       </div>
       <div id="overall-extraction-progress-bar" class="hidden w-full">

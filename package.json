@@ -7,7 +7,7 @@
   "scripts": {
     "start": "tailwindcss -i ./src/renderer/styles/input.css -o ./src/renderer/styles/style.css && electron .",
     "build:all": "npm run build:css && electron-builder --publish never",
-    "build:win": "npm run build:css && electron-builder --win --publish never",
+    "build:win": "npm run build:css && electron-builder --win --x64 --publish never",
     "build:mac": "npm run build:css && electron-builder --mac --publish never",
     "build:linux": "npm run build:css && electron-builder --linux --publish never",
     "build:css": "tailwindcss -i ./src/renderer/styles/input.css -o ./src/renderer/styles/style.css --minify"

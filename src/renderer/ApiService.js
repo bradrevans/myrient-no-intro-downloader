@@ -138,7 +138,8 @@ class ApiService {
     const createSubfolder = stateService.get('createSubfolder');
     const extractAndDelete = stateService.get('extractAndDelete');
     const extractPreviouslyDownloaded = stateService.get('extractPreviouslyDownloaded');
-    window.electronAPI.startDownload(baseUrl, files, stateService.get('downloadDirectory'), createSubfolder, extractAndDelete, extractPreviouslyDownloaded);
+    const maxConcurrentDownloads = stateService.get('maxConcurrentDownloads') || 3;
+    window.electronAPI.startDownload(baseUrl, files, stateService.get('downloadDirectory'), createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads);
   }
 
   /**

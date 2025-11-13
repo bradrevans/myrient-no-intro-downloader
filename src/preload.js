@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkDownloadDirectoryStructure: (downloadPath) => ipcRenderer.invoke('check-download-directory-structure', downloadPath),
   getDownloadDirectoryStructureEnum: () => ipcRenderer.invoke('get-download-directory-structure-enum'),
 
-  startDownload: (baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded),
+  startDownload: (baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads),
   cancelDownload: () => ipcRenderer.send('cancel-download'),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
 
@@ -35,6 +35,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDownloadScanProgress: (callback) => ipcRenderer.on('download-scan-progress', (event, data) => callback(data)),
   onDownloadOverallProgress: (callback) => ipcRenderer.on('download-overall-progress', (event, data) => callback(data)),
   onDownloadFileProgress: (callback) => ipcRenderer.on('download-file-progress', (event, data) => callback(data)),
+  onDownloadFileStarted: (callback) => ipcRenderer.on('download-file-started', (event, data) => callback(data)),
+  onDownloadFileFinished: (callback) => ipcRenderer.on('download-file-finished', (event, data) => callback(data)),
   onDownloadLog: (callback) => ipcRenderer.on('download-log', (event, message) => callback(message)),
   onDownloadComplete: (callback) => ipcRenderer.on('download-complete', (event, summary) => callback(summary)),
   onExtractionStarted: (callback) => ipcRenderer.on('extraction-started', () => callback()),

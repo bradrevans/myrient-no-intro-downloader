@@ -248,7 +248,7 @@ class IpcManager {
       this.win.webContents.setZoomFactor(factor);
     });
 
-    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) => {
+    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads = 3) => {
       /**
        * Handles the 'start-download' IPC channel.
        * Initiates a download process.
@@ -259,10 +259,11 @@ class IpcManager {
        * @param {boolean} createSubfolder Whether to create subfolders for the download.
        * @param {boolean} extractAndDelete Whether to extract archives and delete them after download.
        * @param {boolean} extractPreviouslyDownloaded Whether to extract previously downloaded archives.
+       * @param {number} maxConcurrentDownloads The maximum number of concurrent downloads (default: 3).
        * @returns {Promise<object|{error: string}>} A promise that resolves with download status or rejects with an error.
        */
       try {
-        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded);
+        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, maxConcurrentDownloads);
       } catch (e) {
         return { error: e && e.message ? e.message : String(e) };
       }

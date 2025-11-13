@@ -17,6 +17,7 @@ export default class DownloadUI {
     this.downloadDirectoryStructure = null;
     this.resultsListChangeListener = null;
     this._isExtracting = false;
+    this.activeDownloads = new Map(); // Track active downloads by fileIndex
     this._setupEventListeners();
     if (window.electronAPI && window.electronAPI.onExtractionStarted) {
       window.electronAPI.onExtractionStarted(() => {
@@ -67,11 +68,8 @@ export default class DownloadUI {
       overallProgress: document.getElementById('overall-progress'),
       overallProgressText: document.getElementById('overall-progress-text'),
       overallProgressTime: document.getElementById('overall-progress-time'),
-      fileProgress: document.getElementById('file-progress'),
       fileProgressContainer: document.getElementById('file-progress-container'),
-      fileProgressLabel: document.querySelector('label[for="file-progress"]'),
-      fileProgressName: document.getElementById('file-progress-name'),
-      fileProgressSize: document.getElementById('file-progress-size'),
+      activeDownloadsList: document.getElementById('active-downloads-list'),
       downloadDirBtn: document.getElementById('download-dir-btn'),
       extractionProgressBar: document.getElementById('extraction-progress-bar'),
       extractionProgress: document.getElementById('extraction-progress'),
@@ -207,6 +205,11 @@ export default class DownloadUI {
     elements.createSubfolderCheckbox.disabled = false;
     this.stateService.set('createSubfolder', false);
 
+    const maxConcurrentDownloadsInput = document.getElementById('max-concurrent-downloads');
+    if (maxConcurrentDownloadsInput) {
+      maxConcurrentDownloadsInput.value = this.stateService.get('maxConcurrentDownloads') || 3;
+    }
+
     const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
     if (extractArchivesCheckbox) {
       extractArchivesCheckbox.checked = false;
@@ -253,6 +256,10 @@ export default class DownloadUI {
     elements.downloadCancelBtn.classList.add('hidden');
     elements.downloadRestartBtn.classList.add('hidden');
     elements.downloadLog.innerHTML = '';
+    this.activeDownloads.clear();
+    if (elements.activeDownloadsList) {
+      elements.activeDownloadsList.innerHTML = '';
+    }
 
     if (!this.downloadDirectoryStructure) {
       this.downloadDirectoryStructure = await this.apiService.getDownloadDirectoryStructureEnum();
@@ -311,13 +318,13 @@ export default class DownloadUI {
 
     elements.scanProgress.style.width = '0%';
     elements.overallProgress.style.width = '0%';
-    elements.fileProgress.style.width = '0%';
-    elements.fileProgressName.textContent = "";
-    elements.fileProgressSize.textContent = "";
     elements.overallProgressTime.textContent = "Estimated Time Remaining: --";
     elements.overallProgressText.textContent = "0.00 MB / 0.00 MB";
 
-    elements.fileProgressLabel.classList.remove('hidden');
+    this.activeDownloads.clear();
+    if (elements.activeDownloadsList) {
+      elements.activeDownloadsList.innerHTML = '';
+    }
 
     elements.extractionProgress.style.width = '0%';
     elements.overallExtractionProgress.style.width = '0%';
@@ -359,16 +366,17 @@ export default class DownloadUI {
       elements.downloadRestartBtn.classList.add('hidden');
       elements.extractionProgressBar.classList.add('hidden');
       elements.overallExtractionProgressBar.classList.add('hidden');
-      elements.fileProgress.classList.add('hidden');
-      elements.fileProgressName.classList.add('hidden');
-      elements.fileProgressSize.classList.add('hidden');
-      elements.fileProgressLabel.classList.add('hidden');
+      elements.fileProgressContainer.classList.add('hidden');
       elements.extractionProgress.value = 0;
       elements.overallExtractionProgress.value = 0;
       elements.overallExtractionProgressText.textContent = "";
       elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
       elements.extractionProgressName.textContent = "";
       elements.extractionProgressText.textContent = "";
+      this.activeDownloads.clear();
+      if (elements.activeDownloadsList) {
+        elements.activeDownloadsList.innerHTML = '';
+      }
     });
     document.addEventListener('click', (e) => {
       const elements = this._getElements();
@@ -393,6 +401,13 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (e.target.id === 'create-subfolder-checkbox' && !e.target.disabled) {
         this.stateService.set('createSubfolder', e.target.checked);
+      }
+      if (e.target.id === 'max-concurrent-downloads') {
+        let value = parseInt(e.target.value, 10);
+        if (isNaN(value) || value < 1) value = 1;
+        if (value > 10) value = 10;
+        e.target.value = value;
+        this.stateService.set('maxConcurrentDownloads', value);
       }
       if (e.target.id === 'extract-archives-checkbox') {
         const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
@@ -448,23 +463,16 @@ export default class DownloadUI {
       }
     });
 
+    window.electronAPI.onDownloadFileStarted(data => {
+      this._createFileProgressBar(data);
+    });
+
     window.electronAPI.onDownloadFileProgress(async data => {
-      const elements = this._getElements();
-      if (!elements.fileProgress) return;
+      this._updateFileProgressBar(data);
+    });
 
-      elements.fileProgressContainer.classList.remove('hidden');
-
-      const newFileNameText = `${data.name} (${data.currentFileIndex}/${data.totalFilesToDownload})`;
-      if (elements.fileProgressName.textContent !== newFileNameText) {
-        elements.fileProgress.style.width = '0%';
-        elements.fileProgressName.textContent = newFileNameText;
-      }
-
-      const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
-      elements.fileProgress.style.width = `${percent}%`;
-      const percentFixed = percent.toFixed(0);
-      elements.fileProgressSize.textContent =
-        `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percentFixed}%)`;
+    window.electronAPI.onDownloadFileFinished(data => {
+      this._removeFileProgressBar(data);
     });
 
     window.electronAPI.onDownloadLog(message => {
@@ -477,6 +485,10 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (!elements.fileProgressContainer) return;
       elements.fileProgressContainer.classList.add('hidden');
+      this.activeDownloads.clear();
+      if (elements.activeDownloadsList) {
+        elements.activeDownloadsList.innerHTML = '';
+      }
     });
 
     window.electronAPI.onExtractionProgress(async data => {
@@ -505,5 +517,98 @@ export default class DownloadUI {
         elements.extractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.fileProgress)} / ${await window.electronAPI.formatBytes(data.fileTotal)} (${filePercentFixed}%)`;
       }
     });
+  }
+
+  /**
+   * Creates a progress bar element for a newly started download.
+   * @param {object} data The data object containing name, fileIndex, and size.
+   * @private
+   */
+  _createFileProgressBar(data) {
+    const elements = this._getElements();
+    if (!elements.activeDownloadsList) return;
+
+    // Show the container if it's hidden
+    elements.fileProgressContainer.classList.remove('hidden');
+
+    // Create the progress bar element
+    const progressBarContainer = document.createElement('div');
+    progressBarContainer.className = 'bg-neutral-800 rounded-md p-2';
+    progressBarContainer.dataset.fileIndex = data.fileIndex;
+
+    progressBarContainer.innerHTML = `
+      <div class="flex justify-between text-sm text-gray-100 mb-1">
+        <span class="truncate file-name">${data.name}</span>
+        <span class="flex-shrink-0 ml-2 file-size">0 B / ${this._formatBytesSync(data.size)}</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill file-progress-bar" style="width: 0%"></div>
+      </div>
+    `;
+
+    elements.activeDownloadsList.appendChild(progressBarContainer);
+    this.activeDownloads.set(data.fileIndex, {
+      element: progressBarContainer,
+      name: data.name,
+      size: data.size
+    });
+  }
+
+  /**
+   * Updates the progress bar for an active download.
+   * @param {object} data The progress data containing name, fileIndex, current, and total.
+   * @private
+   */
+  async _updateFileProgressBar(data) {
+    const downloadInfo = this.activeDownloads.get(data.fileIndex);
+    if (!downloadInfo) return;
+
+    const progressBar = downloadInfo.element.querySelector('.file-progress-bar');
+    const sizeSpan = downloadInfo.element.querySelector('.file-size');
+
+    if (progressBar && sizeSpan) {
+      const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
+      progressBar.style.width = `${percent}%`;
+      const percentFixed = percent.toFixed(0);
+      sizeSpan.textContent = `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percentFixed}%)`;
+    }
+  }
+
+  /**
+   * Removes the progress bar for a completed or failed download.
+   * @param {object} data The data object containing fileIndex and success status.
+   * @private
+   */
+  _removeFileProgressBar(data) {
+    const downloadInfo = this.activeDownloads.get(data.fileIndex);
+    if (!downloadInfo) return;
+
+    // Remove the element from DOM
+    if (downloadInfo.element && downloadInfo.element.parentNode) {
+      downloadInfo.element.parentNode.removeChild(downloadInfo.element);
+    }
+
+    // Remove from tracking map
+    this.activeDownloads.delete(data.fileIndex);
+
+    // Hide container if no more active downloads
+    const elements = this._getElements();
+    if (this.activeDownloads.size === 0 && elements.fileProgressContainer) {
+      elements.fileProgressContainer.classList.add('hidden');
+    }
+  }
+
+  /**
+   * Synchronously formats bytes for initial display (before async formatBytes is available).
+   * @param {number} bytes The number of bytes.
+   * @returns {string} Formatted string.
+   * @private
+   */
+  _formatBytesSync(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }
