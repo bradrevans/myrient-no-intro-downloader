@@ -19,7 +19,7 @@ export default class DownloadUI {
     this.downloadDirectoryStructure = null;
     this.resultsListChangeListener = null;
     this._isExtracting = false;
-    this.activeDownloads = new Map(); // Track active downloads by fileIndex
+    this.activeDownloads = new Map();
     this._setupEventListeners();
     if (window.electronAPI && window.electronAPI.onExtractionStarted) {
       window.electronAPI.onExtractionStarted(() => {
@@ -532,10 +532,8 @@ export default class DownloadUI {
     const elements = this._getElements();
     if (!elements.activeDownloadsList) return;
 
-    // Show the container if it's hidden
     elements.fileProgressContainer.classList.remove('hidden');
 
-    // Create the progress bar element
     const progressBarContainer = document.createElement('div');
     progressBarContainer.className = 'bg-neutral-800 rounded-md p-3';
     progressBarContainer.dataset.fileIndex = data.fileIndex;
@@ -585,15 +583,12 @@ export default class DownloadUI {
     const downloadInfo = this.activeDownloads.get(data.fileIndex);
     if (!downloadInfo) return;
 
-    // Remove the element from DOM
     if (downloadInfo.element && downloadInfo.element.parentNode) {
       downloadInfo.element.parentNode.removeChild(downloadInfo.element);
     }
 
-    // Remove from tracking map
     this.activeDownloads.delete(data.fileIndex);
 
-    // Hide container if no more active downloads
     const elements = this._getElements();
     if (this.activeDownloads.size === 0 && elements.fileProgressContainer) {
       elements.fileProgressContainer.classList.add('hidden');

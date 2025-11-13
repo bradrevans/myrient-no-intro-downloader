@@ -73,14 +73,12 @@ class DownloadService {
     let lastDownloadProgressUpdateTime = 0;
     let completedFileCount = 0;
 
-    // Shared state needs to be protected from race conditions
     const state = {
       totalDownloaded,
       totalBytesFailed,
       lastDownloadProgressUpdateTime
     };
 
-    // Helper function to download a single file
     const downloadSingleFile = async (fileInfo, fileIndex) => {
       if (this.isCancelled()) {
         throw new Error("CANCELLED_BETWEEN_FILES");
@@ -119,7 +117,6 @@ class DownloadService {
       }
 
       try {
-        // Notify that this file has started downloading
         win.webContents.send('download-file-started', {
           name: filename,
           fileIndex: fileIndex,
@@ -192,7 +189,6 @@ class DownloadService {
           });
         });
 
-        // Notify that this file has finished successfully
         win.webContents.send('download-file-finished', {
           name: filename,
           fileIndex: fileIndex,
@@ -222,7 +218,6 @@ class DownloadService {
         } catch (fsErr) {
         }
 
-        // Notify that this file has finished with failure
         win.webContents.send('download-file-finished', {
           name: filename,
           fileIndex: fileIndex,
@@ -232,11 +227,9 @@ class DownloadService {
         return { failed: true, filename };
       }
 
-      // Notify that this file has finished successfully (already sent after promise resolves above)
       return { success: true };
     };
 
-    // Process files with concurrency control using a worker pool
     const queue = files.map((file, index) => ({ file, index })).filter(item => !item.file.skip);
     const workers = [];
     let queueIndex = 0;
@@ -256,12 +249,10 @@ class DownloadService {
       }
     };
 
-    // Create worker pool
     for (let i = 0; i < Math.min(maxConcurrentDownloads, queue.length); i++) {
       workers.push(processNext());
     }
 
-    // Wait for all workers to complete
     await Promise.all(workers);
 
     return { skippedFiles };
