@@ -88,6 +88,7 @@ export default class DownloadUI {
       resultsSelectedCount: document.getElementById('results-selected-count'),
       createSubfolderCheckbox: document.getElementById('create-subfolder-checkbox'),
       createSubfolderLabel: document.querySelector('label[for="create-subfolder-checkbox"]'),
+      maintainFolderStructureCheckbox: document.getElementById('maintain-folder-structure-checkbox'),
       throttleDownloadCheckbox: document.getElementById('throttle-download-checkbox'),
       throttleSpeedInput: document.getElementById('throttle-speed-input'),
       throttleUnitSelect: document.getElementById('throttle-unit-select'),
@@ -211,6 +212,9 @@ export default class DownloadUI {
     elements.createSubfolderCheckbox.checked = false;
     elements.createSubfolderCheckbox.disabled = false;
     this.stateService.set('createSubfolder', false);
+
+    elements.maintainFolderStructureCheckbox.checked = false;
+    this.stateService.set('maintainFolderStructure', false);
 
     const throttleDownloadCheckbox = document.getElementById('throttle-download-checkbox');
     const throttleSpeedInput = document.getElementById('throttle-speed-input');
@@ -447,6 +451,9 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (e.target.id === 'create-subfolder-checkbox' && !e.target.disabled) {
         this.stateService.set('createSubfolder', e.target.checked);
+      }
+      if (e.target.id === 'maintain-folder-structure-checkbox') {
+        this.stateService.set('maintainFolderStructure', e.target.checked);
       }
       if (e.target.id === 'extract-archives-checkbox') {
         const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');

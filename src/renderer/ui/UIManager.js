@@ -787,6 +787,7 @@ class UIManager {
         });
       }
       setTimeout(() => {
+        this.addInfoIconToElement('maintain-folder-structure-label', 'maintainSiteFolderStructure');
         this.addInfoIconToElement('create-subfolder-label', 'createSubfolder');
 
         const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');

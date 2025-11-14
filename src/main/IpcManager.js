@@ -248,7 +248,7 @@ class IpcManager {
       this.win.webContents.setZoomFactor(factor);
     });
 
-    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit) => {
+    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, maintainFolderStructure, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit) => {
       /**
        * Handles the 'start-download' IPC channel.
        * Initiates a download process.
@@ -257,6 +257,7 @@ class IpcManager {
        * @param {Array<object>} files An array of file and/or directory objects to download.
        * @param {string} targetDir The target directory for the download.
        * @param {boolean} createSubfolder Whether to create subfolders for the download.
+       * @param {boolean} maintainFolderStructure Whether to maintain the site's folder structure.
        * @param {boolean} extractAndDelete Whether to extract archives and delete them after download.
        * @param {boolean} extractPreviouslyDownloaded Whether to extract previously downloaded archives.
        * @param {boolean} isThrottlingEnabled Whether to enable download throttling.
@@ -265,7 +266,7 @@ class IpcManager {
        * @returns {Promise<object|{error: string}>} A promise that resolves with download status or rejects with an error.
        */
       try {
-        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit);
+        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, maintainFolderStructure, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit);
       } catch (e) {
         return { error: e && e.message ? e.message : String(e) };
       }

@@ -53,6 +53,7 @@ class DownloadService {
    * @param {number} totalSize The total size of all files to be downloaded (including already downloaded parts).
    * @param {number} [initialDownloadedSize=0] The size of files already downloaded or skipped initially.
    * @param {boolean} [createSubfolder=false] Whether to create subfolders for each download.
+   * @param {boolean} [maintainFolderStructure=false] Whether to maintain the site's folder structure.
    * @param {number} totalFilesOverall The total number of files initially considered for download.
    * @param {number} initialSkippedFileCount The number of files initially skipped.
    * @param {boolean} isThrottlingEnabled Whether to enable download throttling.
@@ -61,7 +62,7 @@ class DownloadService {
    * @returns {Promise<{skippedFiles: Array<string>}>} A promise that resolves with an object containing any skipped files.
    * @throws {Error} If the download is cancelled between files or mid-file.
    */
-  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false, totalFilesOverall, initialSkippedFileCount, isThrottlingEnabled = false, throttleSpeed = 10, throttleUnit = 'MB/s') {
+  async downloadFiles(win, baseUrl, files, targetDir, totalSize, initialDownloadedSize = 0, createSubfolder = false, maintainFolderStructure = false, totalFilesOverall, initialSkippedFileCount, isThrottlingEnabled = false, throttleSpeed = 10, throttleUnit = 'MB/s') {
     const session = axios.create({
       httpsAgent: this.httpAgent,
       timeout: 15000,
@@ -99,7 +100,75 @@ class DownloadService {
         }
       }
 
-      const targetPath = path.join(finalTargetDir, filename);
+      let targetPath;
+      if (maintainFolderStructure && fileInfo.href) {
+        // Extract relative path by comparing href with baseUrl
+        let relativePath = fileInfo.href;
+        
+        try {
+          // Parse both URLs to get their pathname components
+          const hrefUrl = new URL(fileInfo.href);
+          const baseUrlObj = new URL(baseUrl);
+          
+          // Get the pathname from both (e.g., "/files/Total%20DOS%20Collection/Games/Applications/file.zip")
+          let hrefPath = hrefUrl.pathname;
+          let basePath = baseUrlObj.pathname;
+          
+          // Remove trailing slash from basePath to get the parent directory
+          basePath = basePath.replace(/\/$/, '');
+          
+          // Extract the last segment of basePath (e.g., "Games")
+          const basePathSegments = basePath.split('/').filter(s => s.length > 0);
+          const selectedDirectory = basePathSegments[basePathSegments.length - 1];
+          
+          // Get the parent path (everything before the selected directory)
+          const parentPath = basePath.substring(0, basePath.lastIndexOf('/' + selectedDirectory));
+          
+          // If hrefPath starts with parentPath, extract relative portion including selected directory
+          if (parentPath && hrefPath.startsWith(parentPath + '/')) {
+            relativePath = hrefPath.substring(parentPath.length + 1); // +1 to remove leading slash
+          } else if (hrefPath.startsWith(basePath + '/')) {
+            // Fallback: if parentPath logic fails, at least include the selected directory
+            relativePath = selectedDirectory + '/' + hrefPath.substring(basePath.length + 1);
+          } else {
+            // Fallback: just use the filename
+            relativePath = filename;
+          }
+          
+          // Decode URL encoding
+          relativePath = decodeURIComponent(relativePath);
+          
+        } catch (e) {
+          // If URL parsing fails, treat href as a simple path
+          // Try string-based removal of baseUrl
+          if (relativePath.startsWith(baseUrl)) {
+            relativePath = relativePath.substring(baseUrl.length);
+          }
+          relativePath = relativePath.replace(/^\/+/, '');
+        }
+        
+        // Extract directory path from relative path (e.g., "Games/Applications/file.zip" -> "Games/Applications")
+        const hrefDirPath = path.dirname(relativePath);
+        if (hrefDirPath && hrefDirPath !== '.' && hrefDirPath !== '/') {
+          // Normalize path separators for Windows
+          const normalizedDirPath = hrefDirPath.replace(/\//g, path.sep);
+          
+          // Create the folder structure within the target directory
+          const fullDirPath = path.join(finalTargetDir, normalizedDirPath);
+          if (!fs.existsSync(fullDirPath)) {
+            try {
+              fs.mkdirSync(fullDirPath, { recursive: true });
+            } catch (mkdirErr) {
+              this.downloadConsole.logCreatingSubfolderError(fullDirPath, mkdirErr.message);
+            }
+          }
+          targetPath = path.join(fullDirPath, filename);
+        } else {
+          targetPath = path.join(finalTargetDir, filename);
+        }
+      } else {
+        targetPath = path.join(finalTargetDir, filename);
+      }
       const fileUrl = fileInfo.href;
       const fileSize = fileInfo.size || 0;
       let fileDownloaded = fileInfo.downloadedBytes || 0;

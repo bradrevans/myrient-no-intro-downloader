@@ -136,9 +136,10 @@ class ApiService {
   startDownload(files, isThrottlingEnabled, throttleSpeed, throttleUnit) {
     const baseUrl = new URL(stateService.get('archive').href + stateService.get('directory').href, stateService.get('baseUrl')).href;
     const createSubfolder = stateService.get('createSubfolder');
+    const maintainFolderStructure = stateService.get('maintainFolderStructure');
     const extractAndDelete = stateService.get('extractAndDelete');
     const extractPreviouslyDownloaded = stateService.get('extractPreviouslyDownloaded');
-    window.electronAPI.startDownload(baseUrl, files, stateService.get('downloadDirectory'), createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit);
+    window.electronAPI.startDownload(baseUrl, files, stateService.get('downloadDirectory'), createSubfolder, maintainFolderStructure, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit);
   }
 
   /**
