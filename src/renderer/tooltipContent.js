@@ -8,6 +8,7 @@ const tooltipContent = {
   otherFiltering: "Filter ROMs based on miscellaneous tags (e.g., Beta, Demo, Unlicensed). Select tags to include or exclude specific categories.",
   includeTags: "Tags selected here will be INCLUDED in your filtered results. Only ROMs containing at least one of these tags will be shown.",
   excludeTags: "Tags selected here will be EXCLUDED from your filtered results. ROMs containing any of these tags will be removed from the results.",
+  maintainSiteFolderStructure: "If checked, the folder structure of the site will be re-created on your local machine within the download directory.",
   createSubfolder: "If checked, downloaded files will be organized into a subfolder named after the archive (e.g., 'Title (Region)') within your chosen download directory.",
   extractArchives: "If checked, downloaded compressed archives will be automatically extracted to their contents, and the original archive file will be deleted after successful extraction.",
   extractPreviouslyDownloaded: "If checked, any existing compressed archives in your download directory that were previously downloaded will also be extracted and deleted.",

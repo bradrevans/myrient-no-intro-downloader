@@ -109,6 +109,7 @@ class DownloadInfoService {
    * @param {Array<object>} items An array of file and/or directory objects, each with at least `name_raw`, `href`, and `type`.
    * @param {string} targetDir The target directory for downloads.
    * @param {boolean} [createSubfolder=false] Whether to create subfolders for each download.
+   * @param {boolean} [maintainFolderStructure=false] Whether to maintain the site's folder structure.
    * @returns {Promise<object>} An object containing:
    *   - `filesToDownload`: Array of file objects that need to be downloaded.
    *   - `totalSize`: Total size of all files (including skipped ones).
@@ -118,7 +119,7 @@ class DownloadInfoService {
    *   - `skippedBecauseDownloadedCount`: Number of files skipped because they were already downloaded.
    * @throws {Error} If the scan is cancelled.
    */
-  async getDownloadInfo(win, baseUrl, items, targetDir, createSubfolder = false) {
+  async getDownloadInfo(win, baseUrl, items, targetDir, createSubfolder = false, maintainFolderStructure = false) {
     let totalSize = 0;
     let skippedSize = 0;
     const filesToDownload = [];
@@ -174,7 +175,54 @@ class DownloadInfoService {
       if (createSubfolder) {
         finalTargetDir = path.join(targetDir, path.parse(filename).name);
       }
-      const targetPath = path.join(finalTargetDir, filename);
+      
+      let targetPath;
+      if (maintainFolderStructure && fileInfo.href) {
+        // Use the same logic as DownloadService to calculate the target path
+        let relativePath = fileInfo.href;
+        
+        try {
+          const hrefUrl = new URL(fileInfo.href);
+          const baseUrlObj = new URL(baseUrl);
+          
+          let hrefPath = hrefUrl.pathname;
+          let basePath = baseUrlObj.pathname;
+          
+          basePath = basePath.replace(/\/$/, '');
+          
+          const basePathSegments = basePath.split('/').filter(s => s.length > 0);
+          const selectedDirectory = basePathSegments[basePathSegments.length - 1];
+          
+          const parentPath = basePath.substring(0, basePath.lastIndexOf('/' + selectedDirectory));
+          
+          if (parentPath && hrefPath.startsWith(parentPath + '/')) {
+            relativePath = hrefPath.substring(parentPath.length + 1);
+          } else if (hrefPath.startsWith(basePath + '/')) {
+            relativePath = selectedDirectory + '/' + hrefPath.substring(basePath.length + 1);
+          } else {
+            relativePath = filename;
+          }
+          
+          relativePath = decodeURIComponent(relativePath);
+          
+        } catch (e) {
+          if (relativePath.startsWith(baseUrl)) {
+            relativePath = relativePath.substring(baseUrl.length);
+          }
+          relativePath = relativePath.replace(/^\/+/, '');
+        }
+        
+        const hrefDirPath = path.dirname(relativePath);
+        if (hrefDirPath && hrefDirPath !== '.' && hrefDirPath !== '/') {
+          const normalizedDirPath = hrefDirPath.replace(/\//g, path.sep);
+          const fullDirPath = path.join(finalTargetDir, normalizedDirPath);
+          targetPath = path.join(fullDirPath, filename);
+        } else {
+          targetPath = path.join(finalTargetDir, filename);
+        }
+      } else {
+        targetPath = path.join(finalTargetDir, filename);
+      }
 
       try {
         const response = await session.head(fileUrl, { timeout: 15000 });
