@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         downloadUI.populateResults(hasSubdirectories);
         stateService.set('wizardSkipped', true);
       } else {
+        uiManager.hideLoading();
         const userWantsToFilter = await uiManager.showConfirmationModal(
           'This directory contains filterable tags. Would you like to use the filtering wizard?',
           {
@@ -96,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           uiManager.setupWizard();
           stateService.set('wizardSkipped', false);
         } else if (userWantsToFilter === false) {
+          uiManager.showLoading('Filtering files...');
           const defaultFilters = {
             include_tags: [],
             exclude_tags: [],

@@ -29,8 +29,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </button>
-      <div id="settings-overlay"
-        class="overlay-transition fixed inset-x-0 bottom-0 top-16 bg-black bg-opacity-50 z-40"></div>
+      <div id="settings-overlay" class="overlay-transition fixed inset-x-0 bottom-0 top-16 bg-black bg-opacity-50 z-40">
+      </div>
       <div id="settings-panel"
         class="fixed top-16 right-0 w-64 h-[calc(100vh-4rem)] bg-neutral-900 shadow-lg z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
         <div class="flex justify-between items-center p-4 border-b border-neutral-700">
@@ -58,10 +58,10 @@
           </div>
         </div>
         <div class="p-4 border-t border-neutral-700">
-            <h6 class="text-white text-base font-bold mb-2">About</h6>
-            <p class="text-neutral-400 text-sm">Version: <span id="app-version"></span></p>
-            <button id="check-for-updates-btn" class="btn btn-secondary btn-sm mt-2">Check for Updates</button>
-            <p id="update-status" class="text-neutral-400 text-sm mt-2"></p>
+          <h6 class="text-white text-base font-bold mb-2">About</h6>
+          <p class="text-neutral-400 text-sm">Version: <span id="app-version"></span></p>
+          <button id="check-for-updates-btn" class="btn btn-secondary btn-sm mt-2">Check for Updates</button>
+          <p id="update-status" class="text-neutral-400 text-sm mt-2"></p>
         </div>
       </div>
       <div class="w-px h-6 bg-neutral-700 mx-2"></div>
@@ -95,7 +95,7 @@
 
     <div id="confirmation-modal"
       class="overlay-transition fixed inset-x-0 bottom-0 top-16 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="modal-transition bg-neutral-800 p-6 rounded-lg shadow-lg w-1/3">
+      <div class="modal-transition bg-neutral-800 p-6 rounded-lg shadow-lg max-w-md min-w-xs mt-16">
         <h3 id="confirmation-modal-title" class="text-xl font-bold text-white mb-4">Confirmation</h3>
         <p id="confirmation-modal-message" class="text-neutral-300 mb-6"></p>
         <div class="flex justify-end space-x-4">
