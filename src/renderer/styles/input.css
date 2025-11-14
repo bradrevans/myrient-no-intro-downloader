@@ -5,6 +5,7 @@
 body {
   background-color: theme('colors.primary');
   color: theme('colors.secondary');
+  overflow: hidden;
 }
 
 .view {
