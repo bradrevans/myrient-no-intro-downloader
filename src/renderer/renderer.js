@@ -82,20 +82,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         downloadUI.populateResults(hasSubdirectories);
         stateService.set('wizardSkipped', true);
       } else {
+        uiManager.hideLoading();
         const userWantsToFilter = await uiManager.showConfirmationModal(
           'This directory contains filterable tags. Would you like to use the filtering wizard?',
           {
-            title: 'Filter Results?',
-            confirmText: 'Enter Wizard',
-            cancelText: 'Show All'
+            title: 'Filtering Wizard',
+            confirmText: 'Yes',
+            cancelText: 'No'
           }
         );
-
         if (userWantsToFilter === true) {
           uiManager.showView('wizard');
-          uiManager.setupWizard();
           stateService.set('wizardSkipped', false);
+          uiManager.setupWizard();
         } else if (userWantsToFilter === false) {
+          uiManager.showLoading('Filtering files...');
           const defaultFilters = {
             include_tags: [],
             exclude_tags: [],
@@ -307,14 +308,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 window.electronAPI.onDownloadComplete(async (summary) => {
-  if (summary.wasCancelled && summary.partialFile) {
-    const userWantsDelete = confirm(`Download cancelled. Do you want to delete the incomplete file?\n\nFile: ${summary.partialFile.name}`);
-    if (userWantsDelete) {
-      await apiService.deleteFile(summary.partialFile.path);
-      downloadUI.log(`Deleted partial file: ${summary.partialFile.name}`);
-    }
-  }
-
   stateService.set('isDownloading', false);
   document.getElementById('download-scan-btn').disabled = false;
   document.getElementById('download-dir-btn').disabled = false;

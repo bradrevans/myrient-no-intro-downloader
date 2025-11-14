@@ -51,7 +51,7 @@ class DownloadManager {
    * @param {boolean} extractPreviouslyDownloaded Whether to extract previously downloaded archives.
    * @returns {Promise<{success: boolean}>} A promise that resolves with a success status.
    */
-  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) {
+  async startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit) {
     this.reset();
 
     const downloadStartTime = performance.now();
@@ -75,7 +75,7 @@ class DownloadManager {
       filesToDownload = scanResult.filesToDownload;
       totalSize = scanResult.totalSize;
       skippedSize = scanResult.skippedSize;
-      allSkippedFiles.push(...scanResult.skippedFiles.map(f => f.name));
+      allSkippedFiles.push(...scanResult.skippedFiles.filter(f => f.skippedBecauseExtracted).map(f => f.name));
 
       if (filesToDownload.length === 0) {
         if (scanResult.skippedBecauseExtractedCount === files.length) {
@@ -102,7 +102,10 @@ class DownloadManager {
           skippedSize,
           createSubfolder,
           totalFilesOverall,
-          initialSkippedFileCount
+          initialSkippedFileCount,
+          isThrottlingEnabled,
+          throttleSpeed,
+          throttleUnit
         );
         allSkippedFiles.push(...downloadResult.skippedFiles);
         downloadedFiles = filesToDownload.filter(f => !downloadResult.skippedFiles.includes(f.name));

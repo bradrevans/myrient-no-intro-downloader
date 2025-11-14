@@ -272,6 +272,7 @@ class UIManager {
    */
   setupWizard() {
     const revisionToggle = document.getElementById('filter-revision-mode');
+    if (!revisionToggle) { console.error('filter-revision-mode not found'); return; }
     const revisionOptions = revisionToggle.querySelectorAll('.toggle-option');
     const currentRevisionMode = stateService.get('revisionMode');
 
@@ -287,7 +288,7 @@ class UIManager {
       });
     });
 
-    this.addInfoIconToElement('filter-revision-mode-label', 'revisionMode'); // Add info icon
+    this.addInfoIconToElement('filter-revision-mode-label', 'revisionMode');
     this.addInfoIconToElement('region-filtering-label', 'regionFiltering');
     this.addInfoIconToElement('language-filtering-label', 'languageFiltering');
     this.addInfoIconToElement('other-filtering-label', 'otherFiltering');
@@ -298,19 +299,22 @@ class UIManager {
     this.addInfoIconToElement('other-include-label', 'includeTags');
     this.addInfoIconToElement('other-exclude-label', 'excludeTags');
 
-
     const allTags = stateService.get('allTags');
     const totalTagCount = Object.values(allTags).reduce((sum, tags) => sum + tags.length, 0);
 
-    document.getElementById('wizard-file-count').textContent = stateService.get('allFiles').length;
-    document.getElementById('wizard-tag-count').textContent = totalTagCount;
+    const wizardFileCount = document.getElementById('wizard-file-count');
+    if (wizardFileCount) wizardFileCount.textContent = stateService.get('allFiles').length;
+    const wizardTagCount = document.getElementById('wizard-tag-count');
+    if (wizardTagCount) wizardTagCount.textContent = totalTagCount;
 
     this.populateTagCategory('region', allTags.Region || [], stateService.get('includeTags').region, stateService.get('excludeTags').region);
     this.populateTagCategory('language', allTags.Language || [], stateService.get('includeTags').language, stateService.get('excludeTags').language);
     this.populateTagCategory('other', allTags.Other || [], stateService.get('includeTags').other, stateService.get('excludeTags').other);
 
-    document.getElementById('priority-list').innerHTML = '';
-    document.getElementById('priority-available').innerHTML = '';
+    const priorityListEl = document.getElementById('priority-list');
+    if (priorityListEl) priorityListEl.innerHTML = '';
+    const priorityAvailableEl = document.getElementById('priority-available');
+    if (priorityAvailableEl) priorityAvailableEl.innerHTML = '';
 
     const currentPriorityList = stateService.get('priorityList');
     currentPriorityList.forEach(tag => {
@@ -318,12 +322,13 @@ class UIManager {
       el.className = 'list-group-item';
       el.textContent = tag;
       el.dataset.name = tag;
-      document.getElementById('priority-list').appendChild(el);
+      if (priorityListEl) priorityListEl.appendChild(el);
     });
 
     this.updatePriorityBuilderAvailableTags();
 
     const dedupeToggle = document.getElementById('filter-dedupe-mode');
+    if (!dedupeToggle) { console.error('filter-dedupe-mode not found'); return; }
     const dedupeOptions = dedupeToggle.querySelectorAll('.toggle-option');
     const currentDedupeMode = stateService.get('dedupeMode');
 
@@ -336,16 +341,17 @@ class UIManager {
         option.classList.add('active');
         const newMode = option.dataset.value;
         stateService.set('dedupeMode', newMode);
-        document.getElementById('priority-builder-ui').classList.toggle('hidden', newMode !== 'priority');
+        const priorityBuilderUi = document.getElementById('priority-builder-ui');
+        if (priorityBuilderUi) priorityBuilderUi.classList.toggle('hidden', newMode !== 'priority');
       });
     });
 
-    this.addInfoIconToElement('filter-dedupe-mode-label', 'dedupeMode'); // Add info icon
-    this.addInfoIconToElement('priority-list-label', 'priorityList'); // Add info icon
-    this.addInfoIconToElement('priority-available-label', 'availableTags'); // Add info icon
+    this.addInfoIconToElement('filter-dedupe-mode-label', 'dedupeMode');
+    this.addInfoIconToElement('priority-list-label', 'priorityList');
+    this.addInfoIconToElement('priority-available-label', 'availableTags');
 
-
-    document.getElementById('priority-builder-ui').classList.toggle('hidden', currentDedupeMode !== 'priority');
+    const priorityBuilderUi = document.getElementById('priority-builder-ui');
+    if (priorityBuilderUi) priorityBuilderUi.classList.toggle('hidden', currentDedupeMode !== 'priority');
 
     this.refreshSearchPlaceholders();
   }
@@ -465,36 +471,51 @@ class UIManager {
       const excludeTags = new Set(stateService.get('excludeTags')[category]);
 
       listEl.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
-        if (checkbox.checked === shouldSelect) return;
-        checkbox.checked = shouldSelect;
-
         const tagName = checkbox.parentElement.dataset.name;
         const opposingLabel = opposingListEl.querySelector(`[data-name="${tagName}"]`);
         const opposingCheckbox = opposingLabel?.querySelector('input');
 
-        if (type === 'include') {
-          if (shouldSelect) {
-            includeTags.add(tagName);
-            if (excludeTags.has(tagName)) {
-              excludeTags.delete(tagName);
-              if (opposingCheckbox) opposingCheckbox.checked = false;
+        if (shouldSelect) {
+          if (type === 'include') {
+            if (!excludeTags.has(tagName)) {
+              includeTags.add(tagName);
+              checkbox.checked = true;
             }
           } else {
-            includeTags.delete(tagName);
+            if (!includeTags.has(tagName)) {
+              excludeTags.add(tagName);
+              checkbox.checked = true;
+            }
           }
         } else {
-          if (shouldSelect) {
-            excludeTags.add(tagName);
-            if (includeTags.has(tagName)) {
-              includeTags.delete(tagName);
-              if (opposingCheckbox) opposingCheckbox.checked = false;
-            }
+          checkbox.checked = false;
+          if (type === 'include') {
+            includeTags.delete(tagName);
           } else {
             excludeTags.delete(tagName);
           }
         }
+        if (type === 'include' && includeTags.has(tagName) && excludeTags.has(tagName)) {
+          excludeTags.delete(tagName);
+          if (opposingCheckbox) opposingCheckbox.checked = false;
+        } else if (type === 'exclude' && excludeTags.has(tagName) && includeTags.has(tagName)) {
+          includeTags.delete(tagName);
+          if (opposingCheckbox) opposingCheckbox.checked = false;
+        }
       });
-
+      listEl.querySelectorAll('label').forEach(label => {
+        const tagName = label.dataset.name;
+        const checkbox = label.querySelector('input');
+        if ((type === 'include' && excludeTags.has(tagName)) || (type === 'exclude' && includeTags.has(tagName))) {
+          checkbox.disabled = true;
+          label.classList.add('opacity-50', 'cursor-not-allowed');
+          label.style.pointerEvents = 'none';
+        } else {
+          checkbox.disabled = false;
+          label.classList.remove('opacity-50', 'cursor-not-allowed');
+          label.style.pointerEvents = '';
+        }
+      });
       opposingListEl.querySelectorAll('label').forEach(label => {
         const tagName = label.dataset.name;
         const checkbox = label.querySelector('input');
@@ -709,8 +730,10 @@ class UIManager {
         };
 
         try {
+          this.showLoading('Filtering files...');
           await apiService.runFilter(filters);
           if (stateService.get('finalFileList').length === 0) {
+            this.hideLoading();
             await this.showConfirmationModal('No files matched your filters. Please adjust your filter settings and try again.', {
               title: 'No Results',
               confirmText: 'OK',
@@ -718,7 +741,6 @@ class UIManager {
             });
             return;
           }
-          this.showLoading('Filtering files...');
           this.showView('results');
           this.downloadUI.populateResults();
           const searchInput = document.getElementById('search-results');
@@ -764,42 +786,44 @@ class UIManager {
           stateService.set('createSubfolder', e.target.checked);
         });
       }
-      this.addInfoIconToElement('create-subfolder-label', 'createSubfolder'); // Add info icon
+      setTimeout(() => {
+        this.addInfoIconToElement('create-subfolder-label', 'createSubfolder');
 
-      const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
-      const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
+        const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
+        const extractPreviouslyDownloadedCheckbox = document.getElementById('extract-previously-downloaded-checkbox');
 
-      if (extractArchivesCheckbox && extractPreviouslyDownloadedCheckbox) {
-        extractArchivesCheckbox.checked = stateService.get('extractAndDelete');
-        extractPreviouslyDownloadedCheckbox.checked = stateService.get('extractPreviouslyDownloaded');
-        extractPreviouslyDownloadedCheckbox.disabled = !extractArchivesCheckbox.checked;
+        if (extractArchivesCheckbox && extractPreviouslyDownloadedCheckbox) {
+          extractArchivesCheckbox.checked = stateService.get('extractAndDelete');
+          extractPreviouslyDownloadedCheckbox.checked = stateService.get('extractPreviouslyDownloaded');
+          extractPreviouslyDownloadedCheckbox.disabled = !extractArchivesCheckbox.checked;
 
-        extractArchivesCheckbox.addEventListener('change', (e) => {
-          const isChecked = e.target.checked;
-          stateService.set('extractAndDelete', isChecked);
-          extractPreviouslyDownloadedCheckbox.disabled = !isChecked;
-          if (!isChecked) {
-            extractPreviouslyDownloadedCheckbox.checked = false;
-            stateService.set('extractPreviouslyDownloaded', false);
-          }
-          if (this.downloadUI && typeof this.downloadUI.updateScanButtonText === 'function') {
-            this.downloadUI.updateScanButtonText();
-          }
-        });
-        this.addInfoIconToElement('extract-archives-label', 'extractArchives'); // Add info icon
+          extractArchivesCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            stateService.set('extractAndDelete', isChecked);
+            extractPreviouslyDownloadedCheckbox.disabled = !isChecked;
+            if (!isChecked) {
+              extractPreviouslyDownloadedCheckbox.checked = false;
+              stateService.set('extractPreviouslyDownloaded', false);
+            }
+            if (this.downloadUI && typeof this.downloadUI.updateScanButtonText === 'function') {
+              this.downloadUI.updateScanButtonText();
+            }
+          });
+          this.addInfoIconToElement('extract-archives-label', 'extractArchives');
 
-        extractPreviouslyDownloadedCheckbox.addEventListener('change', (e) => {
-          stateService.set('extractPreviouslyDownloaded', e.target.checked);
-        });
-        this.addInfoIconToElement('extract-previously-downloaded-label', 'extractPreviouslyDownloaded'); // Add info icon
-      }
+          extractPreviouslyDownloadedCheckbox.addEventListener('change', (e) => {
+            stateService.set('extractPreviouslyDownloaded', e.target.checked);
+          });
+          this.addInfoIconToElement('extract-previously-downloaded-label', 'extractPreviouslyDownloaded');
+        }
 
-      this.addInfoIconToElement('download-options-label', 'downloadOptions');
+        this.addInfoIconToElement('download-options-label', 'downloadOptions');
 
-      this.addInfoIconToElement('overall-download-progress-label', 'overallDownloadProgress');
-      this.addInfoIconToElement('file-download-progress-label', 'fileDownloadProgress');
-      this.addInfoIconToElement('overall-extraction-progress-label', 'overallExtractionProgress');
-      this.addInfoIconToElement('file-extraction-progress-label', 'fileExtractionProgress');
+        this.addInfoIconToElement('overall-download-progress-label', 'overallDownloadProgress');
+        this.addInfoIconToElement('file-download-progress-label', 'fileDownloadProgress');
+        this.addInfoIconToElement('overall-extraction-progress-label', 'overallExtractionProgress');
+        this.addInfoIconToElement('file-extraction-progress-label', 'fileExtractionProgress');
+      }, 0);
 
       document.getElementById('download-dir-btn').addEventListener('click', async () => {
         const dir = await apiService.getDownloadDirectory();
@@ -911,13 +935,22 @@ class UIManager {
         if (!searchInput) return;
 
         if (config.includeListId) {
-          this.searchInstances[config.includeListId] = new Search(config.searchId, config.includeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          const includeListEl = document.getElementById(config.includeListId);
+          if (includeListEl) {
+            this.searchInstances[config.includeListId] = new Search(config.searchId, config.includeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          }
         }
         if (config.excludeListId) {
-          this.searchInstances[config.excludeListId] = new Search(config.searchId, config.excludeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          const excludeListEl = document.getElementById(config.excludeListId);
+          if (excludeListEl) {
+            this.searchInstances[config.excludeListId] = new Search(config.searchId, config.excludeListId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          }
         }
         if (config.listId && !config.includeListId) {
-          this.searchInstances[config.listId] = new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          const listEl = document.getElementById(config.listId);
+          if (listEl) {
+            this.searchInstances[config.listId] = new Search(config.searchId, config.listId, config.itemSelector, config.noResultsText, config.noItemsText, `${config.searchId}-clear`);
+          }
         }
 
         const parentContainer = document.getElementById(config.parentContainerId);
@@ -927,7 +960,9 @@ class UIManager {
           if (config.excludeListId) listContainers.push(document.getElementById(config.excludeListId));
           if (config.listId && !config.includeListId) listContainers.push(document.getElementById(config.listId));
 
-          const keyboardNavigator = new KeyboardNavigator(listContainers.filter(el => el !== null), config.itemSelector, searchInput, this);
+          const filteredListContainers = listContainers.filter(el => el !== null);
+
+          const keyboardNavigator = new KeyboardNavigator(filteredListContainers, config.itemSelector, searchInput, this);
           parentContainer.addEventListener('keydown', keyboardNavigator.handleKeyDown.bind(keyboardNavigator));
           searchInput.addEventListener('keydown', keyboardNavigator.handleKeyDown.bind(keyboardNavigator));
 

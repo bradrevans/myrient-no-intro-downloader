@@ -1,4 +1,6 @@
 import { formatTime } from '../utils.js';
+import InfoIcon from './InfoIcon.js';
+import tooltipContent from '../tooltipContent.js';
 
 /**
  * Manages the user interface elements and interactions related to the download process.
@@ -86,6 +88,9 @@ export default class DownloadUI {
       resultsSelectedCount: document.getElementById('results-selected-count'),
       createSubfolderCheckbox: document.getElementById('create-subfolder-checkbox'),
       createSubfolderLabel: document.querySelector('label[for="create-subfolder-checkbox"]'),
+      throttleDownloadCheckbox: document.getElementById('throttle-download-checkbox'),
+      throttleSpeedInput: document.getElementById('throttle-speed-input'),
+      throttleUnitSelect: document.getElementById('throttle-unit-select'),
     };
   }
 
@@ -207,6 +212,32 @@ export default class DownloadUI {
     elements.createSubfolderCheckbox.disabled = false;
     this.stateService.set('createSubfolder', false);
 
+    const throttleDownloadCheckbox = document.getElementById('throttle-download-checkbox');
+    const throttleSpeedInput = document.getElementById('throttle-speed-input');
+    const throttleUnitSelect = document.getElementById('throttle-unit-select');
+
+    if (throttleDownloadCheckbox && throttleSpeedInput && throttleUnitSelect) {
+      const isThrottlingEnabled = this.stateService.get('isThrottlingEnabled') || false;
+      const throttleSpeed = this.stateService.get('throttleSpeed') || 100;
+      const throttleUnit = this.stateService.get('throttleUnit') || 'KB/s';
+
+      throttleDownloadCheckbox.checked = isThrottlingEnabled;
+      throttleSpeedInput.disabled = !isThrottlingEnabled;
+      throttleUnitSelect.disabled = !isThrottlingEnabled;
+
+      throttleSpeedInput.value = throttleSpeed;
+      throttleUnitSelect.value = throttleUnit;
+
+      this.stateService.set('isThrottlingEnabled', isThrottlingEnabled);
+      this.stateService.set('throttleSpeed', throttleSpeed);
+      this.stateService.set('throttleUnit', throttleUnit);
+
+      if (!throttleSpeedInput.parentNode.querySelector('.info-icon')) {
+        const infoIcon = new InfoIcon(tooltipContent.throttleSpeed);
+        throttleSpeedInput.parentNode.appendChild(infoIcon.element);
+      }
+    }
+
     const extractArchivesCheckbox = document.getElementById('extract-archives-checkbox');
     if (extractArchivesCheckbox) {
       extractArchivesCheckbox.checked = false;
@@ -309,9 +340,9 @@ export default class DownloadUI {
     elements.downloadCancelBtn.classList.remove('hidden');
     elements.downloadRestartBtn.classList.add('hidden');
 
-    elements.scanProgress.style.width = '0%';
-    elements.overallProgress.style.width = '0%';
-    elements.fileProgress.style.width = '0%';
+    elements.scanProgress.value = 0;
+    elements.overallProgress.value = 0;
+    elements.fileProgress.value = 0;
     elements.fileProgressName.textContent = "";
     elements.fileProgressSize.textContent = "";
     elements.overallProgressTime.textContent = "Estimated Time Remaining: --";
@@ -319,8 +350,8 @@ export default class DownloadUI {
 
     elements.fileProgressLabel.classList.remove('hidden');
 
-    elements.extractionProgress.style.width = '0%';
-    elements.overallExtractionProgress.style.width = '0%';
+    elements.extractionProgress.value = 0;
+    elements.overallExtractionProgress.value = 0;
     elements.overallExtractionProgressText.textContent = "";
     elements.overallExtractionProgressTime.textContent = "Estimated Time Remaining: --";
     elements.extractionProgressName.textContent = "";
@@ -331,7 +362,10 @@ export default class DownloadUI {
     elements.extractionProgressBar.classList.add('hidden');
     elements.overallExtractionProgressBar.classList.add('hidden');
 
-    this.apiService.startDownload(this.stateService.get('selectedResults'));
+    const isThrottlingEnabled = this.stateService.get('isThrottlingEnabled');
+    const throttleSpeed = this.stateService.get('throttleSpeed');
+    const throttleUnit = this.stateService.get('throttleUnit');
+    this.apiService.startDownload(this.stateService.get('selectedResults'), isThrottlingEnabled, throttleSpeed, throttleUnit);
   }
 
   /**
@@ -390,6 +424,26 @@ export default class DownloadUI {
     });
 
     document.addEventListener('change', (e) => {
+      const { throttleDownloadCheckbox, throttleSpeedInput, throttleUnitSelect } = this._getElements();
+      if (e.target.id === 'throttle-download-checkbox') {
+        const isThrottlingEnabled = e.target.checked;
+        throttleSpeedInput.disabled = !isThrottlingEnabled;
+        throttleUnitSelect.disabled = !isThrottlingEnabled;
+        this.stateService.set('isThrottlingEnabled', isThrottlingEnabled);
+        if (isThrottlingEnabled) {
+          this.stateService.set('throttleSpeed', parseInt(throttleSpeedInput.value, 10));
+          this.stateService.set('throttleUnit', throttleUnitSelect.value);
+        }
+      }
+
+      if (e.target.id === 'throttle-speed-input') {
+        this.stateService.set('throttleSpeed', parseInt(e.target.value, 10));
+      }
+
+      if (e.target.id === 'throttle-unit-select') {
+        this.stateService.set('throttleUnit', e.target.value);
+      }
+
       const elements = this._getElements();
       if (e.target.id === 'create-subfolder-checkbox' && !e.target.disabled) {
         this.stateService.set('createSubfolder', e.target.checked);
@@ -417,7 +471,7 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (!elements.scanProgress) return;
       const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
-      elements.scanProgress.style.width = `${percent}%`;
+      elements.scanProgress.value = percent;
       const percentFixed = percent.toFixed(0);
       elements.scanProgressText.textContent = `${percentFixed}% (${data.current} / ${data.total} files)`;
     });
@@ -426,7 +480,7 @@ export default class DownloadUI {
       const elements = this._getElements();
       if (!elements.overallProgress) return;
       const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
-      elements.overallProgress.style.width = `${percent}%`;
+      elements.overallProgress.value = percent;
       const percentFixed = percent.toFixed(1);
       elements.overallProgressText.textContent =
         `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percentFixed}%)`;
@@ -456,12 +510,12 @@ export default class DownloadUI {
 
       const newFileNameText = `${data.name} (${data.currentFileIndex}/${data.totalFilesToDownload})`;
       if (elements.fileProgressName.textContent !== newFileNameText) {
-        elements.fileProgress.style.width = '0%';
+        elements.fileProgress.value = 0;
         elements.fileProgressName.textContent = newFileNameText;
       }
 
       const percent = data.total > 0 ? (data.current / data.total) * 100 : 0;
-      elements.fileProgress.style.width = `${percent}%`;
+      elements.fileProgress.value = percent;
       const percentFixed = percent.toFixed(0);
       elements.fileProgressSize.textContent =
         `${await window.electronAPI.formatBytes(data.current)} / ${await window.electronAPI.formatBytes(data.total)} (${percentFixed}%)`;
@@ -470,8 +524,6 @@ export default class DownloadUI {
     window.electronAPI.onDownloadLog(message => {
       this.log(message);
     });
-
-
 
     window.electronAPI.onDownloadComplete((summary) => {
       const elements = this._getElements();
@@ -486,7 +538,7 @@ export default class DownloadUI {
       const overallExtractionProgressBar = document.getElementById('overall-extraction-progress-bar');
       if (data.totalUncompressedSizeOfAllArchives > 0) {
         const overallPercent = data.totalUncompressedSizeOfAllArchives > 0 ? (data.overallExtractedBytes / data.totalUncompressedSizeOfAllArchives) * 100 : 0;
-        elements.overallExtractionProgress.style.width = `${overallPercent}%`;
+        elements.overallExtractionProgress.value = overallPercent;
         const overallPercentFixed = overallPercent.toFixed(1);
         elements.overallExtractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.overallExtractedBytes)} / ${await window.electronAPI.formatBytes(data.totalUncompressedSizeOfAllArchives)} (${overallPercentFixed}%)`;
         if (data.eta !== undefined) {
@@ -499,7 +551,7 @@ export default class DownloadUI {
       const extractionProgressBar = document.getElementById('extraction-progress-bar');
       if (data.fileTotal > 0) {
         const filePercent = data.fileTotal > 0 ? (data.fileProgress / data.fileTotal) * 100 : 0;
-        elements.extractionProgress.style.width = `${filePercent}%`;
+        elements.extractionProgress.value = filePercent;
         const filePercentFixed = filePercent.toFixed(0);
         elements.extractionProgressName.textContent = `${data.filename} (${data.overallExtractedEntryCount}/${data.totalEntriesOverall})`;
         elements.extractionProgressText.textContent = `${await window.electronAPI.formatBytes(data.fileProgress)} / ${await window.electronAPI.formatBytes(data.fileTotal)} (${filePercentFixed}%)`;

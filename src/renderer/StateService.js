@@ -38,6 +38,9 @@ class StateService {
       extractAndDelete: false,
       extractPreviouslyDownloaded: false,
       wizardSkipped: false,
+      isThrottlingEnabled: false,
+      throttleSpeed: 100,
+      throttleUnit: 'KB/s',
     };
   }
 

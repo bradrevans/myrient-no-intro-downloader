@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkDownloadDirectoryStructure: (downloadPath) => ipcRenderer.invoke('check-download-directory-structure', downloadPath),
   getDownloadDirectoryStructureEnum: () => ipcRenderer.invoke('get-download-directory-structure-enum'),
 
-  startDownload: (baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded),
+  startDownload: (baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit) => ipcRenderer.invoke('start-download', baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit),
   cancelDownload: () => ipcRenderer.send('cancel-download'),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
 

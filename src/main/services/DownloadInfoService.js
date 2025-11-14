@@ -155,6 +155,7 @@ class DownloadInfoService {
 
       if (await this._isAlreadyExtracted(targetDir, filename, createSubfolder)) {
         fileInfo.skip = true;
+        fileInfo.skippedBecauseExtracted = true;
         skippedBecauseExtractedCount++;
         try {
           const response = await session.head(fileUrl, { timeout: 15000 });
@@ -186,6 +187,7 @@ class DownloadInfoService {
           const localSize = fs.statSync(targetPath).size;
           if (remoteSize > 0 && localSize === remoteSize) {
             fileInfo.skip = true;
+            fileInfo.skippedBecauseDownloaded = true;
             skippedBecauseDownloadedCount++;
             skippedSize += remoteSize;
             skippedFiles.push(fileInfo);

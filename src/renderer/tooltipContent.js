@@ -1,6 +1,6 @@
 const tooltipContent = {
   revisionMode: "Determines which revisions of ROMs are kept when multiple versions exist. 'Highest' keeps only the newest revision (based on revision number), and 'All' includes all revisions found.",
-  dedupeMode: "Controls how duplicate ROMs (files with identical base names) are handled. 'Priority' uses your custom priority list to select a single preferred file. 'All' keeps all duplicate files.",
+  dedupeMode: "Controls how duplicate ROMs (files with identical base names) are handled. 'Priority' uses your custom priority list to select a single preferred file (or defaults to one at random if you haven't set priorities). 'All' keeps all duplicate files.",
   priorityList: "Drag and drop tags from the 'Available' list here to create a priority order. ROMs containing tags higher in this list will be preferred when de-duplicating files using 'Priority' de-duplication mode. You can reorder them by dragging.",
   availableTags: "These are all the unique tags you have selected to include above. Drag tags from this list to the 'Priority' list to influence de-duplication.",
   regionFiltering: "Filter ROMs based on their geographical region tags (e.g., USA, Europe, Japan). Select tags to include or exclude specific regions. Selecting nothing in any of the lists will default to including all tags.",
@@ -14,7 +14,9 @@ const tooltipContent = {
   overallDownloadProgress: "Shows the combined progress for all files being downloaded.",
   fileDownloadProgress: "Shows the progress for the currently downloading file.",
   overallExtractionProgress: "Shows the combined progress for all archives being extracted.",
-  fileExtractionProgress: "Shows the progress for the currently extracting archive."
+  fileExtractionProgress: "Shows the progress for the currently extracting archive.",
+  throttleSpeed: "Limit the download speed to the specified value. This is useful for managing bandwidth usage. You can set the speed in Kilobytes per second (KB/s) or Megabytes per second (MB/s).",
+  downloadOptions: "Configure how files are downloaded and processed."
 };
 
 export default tooltipContent;

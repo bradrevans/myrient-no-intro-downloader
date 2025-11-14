@@ -248,7 +248,7 @@ class IpcManager {
       this.win.webContents.setZoomFactor(factor);
     });
 
-    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded) => {
+    ipcMain.handle('start-download', async (event, baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit) => {
       /**
        * Handles the 'start-download' IPC channel.
        * Initiates a download process.
@@ -259,10 +259,13 @@ class IpcManager {
        * @param {boolean} createSubfolder Whether to create subfolders for the download.
        * @param {boolean} extractAndDelete Whether to extract archives and delete them after download.
        * @param {boolean} extractPreviouslyDownloaded Whether to extract previously downloaded archives.
+       * @param {boolean} isThrottlingEnabled Whether to enable download throttling.
+       * @param {number} throttleSpeed The download speed limit.
+       * @param {string} throttleUnit The unit for the download speed limit (KB/s or MB/s).
        * @returns {Promise<object|{error: string}>} A promise that resolves with download status or rejects with an error.
        */
       try {
-        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded);
+        return await this.downloadManager.startDownload(baseUrl, files, targetDir, createSubfolder, extractAndDelete, extractPreviouslyDownloaded, isThrottlingEnabled, throttleSpeed, throttleUnit);
       } catch (e) {
         return { error: e && e.message ? e.message : String(e) };
       }
