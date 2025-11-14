@@ -465,36 +465,38 @@ class UIManager {
       const excludeTags = new Set(stateService.get('excludeTags')[category]);
 
       listEl.querySelectorAll('label:not(.hidden) input[type=checkbox]').forEach(checkbox => {
-        if (checkbox.checked === shouldSelect) return;
-        checkbox.checked = shouldSelect;
-
         const tagName = checkbox.parentElement.dataset.name;
         const opposingLabel = opposingListEl.querySelector(`[data-name="${tagName}"]`);
         const opposingCheckbox = opposingLabel?.querySelector('input');
 
-        if (type === 'include') {
-          if (shouldSelect) {
-            includeTags.add(tagName);
-            if (excludeTags.has(tagName)) {
-              excludeTags.delete(tagName);
-              if (opposingCheckbox) opposingCheckbox.checked = false;
+        if (shouldSelect) {
+          if (type === 'include') {
+            if (!excludeTags.has(tagName)) {
+              includeTags.add(tagName);
+              checkbox.checked = true;
             }
           } else {
-            includeTags.delete(tagName);
+            if (!includeTags.has(tagName)) {
+              excludeTags.add(tagName);
+              checkbox.checked = true;
+            }
           }
         } else {
-          if (shouldSelect) {
-            excludeTags.add(tagName);
-            if (includeTags.has(tagName)) {
-              includeTags.delete(tagName);
-              if (opposingCheckbox) opposingCheckbox.checked = false;
-            }
+          checkbox.checked = false;
+          if (type === 'include') {
+            includeTags.delete(tagName);
           } else {
             excludeTags.delete(tagName);
           }
         }
+        if (type === 'include' && includeTags.has(tagName) && excludeTags.has(tagName)) {
+          excludeTags.delete(tagName);
+          if (opposingCheckbox) opposingCheckbox.checked = false;
+        } else if (type === 'exclude' && excludeTags.has(tagName) && includeTags.has(tagName)) {
+          includeTags.delete(tagName);
+          if (opposingCheckbox) opposingCheckbox.checked = false;
+        }
       });
-
       opposingListEl.querySelectorAll('label').forEach(label => {
         const tagName = label.dataset.name;
         const checkbox = label.querySelector('input');
